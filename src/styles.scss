@@ -1,1 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --color-surface: #faf8ff;
+  --color-surface-dim: #d9d9e2;
+  --color-surface-bright: #faf8ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f3fb;
+  --color-surface-container: #ededf5;
+  --color-surface-container-high: #e8e7f0;
+  --color-surface-container-highest: #e2e2ea;
+  --color-on-surface: #1a1b21;
+  --color-on-surface-variant: #434652;
+  --color-inverse-surface: #2e3036;
+  --color-inverse-on-surface: #f0f0f8;
+  --color-outline: #737783;
+  --color-outline-variant: #c3c6d4;
+  --color-surface-tint: #2b5ab6;
+  --color-primary: #002d70;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #00429d;
+  --color-on-primary-container: #97b4ff;
+  --color-inverse-primary: #b0c6ff;
+  --color-secondary: #bb0308;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e02a21;
+  --color-on-secondary-container: #fffbff;
+  --color-tertiary: #5b1c00;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #802b00;
+  --color-on-tertiary-container: #ff9d76;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #d9e2ff;
+  --color-primary-fixed-dim: #b0c6ff;
+  --color-on-primary-fixed: #001945;
+  --color-on-primary-fixed-variant: #00419c;
+  --color-secondary-fixed: #ffdad5;
+  --color-secondary-fixed-dim: #ffb4a9;
+  --color-on-secondary-fixed: #410001;
+  --color-on-secondary-fixed-variant: #930004;
+  --color-tertiary-fixed: #ffdbce;
+  --color-tertiary-fixed-dim: #ffb599;
+  --color-on-tertiary-fixed: #370e00;
+  --color-on-tertiary-fixed-variant: #7f2b00;
+  --color-background: #faf8ff;
+  --color-on-background: #1a1b21;
+  --color-surface-variant: #e2e2ea;
+  
+  /* Custom Variables */
+  --color-academic-blue: #00429D;
+  --color-national-red: #DA251D;
+  --color-evaluation-0: #B00020;
+  --color-evaluation-1: #FB8C00;
+  --color-evaluation-2: #FDD835;
+  --color-evaluation-3: #7CB342;
+  --color-evaluation-4: #2E7D32;
+  --color-surface-administrative: #F8F9FA;
+  --color-border-neutral: #DEE2E6;
+
+  /* Typography */
+  --font-headline: 'Public Sans', sans-serif;
+  --font-body: 'Public Sans', sans-serif;
+  --font-label: 'Inter', sans-serif;
+  --font-mono: 'Inter', monospace;
+  
+  /* Radii */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --space-margin-page: 2rem;
+  --space-gutter: 1.5rem;
+  --space-stack-section: 2.5rem;
+  --space-stack-element: 1rem;
+  --space-stack-dense: 0.5rem;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-headline);
+  margin-top: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Material Icons (if needed later) */
+.material-icons,
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+}
+

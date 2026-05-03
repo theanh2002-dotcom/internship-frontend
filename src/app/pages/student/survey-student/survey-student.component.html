@@ -1,0 +1,151 @@
+<div class="mb-10">
+  <h2 class="text-2xl font-bold text-[#002d70] mb-2">Khảo sát Phản hồi Thực tập (TTTN-08b)</h2>
+  <p class="text-base text-gray-600 max-w-3xl">Dành cho Sinh viên đánh giá quá trình thực tập và tự đánh giá mức độ đạt chuẩn đầu ra (CLO).</p>
+</div>
+<form class="space-y-10" (ngSubmit)="submitSurvey()">
+  <!-- Section 1: General Satisfaction -->
+  <section class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <div class="mb-4 border-b border-gray-200 pb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-blue-500">sentiment_satisfied</span>
+      <h3 class="text-xl font-semibold text-gray-900">1. Mức độ hài lòng chung</h3>
+    </div>
+    <p class="text-sm text-gray-600 mb-6">Vui lòng đánh giá theo thang điểm từ 1 (Rất không hài lòng) đến 5 (Rất hài lòng).</p>
+    <div class="space-y-6">
+      
+      <!-- Criterion 1 -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900">Chất lượng hướng dẫn từ GVHD</p>
+        </div>
+        <div class="survey-radio-group flex gap-2 w-full md:w-auto">
+          <label *ngFor="let val of [1,2,3,4,5]" 
+                 [class.bg-[#d9e2ff]]="generalSatisfaction.sat_gvhd === val"
+                 [class.border-[#00429d]]="generalSatisfaction.sat_gvhd === val"
+                 [class.text-[#00429d]]="generalSatisfaction.sat_gvhd === val"
+                 class="flex-1 md:w-12 h-10 flex items-center justify-center border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors text-gray-600 font-mono bg-white">
+            <input class="hidden" name="sat_gvhd" type="radio" [value]="val" (change)="setSatisfaction('sat_gvhd', val)" />
+            {{ val }}
+          </label>
+        </div>
+      </div>
+      
+      <!-- Criterion 2 -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900">Chất lượng hỗ trợ từ Đơn vị thực tập</p>
+        </div>
+        <div class="survey-radio-group flex gap-2 w-full md:w-auto">
+          <label *ngFor="let val of [1,2,3,4,5]" 
+                 [class.bg-[#d9e2ff]]="generalSatisfaction.sat_dvtt === val"
+                 [class.border-[#00429d]]="generalSatisfaction.sat_dvtt === val"
+                 [class.text-[#00429d]]="generalSatisfaction.sat_dvtt === val"
+                 class="flex-1 md:w-12 h-10 flex items-center justify-center border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors text-gray-600 font-mono bg-white">
+            <input class="hidden" name="sat_dvtt" type="radio" [value]="val" (change)="setSatisfaction('sat_dvtt', val)" />
+            {{ val }}
+          </label>
+        </div>
+      </div>
+      
+      <!-- Criterion 3 -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900">Sự phù hợp của công việc với chuyên môn</p>
+        </div>
+        <div class="survey-radio-group flex gap-2 w-full md:w-auto">
+          <label *ngFor="let val of [1,2,3,4,5]" 
+                 [class.bg-[#d9e2ff]]="generalSatisfaction.sat_phuhop === val"
+                 [class.border-[#00429d]]="generalSatisfaction.sat_phuhop === val"
+                 [class.text-[#00429d]]="generalSatisfaction.sat_phuhop === val"
+                 class="flex-1 md:w-12 h-10 flex items-center justify-center border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors text-gray-600 font-mono bg-white">
+            <input class="hidden" name="sat_phuhop" type="radio" [value]="val" (change)="setSatisfaction('sat_phuhop', val)" />
+            {{ val }}
+          </label>
+        </div>
+      </div>
+      
+      <!-- Criterion 4 -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900">Điều kiện làm việc và an toàn</p>
+        </div>
+        <div class="survey-radio-group flex gap-2 w-full md:w-auto">
+          <label *ngFor="let val of [1,2,3,4,5]" 
+                 [class.bg-[#d9e2ff]]="generalSatisfaction.sat_dk === val"
+                 [class.border-[#00429d]]="generalSatisfaction.sat_dk === val"
+                 [class.text-[#00429d]]="generalSatisfaction.sat_dk === val"
+                 class="flex-1 md:w-12 h-10 flex items-center justify-center border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors text-gray-600 font-mono bg-white">
+            <input class="hidden" name="sat_dk" type="radio" [value]="val" (change)="setSatisfaction('sat_dk', val)" />
+            {{ val }}
+          </label>
+        </div>
+      </div>
+      
+    </div>
+  </section>
+
+  <!-- Section 2: Self-Assessment of CLOs -->
+  <section class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+    <div class="p-6 border-b border-gray-200 flex items-center gap-2">
+      <span class="material-symbols-outlined text-blue-500">assignment_turned_in</span>
+      <h3 class="text-xl font-semibold text-gray-900">2. Tự đánh giá Chuẩn đầu ra (CLOs)</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse min-w-[800px]">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200">
+            <th class="p-4 text-sm font-medium text-gray-600 w-[30%] border-r border-gray-200">Chuẩn đầu ra (CLO)</th>
+            <th class="p-4 text-sm font-medium text-gray-600 text-center w-10 border-r border-gray-200">Mức 0</th>
+            <th class="p-4 text-sm font-medium text-gray-600 text-center w-10 border-r border-gray-200">Mức 1</th>
+            <th class="p-4 text-sm font-medium text-gray-600 text-center w-10 border-r border-gray-200">Mức 2</th>
+            <th class="p-4 text-sm font-medium text-gray-600 text-center w-10 border-r border-gray-200">Mức 3</th>
+            <th class="p-4 text-sm font-medium text-gray-600 text-center w-10 border-r border-gray-200">Mức 4</th>
+            <th class="p-4 text-sm font-medium text-gray-600 w-[40%]">Minh chứng (Mô tả công việc cụ thể)</th>
+          </tr>
+        </thead>
+        <tbody class="text-sm text-gray-900">
+          <tr *ngFor="let clo of closAssessment; let i = index" class="border-b border-gray-200 hover:bg-gray-50 transition-colors" [class.bg-gray-50]="i % 2 !== 0">
+            <td class="p-4 border-r border-gray-200 font-medium text-[#00429D]">{{ clo.title }}</td>
+            <td class="p-4 border-r border-gray-200 text-center" *ngFor="let level of [0,1,2,3,4]">
+              <input class="text-[#00429D] focus:ring-[#00429D] w-4 h-4 cursor-pointer" [name]="'clo_' + i" type="radio" [value]="level" (change)="setCloLevel(i, level)" />
+            </td>
+            <td class="p-4">
+              <textarea [(ngModel)]="clo.evidence" [name]="'evidence_' + i" class="w-full border-gray-300 rounded bg-white p-2 text-sm font-mono resize-y min-h-[60px] focus:ring-1 focus:ring-[#00429D] focus:border-[#00429D]" placeholder="Ghi chú minh chứng..."></textarea>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Section 3: Open Feedback -->
+  <section class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <div class="mb-4 border-b border-gray-200 pb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-blue-500">rate_review</span>
+      <h3 class="text-xl font-semibold text-gray-900">3. Ý kiến đóng góp</h3>
+    </div>
+    <div class="space-y-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-900 mb-2">Kỹ năng/kiến thức học được nhiều nhất</label>
+        <textarea [(ngModel)]="openFeedback.skillsLearned" name="skillsLearned" class="w-full border border-gray-300 rounded-lg bg-white p-3 text-sm resize-y min-h-[100px] focus:ring-1 focus:ring-[#00429D] focus:border-[#00429D]" placeholder="Chia sẻ những điều tâm đắc nhất bạn học được..."></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-900 mb-2">Khó khăn gặp phải</label>
+        <textarea [(ngModel)]="openFeedback.difficulties" name="difficulties" class="w-full border border-gray-300 rounded-lg bg-white p-3 text-sm resize-y min-h-[100px] focus:ring-1 focus:ring-[#00429D] focus:border-[#00429D]" placeholder="Mô tả các khó khăn trong quá trình thực tập..."></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-900 mb-2">Đề xuất cải tiến học phần</label>
+        <textarea [(ngModel)]="openFeedback.suggestions" name="suggestions" class="w-full border border-gray-300 rounded-lg bg-white p-3 text-sm resize-y min-h-[100px] focus:ring-1 focus:ring-[#00429D] focus:border-[#00429D]" placeholder="Ý kiến đóng góp để môn học tốt hơn..."></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- Actions -->
+  <div class="flex justify-end gap-4 pt-4 pb-12">
+    <button class="px-6 py-2 border border-gray-400 text-gray-600 rounded font-medium text-sm hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-gray-300 focus:outline-none" type="button">
+      Lưu nháp
+    </button>
+    <button [disabled]="!isFormValid()" class="px-6 py-2 bg-[#00429D] text-white rounded font-medium text-sm hover:bg-[#002d70] transition-colors shadow-sm focus:ring-2 focus:ring-[#00429D] focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
+      Gửi khảo sát
+    </button>
+  </div>
+</form>

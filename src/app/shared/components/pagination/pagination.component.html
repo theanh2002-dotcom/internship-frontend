@@ -1,0 +1,25 @@
+<div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-white">
+  <span class="font-label-md text-[13px] text-slate-500">
+    Hiển thị {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalItems) }} trên tổng số {{ totalItems }} đợt
+  </span>
+  <div class="flex items-center gap-1">
+    <button class="p-1 rounded text-slate-400 hover:bg-slate-100 disabled:opacity-50" 
+            [disabled]="currentPage === 1" 
+            (click)="onPageChange(currentPage - 1)">
+      <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+    </button>
+    
+    <button *ngFor="let page of pages" 
+            class="w-8 h-8 rounded font-label-md text-[13px] flex items-center justify-center transition-colors"
+            [ngClass]="page === currentPage ? 'bg-[#00429D] text-white' : 'text-slate-700 hover:bg-slate-100'"
+            (click)="onPageChange(page)">
+      {{ page }}
+    </button>
+    
+    <button class="p-1 rounded text-slate-400 hover:bg-slate-100 disabled:opacity-50"
+            [disabled]="currentPage === totalPages"
+            (click)="onPageChange(currentPage + 1)">
+      <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,157 @@
+<div class="mb-10">
+  <h2 class="text-2xl font-bold text-gray-900">Tổng quan hệ thống</h2>
+  <p class="text-sm text-gray-600 mt-1">Số liệu thống kê đợt thực tập Học kỳ I, Năm học 2023-2024</p>
+</div>
+
+<!-- Overview Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+  <!-- Total Students -->
+  <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng SV Thực tập</span>
+      <div class="p-2 rounded-md" [ngClass]="overviewStats.totalStudents.iconBg">
+        <span class="material-symbols-outlined text-xl" [ngClass]="overviewStats.totalStudents.iconColor">{{ overviewStats.totalStudents.icon }}</span>
+      </div>
+    </div>
+    <div>
+      <span class="text-2xl font-bold text-gray-900">{{ overviewStats.totalStudents.value }}</span>
+      <p class="text-xs font-mono text-green-700 mt-1 flex items-center">
+        <span class="material-symbols-outlined text-sm mr-1">trending_up</span> {{ overviewStats.totalStudents.trend }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Partners -->
+  <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">ĐVHD Đối tác</span>
+      <div class="p-2 rounded-md" [ngClass]="overviewStats.partners.iconBg">
+        <span class="material-symbols-outlined text-xl" [ngClass]="overviewStats.partners.iconColor">{{ overviewStats.partners.icon }}</span>
+      </div>
+    </div>
+    <div>
+      <span class="text-2xl font-bold text-gray-900">{{ overviewStats.partners.value }}</span>
+      <p class="text-xs font-mono text-green-700 mt-1 flex items-center">
+        <span class="material-symbols-outlined text-sm mr-1">trending_up</span> {{ overviewStats.partners.trend }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Reports -->
+  <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Báo cáo đã nộp</span>
+      <div class="p-2 rounded-md" [ngClass]="overviewStats.reports.iconBg">
+        <span class="material-symbols-outlined text-xl" [ngClass]="overviewStats.reports.iconColor">{{ overviewStats.reports.icon }}</span>
+      </div>
+    </div>
+    <div>
+      <span class="text-2xl font-bold text-gray-900">{{ overviewStats.reports.value }}</span>
+      <p class="text-xs font-mono text-gray-500 mt-1 flex items-center">
+        {{ overviewStats.reports.trend }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Avg Score -->
+  <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm TB toàn khóa</span>
+      <div class="p-2 rounded-md" [ngClass]="overviewStats.avgScore.iconBg">
+        <span class="material-symbols-outlined text-xl" [ngClass]="overviewStats.avgScore.iconColor">{{ overviewStats.avgScore.icon }}</span>
+      </div>
+    </div>
+    <div>
+      <span class="text-2xl font-bold text-gray-900">{{ overviewStats.avgScore.value }}</span>
+      <p class="text-xs font-mono text-gray-500 mt-1 flex items-center">
+        {{ overviewStats.avgScore.trend }}
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+  <!-- Bar Chart: Phân bổ điểm -->
+  <div class="lg:col-span-2 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-base font-semibold text-gray-900">Phân bổ điểm học phần</h3>
+      <button class="text-sm font-medium text-[#00429D] hover:underline">Xem chi tiết</button>
+    </div>
+    <div class="h-64 flex items-end justify-between space-x-2 pt-4 border-b border-l border-gray-200 pb-2 pl-2">
+      <div *ngFor="let bar of scoreDistribution" class="w-full flex flex-col items-center justify-end h-full">
+        <div class="w-8/12 rounded-t-sm relative group" [ngClass]="bar.bgClass" [style.height]="bar.height">
+          <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono hidden group-hover:block bg-white shadow-sm border border-gray-200 px-1 rounded">{{ bar.value }}</span>
+        </div>
+        <span class="text-xs font-mono text-gray-500 mt-2">{{ bar.label }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pie Chart: Tỷ lệ tiến độ -->
+  <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col">
+    <h3 class="text-base font-semibold text-gray-900 mb-6">Tiến độ thực tập</h3>
+    <div class="flex-1 flex flex-col items-center justify-center">
+      <div class="w-40 h-40 rounded-full mb-6 relative" style="background: conic-gradient(#00429D 0% 65%, #FB8C00 65% 90%, #ba1a1a 90% 100%);">
+        <div class="absolute inset-0 m-auto w-24 h-24 bg-white rounded-full flex items-center justify-center">
+          <span class="text-base font-semibold text-gray-900">1,245</span>
+        </div>
+      </div>
+      <div class="w-full space-y-3">
+        <div class="flex justify-between items-center text-sm">
+          <div class="flex items-center">
+            <span class="w-3 h-3 rounded-full bg-[#00429D] mr-2"></span>
+            <span class="text-gray-500">Đã hoàn thành</span>
+          </div>
+          <span class="font-medium text-gray-900">65%</span>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+          <div class="flex items-center">
+            <span class="w-3 h-3 rounded-full bg-[#FB8C00] mr-2"></span>
+            <span class="text-gray-500">Đang thực hiện</span>
+          </div>
+          <span class="font-medium text-gray-900">25%</span>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+          <div class="flex items-center">
+            <span class="w-3 h-3 rounded-full bg-[#ba1a1a] mr-2"></span>
+            <span class="text-gray-500">Đình chỉ/Trễ hạn</span>
+          </div>
+          <span class="font-medium text-gray-900">10%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+  <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+    <h3 class="text-base font-semibold text-gray-900">Hoạt động gần đây</h3>
+    <button class="flex items-center text-sm font-medium text-[#00429D] hover:bg-gray-100 px-3 py-1.5 rounded transition-colors border border-transparent hover:border-gray-200">
+      <span class="material-symbols-outlined text-sm mr-1">filter_list</span> Lọc
+    </button>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200 uppercase tracking-wider">
+          <th class="py-3 px-4 w-48">Thời gian</th>
+          <th class="py-3 px-4">Người thực hiện</th>
+          <th class="py-3 px-4">Hoạt động</th>
+          <th class="py-3 px-4 w-32">Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody class="text-sm text-gray-900">
+        <tr *ngFor="let activity of recentActivities" class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+          <td class="py-3 px-4 text-xs font-mono text-gray-500">{{ activity.time }}</td>
+          <td class="py-3 px-4 font-medium">{{ activity.user }} <span class="text-gray-500 font-normal text-sm block">{{ activity.subText }}</span></td>
+          <td class="py-3 px-4">{{ activity.action }}</td>
+          <td class="py-3 px-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" [ngClass]="activity.statusClass">{{ activity.status }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

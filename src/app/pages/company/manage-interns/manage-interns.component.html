@@ -1,0 +1,113 @@
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-900">Quản lý Thực tập sinh</h2>
+  <p class="text-sm text-gray-600 mt-1">Xác nhận Tiếp nhận (TTTN-01), Duyệt Kế hoạch (TTTN-02) và Xác nhận Tiến độ hàng tuần (TTTN-03).</p>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+  <table class="w-full text-left border-collapse">
+    <thead>
+      <tr class="bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200 uppercase tracking-wider">
+        <th class="py-3 px-4">Sinh viên</th>
+        <th class="py-3 px-4">Tuần hiện tại</th>
+        <th class="py-3 px-4">Tiếp nhận (TTTN-01)</th>
+        <th class="py-3 px-4">Kế hoạch (TTTN-02)</th>
+        <th class="py-3 px-4">Nhật ký (TTTN-03)</th>
+        <th class="py-3 px-4 text-center">Hành động</th>
+      </tr>
+    </thead>
+    <tbody class="text-sm text-gray-900">
+      <tr *ngFor="let intern of interns" class="border-b border-gray-200 hover:bg-gray-50">
+        <td class="py-3 px-4">
+          <div class="font-medium text-gray-900">{{ intern.studentName }}</div>
+          <div class="text-gray-500 font-mono text-xs">{{ intern.studentId }} - {{ intern.university }}</div>
+        </td>
+        <td class="py-3 px-4 font-medium">{{ intern.currentWeek }}</td>
+        <td class="py-3 px-4">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+            [ngClass]="{
+              'bg-yellow-100 text-yellow-800': intern.declarationStatus === 'Chờ tiếp nhận',
+              'bg-green-100 text-green-800': intern.declarationStatus === 'Đã tiếp nhận'
+            }">
+            {{ intern.declarationStatus }}
+          </span>
+        </td>
+        <td class="py-3 px-4">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+            [ngClass]="{
+              'bg-yellow-100 text-yellow-800': intern.planStatus === 'Chờ duyệt',
+              'bg-green-100 text-green-800': intern.planStatus === 'Đã duyệt',
+              'bg-gray-100 text-gray-800': intern.planStatus === 'Chưa có dữ liệu'
+            }">
+            {{ intern.planStatus }}
+          </span>
+        </td>
+        <td class="py-3 px-4">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+            [ngClass]="{
+              'bg-yellow-100 text-yellow-800': intern.logStatus.includes('Chờ xác nhận'),
+              'bg-green-100 text-green-800': intern.logStatus === 'Đã xác nhận',
+              'bg-gray-100 text-gray-800': intern.logStatus === 'Chưa có dữ liệu'
+            }">
+            {{ intern.logStatus }}
+          </span>
+        </td>
+        <td class="py-3 px-4 text-center flex flex-col gap-2 items-center">
+          <button *ngIf="intern.declarationStatus === 'Chờ tiếp nhận'" (click)="openAction(intern, 'DECLARATION')" class="text-[#00429D] hover:underline font-medium text-sm">
+            Xác nhận Tiếp nhận
+          </button>
+          <button *ngIf="intern.planStatus === 'Chờ duyệt'" (click)="openAction(intern, 'PLAN')" class="text-blue-600 hover:underline font-medium text-sm">
+            Duyệt Kế hoạch
+          </button>
+          <button *ngIf="intern.logStatus.includes('Chờ xác nhận')" (click)="openAction(intern, 'LOG')" class="text-green-600 hover:underline font-medium text-sm">
+            Xác nhận Nhật ký
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="text-lg font-bold text-gray-900">
+        {{ actionType === 'PLAN' ? 'Phê duyệt Kế hoạch TTTN' : (actionType === 'LOG' ? 'Xác nhận Tiến độ Tuần' : 'Xác nhận Tiếp nhận Thực tập sinh') }}
+      </h3>
+      <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    
+    <div class="p-6">
+      <p class="mb-4 text-gray-700">Sinh viên: <strong>{{ selectedIntern?.studentName }}</strong> ({{ selectedIntern?.studentId }})</p>
+      
+      <div *ngIf="actionType === 'DECLARATION'" class="bg-gray-50 p-4 rounded border border-gray-200">
+        <p class="text-sm text-gray-600">Bằng việc bấm xác nhận, đơn vị đồng ý tiếp nhận sinh viên này vào thực tập theo <strong>Hình thức Thực tập Doanh nghiệp</strong>. Sinh viên sẽ được phân công cho người hướng dẫn trực tiếp theo thông tin đã kê khai.</p>
+      </div>
+
+      <div *ngIf="actionType === 'PLAN'" class="bg-gray-50 p-4 rounded border border-gray-200">
+        <h4 class="font-medium text-sm mb-2">Mục tiêu Thực tập:</h4>
+        <p class="text-sm text-gray-600">Nắm vững quy trình phát triển phần mềm Agile/Scrum. Học hỏi kinh nghiệm thực tế về Frontend (Angular).</p>
+      </div>
+
+      <div *ngIf="actionType === 'LOG'" class="bg-gray-50 p-4 rounded border border-gray-200">
+        <h4 class="font-medium text-sm mb-2">Báo cáo {{ selectedIntern?.currentWeek }}:</h4>
+        <p class="text-sm text-gray-600 mb-2">Đã hoàn thành thiết kế giao diện đăng nhập và kết nối API thành công. Bắt đầu tìm hiểu về State Management.</p>
+        <p class="text-sm font-medium text-green-700">Mức độ hoàn thành: 100%</p>
+      </div>
+
+      <div *ngIf="actionType !== 'DECLARATION'" class="mt-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Nhận xét của Cán bộ Hướng dẫn (Bắt buộc đối với xác nhận tuần)</label>
+        <textarea rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-[#00429D] focus:border-[#00429D] sm:text-sm" placeholder="Nhập nhận xét đánh giá chất lượng công việc..."></textarea>
+      </div>
+    </div>
+    
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+      <button (click)="closeModal()" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Hủy</button>
+      <button (click)="approve()" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+        {{ actionType === 'PLAN' ? 'Phê duyệt Kế hoạch' : (actionType === 'LOG' ? 'Xác nhận Tiến độ' : 'Đồng ý Tiếp nhận') }}
+      </button>
+    </div>
+  </div>
+</div>

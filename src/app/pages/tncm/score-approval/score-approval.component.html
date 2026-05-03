@@ -1,0 +1,111 @@
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-900">Phê duyệt Bảng điểm (TTTN-07)</h2>
+  <p class="text-sm text-gray-600 mt-1">Dành cho Trưởng nhóm chuyên môn xem xét và chốt điểm Thực tập.</p>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+  <table class="w-full text-left border-collapse">
+    <thead>
+      <tr class="bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200 uppercase tracking-wider">
+        <th class="py-3 px-4">Giảng viên nộp</th>
+        <th class="py-3 px-4">Nhóm thực tập</th>
+        <th class="py-3 px-4">Số SV</th>
+        <th class="py-3 px-4">Ngày nộp</th>
+        <th class="py-3 px-4">Trạng thái</th>
+        <th class="py-3 px-4 text-center">Hành động</th>
+      </tr>
+    </thead>
+    <tbody class="text-sm text-gray-900">
+      <tr *ngFor="let sheet of scoreSheets" class="border-b border-gray-200 hover:bg-gray-50">
+        <td class="py-3 px-4 font-medium">{{ sheet.teacherName }}</td>
+        <td class="py-3 px-4 text-gray-600">{{ sheet.groupName }}</td>
+        <td class="py-3 px-4">{{ sheet.studentCount }}</td>
+        <td class="py-3 px-4 text-gray-500 font-mono">{{ sheet.dateSubmitted }}</td>
+        <td class="py-3 px-4">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+            [ngClass]="{
+              'bg-yellow-100 text-yellow-800': sheet.status === 'Chờ phê duyệt',
+              'bg-green-100 text-green-800': sheet.status === 'Đã phê duyệt'
+            }">
+            {{ sheet.status }}
+          </span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <button (click)="openSheet(sheet)" class="text-[#00429D] hover:underline font-medium text-sm">
+            Xem chi tiết
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="text-lg font-bold text-gray-900">Chi tiết Bảng điểm: {{ selectedSheet?.groupName }}</h3>
+      <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    
+    <div class="p-6">
+      <div class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded mb-6 flex items-start">
+        <span class="material-symbols-outlined mr-2">info</span>
+        <div>
+          <p class="font-medium text-sm">Bảng điểm đã được tính toán tự động dựa trên:</p>
+          <ul class="list-disc pl-5 text-sm mt-1">
+            <li>Chặng 1 (30%): Trung bình cộng điểm GVHD và ĐVHD (theo trọng số CĐR).</li>
+            <li>Chặng 2 (70%): Điểm đánh giá từ Hội đồng chấm thi.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto border border-gray-200 rounded">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead class="bg-gray-100 font-medium border-b border-gray-200">
+            <tr>
+              <th class="p-2 border-r">MSSV</th>
+              <th class="p-2 border-r">Họ và Tên</th>
+              <th class="p-2 text-center border-r">Chặng 1 (30%)</th>
+              <th class="p-2 text-center border-r">Chặng 2 (70%)</th>
+              <th class="p-2 text-center border-r font-bold text-[#00429D]">Tổng kết (Hệ 10)</th>
+              <th class="p-2 text-center">Điểm chữ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b">
+              <td class="p-2 border-r font-mono text-xs">1234567</td>
+              <td class="p-2 border-r font-medium">Nguyễn Văn A</td>
+              <td class="p-2 text-center border-r">8.5</td>
+              <td class="p-2 text-center border-r">9.0</td>
+              <td class="p-2 text-center border-r font-bold">8.9</td>
+              <td class="p-2 text-center text-green-700 font-bold">A</td>
+            </tr>
+            <tr class="border-b bg-gray-50">
+              <td class="p-2 border-r font-mono text-xs">7654321</td>
+              <td class="p-2 border-r font-medium">Phạm Thị B</td>
+              <td class="p-2 text-center border-r">7.0</td>
+              <td class="p-2 text-center border-r">7.5</td>
+              <td class="p-2 text-center border-r font-bold">7.4</td>
+              <td class="p-2 text-center text-blue-700 font-bold">B</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+      <button class="flex items-center text-gray-700 font-medium text-sm hover:text-[#00429D]">
+        <span class="material-symbols-outlined text-[20px] mr-1">print</span> Xuất Bảng Điểm (PDF)
+      </button>
+      <div class="flex gap-3">
+        <button (click)="closeModal()" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Đóng</button>
+        <button *ngIf="selectedSheet?.status === 'Chờ phê duyệt'" (click)="approve()" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#00429D] hover:bg-blue-800">
+          Chốt Bảng Điểm
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

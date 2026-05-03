@@ -1,0 +1,98 @@
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-900">Yêu cầu Cần phê duyệt</h2>
+  <p class="text-sm text-gray-600 mt-1">Danh sách các biểu mẫu TTTN-01 và TTTN-02 do sinh viên nộp.</p>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+  <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+    <div class="flex space-x-2">
+      <button class="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-50">Tất cả</button>
+      <button class="px-4 py-2 text-sm font-medium bg-blue-50 border border-blue-200 rounded text-blue-700">Chờ duyệt</button>
+      <button class="px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-50">Đã duyệt</button>
+    </div>
+  </div>
+  
+  <table class="w-full text-left border-collapse">
+    <thead>
+      <tr class="bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200 uppercase tracking-wider">
+        <th class="py-3 px-4">Sinh viên</th>
+        <th class="py-3 px-4">Loại Yêu Cầu</th>
+        <th class="py-3 px-4">Chi tiết (ĐVHD)</th>
+        <th class="py-3 px-4">Ngày nộp</th>
+        <th class="py-3 px-4">Trạng thái</th>
+        <th class="py-3 px-4 text-center">Hành động</th>
+      </tr>
+    </thead>
+    <tbody class="text-sm text-gray-900">
+      <tr *ngFor="let req of requests" class="border-b border-gray-200 hover:bg-gray-50">
+        <td class="py-3 px-4">
+          <div class="font-medium text-gray-900">{{ req.studentName }}</div>
+          <div class="text-gray-500 font-mono text-xs">{{ req.studentId }}</div>
+        </td>
+        <td class="py-3 px-4 font-medium">{{ req.type }}</td>
+        <td class="py-3 px-4 text-gray-600">{{ req.company }}</td>
+        <td class="py-3 px-4 text-gray-500 font-mono">{{ req.dateSubmitted }}</td>
+        <td class="py-3 px-4">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+            [ngClass]="{
+              'bg-yellow-100 text-yellow-800': req.status === 'Chờ duyệt',
+              'bg-green-100 text-green-800': req.status === 'Đã duyệt',
+              'bg-red-100 text-red-800': req.status === 'Từ chối'
+            }">
+            {{ req.status }}
+          </span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <button (click)="openRequest(req)" class="text-[#00429D] hover:underline font-medium text-sm">
+            Xem & Duyệt
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal Duyệt -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="text-lg font-bold text-gray-900">Chi tiết Yêu cầu: {{ selectedRequest?.type }}</h3>
+      <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    
+    <div class="p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Sinh viên</label>
+          <div class="text-sm text-gray-900">{{ selectedRequest?.studentName }} ({{ selectedRequest?.studentId }})</div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Ngày nộp</label>
+          <div class="text-sm text-gray-900">{{ selectedRequest?.dateSubmitted }}</div>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Đơn vị Hướng dẫn đề xuất</label>
+          <div class="text-sm text-gray-900 p-3 bg-gray-50 rounded border border-gray-200">
+            {{ selectedRequest?.company }}
+            <div class="mt-2 text-xs text-gray-500">Mô tả công việc: Tham gia phát triển hệ thống web bằng Angular & Spring Boot.</div>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="selectedRequest?.status === 'Chờ duyệt'" class="pt-4 border-t border-gray-200">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Nhận xét của GVHD (Tùy chọn)</label>
+        <textarea rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-[#00429D] focus:border-[#00429D] sm:text-sm" placeholder="Nhập lý do từ chối hoặc nhận xét..."></textarea>
+      </div>
+    </div>
+    
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+      <button (click)="closeModal()" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Đóng</button>
+      <ng-container *ngIf="selectedRequest?.status === 'Chờ duyệt'">
+        <button (click)="reject()" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">Từ chối</button>
+        <button (click)="approve()" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">Phê duyệt</button>
+      </ng-container>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,113 @@
+<div class="max-w-5xl mx-auto space-y-10">
+    <!-- Page Header -->
+    <div class="flex flex-col gap-2">
+        <h2 class="text-2xl font-bold text-slate-900">Nộp Báo cáo Tổng kết - TTTN-06</h2>
+        <p class="text-base text-slate-600">Hoàn thành và tải lên báo cáo thực tập cuối kỳ của bạn theo đúng định dạng yêu cầu.</p>
+    </div>
+    <!-- Bento Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Upload Area (Takes up 2 columns on lg) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Drag & Drop Zone -->
+            <div class="bg-white rounded-xl border border-slate-200 p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors border-dashed border-2 cursor-pointer min-h-[300px]">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-[#00429D]">
+                    <span class="material-symbols-outlined text-[32px]">cloud_upload</span>
+                </div>
+                <h3 class="text-base font-semibold text-slate-900 mb-2">Kéo thả tệp vào đây hoặc nhấn để tải lên</h3>
+                <p class="text-sm text-slate-500 mb-4">Hỗ trợ các định dạng: PDF, DOCX, ZIP (Tối đa 50MB)</p>
+                <button class="bg-[#00429D] text-white px-4 py-2 rounded text-sm font-medium transition-colors hover:bg-blue-800">
+                    Chọn Tệp
+                </button>
+            </div>
+            <!-- Upload Progress (Simulated Active Upload) -->
+            <div *ngIf="uploadingFile.isUploading" class="bg-white rounded border border-slate-200 p-4 space-y-4">
+                <h4 class="text-base font-semibold text-slate-900 border-b border-slate-200 pb-2">Đang tải lên</h4>
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-red-100 text-red-800 rounded flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined">picture_as_pdf</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-sm font-medium text-slate-900 truncate">{{ uploadingFile.name }}</p>
+                            <p class="text-sm text-slate-500">{{ uploadingFile.progress }}%</p>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-[#00429D] h-1.5 rounded-full" [style.width.%]="uploadingFile.progress"></div>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <p class="text-sm text-slate-500">{{ uploadingFile.sizeUploaded }} / {{ uploadingFile.totalSize }}</p>
+                            <p class="text-sm text-slate-500">Còn {{ uploadingFile.timeRemaining }}</p>
+                        </div>
+                    </div>
+                    <button class="text-slate-400 hover:text-red-600 transition-colors shrink-0 p-1" (click)="uploadingFile.isUploading = false">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Attached Files List -->
+            <div *ngIf="attachedFiles.length > 0" class="bg-white rounded border border-slate-200 p-4 space-y-4">
+                <h4 class="text-base font-semibold text-slate-900 border-b border-slate-200 pb-2">Tệp minh chứng đã đính kèm</h4>
+                <div class="flex flex-col gap-2">
+                    <div *ngFor="let file of attachedFiles" class="flex items-center justify-between p-3 rounded bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="material-symbols-outlined text-[#00429D]" *ngIf="file.type === 'doc'">description</span>
+                            <span class="material-symbols-outlined text-orange-500" *ngIf="file.type === 'zip'">folder_zip</span>
+                            <div class="truncate">
+                                <p class="text-sm font-medium text-slate-900 truncate">{{ file.name }}</p>
+                                <p class="text-sm text-slate-500">{{ file.size }} • Tải lên lúc {{ file.uploadTime }}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="text-slate-400 hover:text-[#00429D] transition-colors p-1" title="Tải xuống">
+                                <span class="material-symbols-outlined text-[20px]">download</span>
+                            </button>
+                            <button class="text-slate-400 hover:text-red-600 transition-colors p-1" title="Xóa">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Right Column: Instructions & Actions -->
+        <div class="flex flex-col gap-6">
+            <!-- Instructions Card -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-sm">
+                <div class="flex items-center gap-2 text-[#00429D] mb-2">
+                    <span class="material-symbols-outlined">info</span>
+                    <h3 class="text-base font-semibold">Hướng dẫn Mẫu TTTN-06</h3>
+                </div>
+                <ul class="space-y-3 text-sm text-slate-600 list-disc list-inside">
+                    <li>Báo cáo phải tuân thủ nghiêm ngặt định dạng quy định tại <a class="text-[#00429D] underline" href="#">Quyết định 123/QĐ-ĐHXD</a>.</li>
+                    <li>Trang bìa cần có đầy đủ chữ ký của Sinh viên và Giảng viên hướng dẫn.</li>
+                    <li>Phần nội dung chính không vượt quá 50 trang (không tính phụ lục).</li>
+                    <li>Định dạng file yêu cầu: <strong>.PDF</strong> cho báo cáo chính, <strong>.ZIP</strong> cho mã nguồn/tài liệu đính kèm.</li>
+                </ul>
+                <div class="mt-4 p-3 bg-slate-50 rounded border border-slate-200 flex items-start gap-2">
+                    <span class="material-symbols-outlined text-orange-500 text-[20px] mt-0.5">warning</span>
+                    <p class="text-sm font-medium text-slate-600">Hạn cuối nộp bài: <strong>23:59, 15/10/2023</strong>. Hệ thống sẽ tự động khóa sau thời gian này.</p>
+                </div>
+            </div>
+            <!-- Action Card -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-6 shadow-sm sticky top-24">
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900 mb-2">Xác nhận nộp bài</h3>
+                    <p class="text-sm text-slate-500">Vui lòng kiểm tra kỹ các tệp đã tải lên trước khi hoàn tất.</p>
+                </div>
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input class="mt-1 rounded border-slate-300 text-[#00429D] focus:ring-[#00429D]" type="checkbox" [(ngModel)]="isAgreed"/>
+                    <span class="text-sm text-slate-600">Tôi cam đoan báo cáo này là sản phẩm do tôi tự thực hiện, không sao chép trái phép.</span>
+                </label>
+                <div class="pt-4 border-t border-slate-200 flex flex-col gap-3">
+                    <button class="w-full bg-[#00429D] text-white py-3 rounded-lg text-base font-semibold transition-colors hover:bg-blue-800 flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="!isAgreed">
+                        <span class="material-symbols-outlined">send</span>
+                        Nộp báo cáo và Hoàn thành
+                    </button>
+                    <button class="w-full bg-white text-[#00429D] py-2 rounded-lg text-sm font-medium border border-[#00429D] transition-colors hover:bg-blue-50">
+                        Lưu nháp
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

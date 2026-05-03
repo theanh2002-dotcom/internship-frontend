@@ -1,0 +1,111 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div>
+    <h2 class="text-2xl font-bold text-gray-900">Kê khai Đơn vị Thực tập (TTTN-01)</h2>
+    <p class="text-sm text-gray-600 mt-1">Vui lòng điền đầy đủ và chính xác thông tin để GVHD và ĐVHD xác nhận.</p>
+  </div>
+
+  <!-- Status Banner -->
+  <div *ngIf="declaration.status === 'PENDING_TEACHER'" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3 shadow-sm">
+    <span class="material-symbols-outlined text-yellow-600 mt-0.5">pending_actions</span>
+    <div>
+      <h4 class="font-bold text-yellow-800">Trạng thái: Chờ GVHD phê duyệt</h4>
+      <p class="text-yellow-700 text-sm mt-1">Hệ thống đã gửi thông tin đến GVHD. Bạn vui lòng chờ GVHD duyệt tính phù hợp của đơn vị này.</p>
+    </div>
+  </div>
+
+  <div *ngIf="declaration.status === 'PENDING_COMPANY'" class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3 shadow-sm">
+    <span class="material-symbols-outlined text-blue-600 mt-0.5">forward_to_inbox</span>
+    <div>
+      <h4 class="font-bold text-blue-800">Trạng thái: Chờ Đơn vị (ĐVHD) xác nhận</h4>
+      <p class="text-blue-700 text-sm mt-1">GVHD đã duyệt. Hệ thống đã gửi email đến ĐVHD để họ xác nhận tiếp nhận bạn.</p>
+    </div>
+  </div>
+
+  <div *ngIf="declaration.status === 'APPROVED'" class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3 shadow-sm">
+    <span class="material-symbols-outlined text-green-600 mt-0.5">check_circle</span>
+    <div>
+      <h4 class="font-bold text-green-800">Trạng thái: Hoàn tất phê duyệt</h4>
+      <p class="text-green-700 text-sm mt-1">ĐVHD đã xác nhận tiếp nhận. Bạn có thể bắt đầu đi thực tập và tiến hành Lập Kế Hoạch (TTTN-02).</p>
+    </div>
+  </div>
+
+  <!-- Form Body -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" *ngIf="declaration.status === 'DRAFT'">
+    <div class="p-6 space-y-6">
+      
+      <!-- Hình thức thực tập -->
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700">Hình thức thực tập (Theo Điều 4 - QĐ207) <span class="text-red-500">*</span></label>
+        <select [(ngModel)]="declaration.internshipType" class="w-full border-gray-300 rounded-md shadow-sm focus:border-[#00429D] focus:ring-[#00429D] sm:text-sm">
+          <option *ngFor="let type of internshipTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+
+      <hr class="border-gray-200">
+
+      <h3 class="text-lg font-medium text-gray-900 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#00429D]">domain</span>
+        Thông tin Đơn vị
+      </h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700">{{ isInternalOrResearch() ? 'Tên Khoa/Viện/Phòng thí nghiệm' : 'Tên Doanh nghiệp / Tổ chức' }} <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="declaration.companyName" class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-[#00429D] focus:ring-[#00429D] sm:text-sm">
+        </div>
+        
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700">Địa chỉ <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="declaration.companyAddress" class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-[#00429D] focus:ring-[#00429D] sm:text-sm">
+        </div>
+
+        <div *ngIf="!isInternalOrResearch()">
+          <label class="block text-sm font-medium text-gray-700">Mã số thuế</label>
+          <input type="text" [(ngModel)]="declaration.companyTaxCode" class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-[#00429D] focus:ring-[#00429D] sm:text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Lĩnh vực hoạt động / Đề tài nghiên cứu <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="declaration.companyField" class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-[#00429D] focus:ring-[#00429D] sm:text-sm">
+        </div>
+      </div>
+
+      <hr class="border-gray-200">
+
+      <h3 class="text-lg font-medium text-gray-900 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#00429D]">person</span>
+        Người Hướng dẫn trực tiếp
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Họ và tên <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="declaration.mentorName" class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-[#00429D] focus:ring-[#00429D] sm:text-sm">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Chức vụ / Học hàm, học vị <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="declaration.mentorRole" class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-[#00429D] focus:ring-[#00429D] sm:text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Số điện thoại <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="declaration.mentorPhone" class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-[#00429D] focus:ring-[#00429D] sm:text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+          <input type="email" [(ngModel)]="declaration.mentorEmail" class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-[#00429D] focus:ring-[#00429D] sm:text-sm">
+        </div>
+      </div>
+
+    </div>
+    
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+      <button (click)="submitForm()" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#00429D] hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00429D]">
+        Gửi yêu cầu phê duyệt
+      </button>
+    </div>
+  </div>
+</div>

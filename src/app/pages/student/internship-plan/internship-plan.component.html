@@ -1,0 +1,68 @@
+<!-- Page Header & Status -->
+<div class="flex justify-between items-start mb-10">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">Lập Kế hoạch Thực tập - TTTN-02</h2>
+        <p class="text-sm text-slate-600">Sinh viên điền dự kiến nhiệm vụ thực tập cho 8 tuần.</p>
+    </div>
+    <div class="flex flex-col items-end gap-2">
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 border border-yellow-200 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+            <span class="text-xs font-medium text-yellow-700">{{ status.label }}</span>
+        </div>
+        <p class="text-xs text-slate-500 font-medium">{{ status.message }}</p>
+    </div>
+</div>
+
+<!-- Form/Table Area -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+    <!-- Table Header -->
+    <div class="grid grid-cols-12 gap-4 p-4 border-b border-slate-200 bg-slate-50 font-semibold text-sm text-slate-800">
+        <div class="col-span-1">Tuần</div>
+        <div class="col-span-3">Tên công việc / Nhiệm vụ</div>
+        <div class="col-span-3">Kết quả mong đợi</div>
+        <div class="col-span-3">Minh chứng dự kiến</div>
+        <div class="col-span-2 text-center">Ánh xạ CLOs (1-7)</div>
+    </div>
+
+    <!-- Weeks List using ngFor -->
+    <div *ngFor="let week of weeks; let odd = odd" 
+         class="grid grid-cols-12 gap-4 p-4 border-b border-slate-200 items-start"
+         [ngClass]="{'bg-white': !odd, 'bg-slate-50/50': odd}">
+        
+        <div class="col-span-1 font-medium text-sm pt-2">Tuần {{ week.weekNumber }}</div>
+        <div class="col-span-3">
+            <textarea class="w-full text-sm border-slate-300 rounded focus:ring-blue-600 focus:border-blue-600" 
+                      placeholder="Nội dung dự kiến tuần {{ week.weekNumber }}..." rows="3" [(ngModel)]="week.tasks"></textarea>
+        </div>
+        <div class="col-span-3">
+            <textarea class="w-full text-sm border-slate-300 rounded focus:ring-blue-600 focus:border-blue-600" 
+                      placeholder="Kết quả tuần {{ week.weekNumber }}..." rows="3" [(ngModel)]="week.expectedResults"></textarea>
+        </div>
+        <div class="col-span-3">
+            <textarea class="w-full text-sm border-slate-300 rounded focus:ring-blue-600 focus:border-blue-600" 
+                      placeholder="Minh chứng tuần {{ week.weekNumber }}..." rows="3" [(ngModel)]="week.evidences"></textarea>
+        </div>
+        <div class="col-span-2">
+            <div class="grid grid-cols-4 gap-2 pt-1">
+                <label *ngFor="let clo of availableClos" class="flex items-center gap-1 cursor-pointer">
+                    <input class="text-blue-700 border-slate-400 rounded-sm" 
+                           type="checkbox"
+                           [checked]="hasClo(week, clo)"
+                           (change)="toggleClo(week, clo)"/>
+                    <span class="text-xs">{{ clo }}</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action row -->
+    <div class="p-4 bg-white flex justify-end gap-4 border-t border-slate-200">
+        <button class="px-6 py-2 border border-slate-300 text-slate-700 rounded text-sm font-medium hover:bg-slate-50 transition-colors">
+            Lưu nháp
+        </button>
+        <button class="px-6 py-2 bg-[#00429D] text-white rounded text-sm font-medium hover:bg-blue-800 transition-colors flex items-center gap-2 shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">send</span>
+            Gửi phê duyệt
+        </button>
+    </div>
+</div>

@@ -1,0 +1,29 @@
+<aside class="w-64 h-screen border-r border-slate-200 dark:border-slate-800 fixed left-0 top-0 bg-white dark:bg-slate-950 flex flex-col h-full py-4 z-50">
+<!-- Header -->
+<div class="px-6 mb-8 flex flex-col gap-1">
+<h1 class="font-bold text-[#00429D] dark:text-blue-200 tracking-tight font-headline-lg text-headline-lg">HUCE CMS</h1>
+<span class="text-slate-500 font-label-md text-label-md">{{ roleName }}</span>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 overflow-y-auto px-3 space-y-1 font-['Public_Sans'] text-sm antialiased">
+<a *ngFor="let item of menuItems" 
+   [routerLink]="item.route" 
+   [routerLinkActive]="'text-[#00429D] dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 font-bold border-r-4 border-[#00429D] opacity-90'" 
+   [routerLinkActiveOptions]="{exact: item.exact || false}"
+   class="flex items-center gap-3 px-3 py-2.5 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out">
+<span class="material-symbols-outlined text-[20px]">{{item.icon}}</span>
+<span>{{item.title}}</span>
+</a>
+</nav>
+<!-- Footer Links -->
+<div class="mt-auto px-3 border-t border-slate-200 dark:border-slate-800 pt-4 space-y-1 font-['Public_Sans'] text-sm antialiased">
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span>Cài đặt hệ thống</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span>Trợ giúp</span>
+</a>
+</div>
+</aside>
