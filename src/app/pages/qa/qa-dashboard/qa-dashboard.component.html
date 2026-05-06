@@ -1,0 +1,155 @@
+<div class="max-w-7xl mx-auto space-y-6 pb-10">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900">Bảng điều khiển Khảo thí & ĐBCL (QA)</h2>
+      <p class="text-slate-600 mt-1">Hệ thống phân tích mức độ đạt chuẩn đầu ra theo chuẩn AUN-QA &bull; {{ semester }}</p>
+    </div>
+    <div class="text-right">
+      <button class="inline-flex items-center gap-2 bg-[#00429D] text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-800 transition-colors cursor-pointer">
+        <span class="material-symbols-outlined text-[20px]">download</span>
+        Xuất Báo cáo Tự đánh giá
+      </button>
+    </div>
+  </div>
+
+  <!-- Thống kê vĩ mô -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="absolute -right-4 -top-4 text-slate-100">
+        <span class="material-symbols-outlined text-[100px]">fact_check</span>
+      </div>
+      <div class="relative z-10">
+        <p class="text-slate-500 text-sm font-medium mb-2">Sinh viên đã đánh giá</p>
+        <p class="text-3xl font-black text-slate-800">{{ stats.totalEvaluated }}</p>
+      </div>
+    </div>
+    
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="absolute -right-4 -top-4 text-emerald-50">
+        <span class="material-symbols-outlined text-[100px]">verified</span>
+      </div>
+      <div class="relative z-10">
+        <p class="text-slate-500 text-sm font-medium mb-2">Tỷ lệ đạt chuẩn chung</p>
+        <p class="text-3xl font-black text-emerald-600">{{ stats.overallPassRate }}%</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="absolute -right-4 -top-4 text-blue-50">
+        <span class="material-symbols-outlined text-[100px]">stars</span>
+      </div>
+      <div class="relative z-10">
+        <p class="text-slate-500 text-sm font-medium mb-2">Điểm AUN-QA Benchmark</p>
+        <p class="text-3xl font-black text-blue-600">{{ stats.aunQaScore }} <span class="text-lg font-normal text-slate-400">/10</span></p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+      <div class="absolute -right-4 -top-4 text-red-50">
+        <span class="material-symbols-outlined text-[100px]">report_problem</span>
+      </div>
+      <div class="relative z-10">
+        <p class="text-slate-500 text-sm font-medium mb-2">Hành động CAPA đang mở</p>
+        <p class="text-3xl font-black text-red-600">{{ stats.activeCapas }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- Cột trái: Phân tích CLO (Chart) -->
+    <div class="xl:col-span-2 space-y-6">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#00429D]">bar_chart</span>
+            Phân tích mức độ đạt Chuẩn đầu ra (CLO1 - CLO7)
+          </h3>
+          <select class="bg-white border border-slate-300 text-slate-700 text-sm rounded px-3 py-1.5 focus:ring-[#00429D] focus:border-[#00429D] outline-none">
+            <option>Tất cả các Khoa</option>
+            <option>Khoa Công nghệ Thông tin</option>
+            <option>Khoa Xây dựng Dân dụng</option>
+          </select>
+        </div>
+
+        <div class="space-y-5">
+          <!-- Custom Bar Chart using Tailwind -->
+          <div *ngFor="let clo of clos" class="group">
+            <div class="flex justify-between items-end mb-1">
+              <span class="text-sm font-bold text-slate-700 group-hover:text-[#00429D] transition-colors cursor-default" title="{{ clo.name }}">{{ clo.id }}: <span class="font-medium text-slate-500 truncate inline-block max-w-[200px] sm:max-w-xs align-bottom">{{ clo.name }}</span></span>
+              <span class="text-sm font-bold text-slate-900">{{ clo.avgScore }} / 10 <span class="text-xs font-normal text-slate-500 ml-2">({{ clo.passRate }}% đạt)</span></span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden flex relative">
+              <!-- Threshold markers -->
+              <div class="absolute h-full w-px bg-slate-300 left-[40%] z-0" title="Mức 1 (4.0)"></div>
+              <div class="absolute h-full w-px bg-slate-300 left-[55%] z-0" title="Mức 2 (5.5)"></div>
+              <div class="absolute h-full w-px bg-slate-300 left-[70%] z-0" title="Mức 3 (7.0)"></div>
+              <div class="absolute h-full w-px bg-slate-300 left-[85%] z-0" title="Mức 4 (8.5)"></div>
+              
+              <!-- Actual Bar -->
+              <div class="h-3 rounded-full relative z-10 transition-all duration-1000 shadow-inner" 
+                   [ngClass]="clo.color" 
+                   [style.width]="getBarWidth(clo.avgScore)">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-6 pt-4 border-t border-slate-100 flex gap-6 text-xs text-slate-500 justify-center">
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Điểm Tốt (>8.0)</div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500"></span> Khá (7.0 - 8.0)</div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Cảnh báo (<7.0)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột phải: Rủi ro & CAPA -->
+    <div class="space-y-6">
+      
+      <!-- Box Quản lý CAPA -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-red-50 px-5 py-4 border-b border-red-100 flex justify-between items-center">
+          <h3 class="text-base font-bold text-red-800 flex items-center gap-2">
+            <span class="material-symbols-outlined">report_problem</span>
+            Rủi ro chất lượng & CAPA
+          </h3>
+          <span class="bg-red-200 text-red-800 text-xs font-bold px-2 py-0.5 rounded-full">{{ capaAlerts.length }}</span>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <div *ngFor="let capa of capaAlerts" class="p-4 hover:bg-slate-50 transition-colors">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-bold font-mono text-slate-500">{{ capa.id }}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                    [ngClass]="{'bg-red-100 text-red-700': capa.level === 'Cao', 'bg-amber-100 text-amber-700': capa.level === 'Trung bình'}">
+                Rủi ro: {{ capa.level }}
+              </span>
+            </div>
+            <p class="text-sm font-medium text-slate-800 mb-2 leading-relaxed">{{ capa.issue }}</p>
+            <div class="bg-slate-100 p-2 rounded text-xs text-slate-600 flex justify-between items-center">
+              <span>Hành động: <span class="font-bold text-slate-700">{{ capa.action }}</span></span>
+              <span class="text-[#00429D] font-bold">{{ capa.status }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 text-center">
+          <button class="text-sm font-medium text-[#00429D] hover:underline transition-colors flex items-center justify-center gap-1 mx-auto">
+            <span class="material-symbols-outlined text-[16px]">add</span> Mở CAPA mới
+          </button>
+        </div>
+      </div>
+
+      <!-- Khuyến nghị từ Hệ thống -->
+      <div class="bg-gradient-to-br from-blue-900 to-slate-800 rounded-xl shadow-sm p-6 text-white relative overflow-hidden">
+        <span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] text-white/10">tips_and_updates</span>
+        <h3 class="text-base font-bold mb-3 flex items-center gap-2 relative z-10">
+          <span class="material-symbols-outlined text-amber-400">tips_and_updates</span>
+          Khuyến nghị AI
+        </h3>
+        <p class="text-sm text-blue-100 leading-relaxed relative z-10">
+          Dữ liệu cho thấy <strong class="text-white">CLO2 (Phân tích và Giải quyết vấn đề)</strong> đang có dấu hiệu đi xuống ở đợt này. Khuyến nghị Khoa tăng cường hướng dẫn phương pháp giải quyết tình huống kỹ thuật cho sinh viên trước khi gửi sang ĐVHD.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>

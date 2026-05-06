@@ -1,0 +1,147 @@
+<div class="max-w-6xl mx-auto space-y-6">
+  <!-- Header Welcome -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900">Xin chào, {{ teacherName }}! 👋</h2>
+      <p class="text-slate-600 mt-1">Tổng quan công tác hướng dẫn thực tập đợt hiện tại</p>
+    </div>
+    <div class="text-right">
+      <div class="inline-flex items-center gap-2 bg-[#00429D] text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-800 transition-colors cursor-pointer" routerLink="/teacher/students">
+        <span class="material-symbols-outlined text-[20px]">groups</span>
+        Xem danh sách Sinh viên
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Cột trái (Chính) -->
+    <div class="lg:col-span-2 space-y-6">
+      
+      <!-- Card Thống kê Nhanh -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
+          <p class="text-slate-500 text-sm font-medium mb-1 text-center">Tổng SV Hướng dẫn</p>
+          <p class="text-3xl font-black text-[#00429D]">{{ overviewStats.totalStudents }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
+          <p class="text-slate-500 text-sm font-medium mb-1 text-center">Có Đơn vị TT</p>
+          <p class="text-3xl font-black text-emerald-600">{{ overviewStats.companyApproved }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
+          <p class="text-slate-500 text-sm font-medium mb-1 text-center">Đã chốt Kế hoạch</p>
+          <p class="text-3xl font-black text-blue-600">{{ overviewStats.planApproved }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
+          <p class="text-slate-500 text-sm font-medium mb-1 text-center">Đã nộp Báo cáo</p>
+          <p class="text-3xl font-black text-purple-600">{{ overviewStats.reportSubmitted }}</p>
+        </div>
+      </div>
+
+      <!-- Card Yêu cầu chờ xử lý -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-0 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#00429D]">fact_check</span>
+            Yêu cầu cần Phê duyệt
+          </h3>
+          <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">{{ pendingRequests.tttn01 + pendingRequests.tttn02 }} yêu cầu</span>
+        </div>
+        
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- TTTN-01 -->
+          <div class="border border-slate-200 rounded-lg p-4 flex items-center justify-between hover:border-blue-300 transition-colors bg-white">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span class="material-symbols-outlined">domain</span>
+              </div>
+              <div>
+                <p class="font-bold text-slate-800">Kê khai Đơn vị (TTTN-01)</p>
+                <p class="text-sm text-slate-500 mt-0.5">Sinh viên mới nộp thông tin</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-2xl font-black text-[#00429D]">{{ pendingRequests.tttn01 }}</span>
+              <button routerLink="/teacher/approval-requests" class="text-slate-400 hover:text-[#00429D]">
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- TTTN-02 -->
+          <div class="border border-slate-200 rounded-lg p-4 flex items-center justify-between hover:border-emerald-300 transition-colors bg-white">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span class="material-symbols-outlined">edit_document</span>
+              </div>
+              <div>
+                <p class="font-bold text-slate-800">Kế hoạch TT (TTTN-02)</p>
+                <p class="text-sm text-slate-500 mt-0.5">Cần duyệt mục tiêu chi tiết</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-2xl font-black text-emerald-600">{{ pendingRequests.tttn02 }}</span>
+              <button routerLink="/teacher/approval-requests" class="text-slate-400 hover:text-emerald-600">
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột phải (Phụ) -->
+    <div class="space-y-6">
+      
+      <!-- Card Cảnh báo Sinh viên -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-0 overflow-hidden">
+        <div class="bg-red-50 px-5 py-4 border-b border-red-100 flex justify-between items-center">
+          <h3 class="text-base font-bold text-red-800 flex items-center gap-2">
+            <span class="material-symbols-outlined">warning</span>
+            Cảnh báo Sinh viên
+          </h3>
+          <span class="bg-red-200 text-red-800 text-xs font-bold px-2 py-0.5 rounded-full">{{ studentAlerts.length }}</span>
+        </div>
+        <div class="p-0">
+          <div *ngFor="let alert of studentAlerts" class="p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+            <p class="text-sm font-bold text-slate-800">{{ alert.name }} <span class="text-xs font-normal text-slate-500">({{ alert.mssv }})</span></p>
+            <p class="text-sm mt-1 flex items-start gap-1"
+               [ngClass]="{'text-amber-600': alert.type === 'warning', 'text-red-600': alert.type === 'danger'}">
+               <span class="material-symbols-outlined text-[16px] mt-0.5">{{ alert.type === 'warning' ? 'error_outline' : 'report' }}</span>
+               <span>{{ alert.issue }}</span>
+            </p>
+          </div>
+          <div *ngIf="studentAlerts.length === 0" class="p-6 text-center text-slate-500 text-sm">
+            Tất cả sinh viên đang thực hiện tốt tiến độ.
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Lịch Đánh giá (Hội đồng) -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#00429D]">event_available</span>
+          Lịch Chấm Hội đồng (Sắp tới)
+        </h3>
+        
+        <div class="space-y-4">
+          <div *ngFor="let ev of upcomingEvaluations" class="flex gap-4">
+            <div class="flex flex-col items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 min-w-[70px]">
+              <span class="text-xs font-bold text-slate-500 uppercase">{{ ev.date.split('/')[1] }}/{{ ev.date.split('/')[2] }}</span>
+              <span class="text-xl font-black text-[#00429D]">{{ ev.date.split('/')[0] }}</span>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-bold text-slate-800">Phòng: {{ ev.room }}</p>
+              <p class="text-xs text-slate-600 flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-[14px]">schedule</span> {{ ev.time }}</p>
+              <p class="text-xs text-slate-500 font-medium mt-1">Vai trò: <span class="text-[#00429D]">{{ ev.role }}</span></p>
+            </div>
+          </div>
+          
+          <button routerLink="/teacher/rubric-evaluation" class="w-full mt-2 bg-slate-50 border border-slate-200 text-[#00429D] py-2 rounded-lg text-sm font-semibold hover:bg-slate-100 transition-colors shadow-sm">
+            Vào phòng chấm điểm
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

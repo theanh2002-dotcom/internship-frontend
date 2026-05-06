@@ -1,0 +1,122 @@
+<div class="max-w-7xl mx-auto space-y-6">
+  <!-- Header Welcome -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900">Xin chào, {{ mentorName }}! 👋</h2>
+      <p class="text-slate-600 mt-1">Cán bộ hướng dẫn &bull; {{ companyName }}</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- Cột trái (Chính) -->
+    <div class="xl:col-span-2 space-y-6">
+      
+      <!-- Thống kê nhanh -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500 cursor-pointer hover:bg-blue-50 transition-colors" routerLink="/company/manage-interns">
+          <p class="text-slate-500 text-sm font-medium mb-2">Thực tập sinh</p>
+          <p class="text-3xl font-black text-blue-600">{{ stats.totalInterns }}</p>
+        </div>
+        
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500 cursor-pointer hover:bg-amber-50 transition-colors" routerLink="/company/manage-interns">
+          <p class="text-slate-500 text-sm font-medium mb-2">Chờ duyệt Kế hoạch</p>
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-500 text-[20px]">assignment_turned_in</span>
+            <p class="text-3xl font-black text-amber-600">{{ stats.pendingPlanApprovals }}</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-purple-500 cursor-pointer hover:bg-purple-50 transition-colors" routerLink="/company/manage-interns">
+          <p class="text-slate-500 text-sm font-medium mb-2">Cần xác nhận Tuần</p>
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-purple-500 text-[20px]">fact_check</span>
+            <p class="text-3xl font-black text-purple-600">{{ stats.pendingWeeklyLogs }}</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500 cursor-pointer hover:bg-emerald-50 transition-colors" routerLink="/company/manage-interns">
+          <p class="text-slate-500 text-sm font-medium mb-2">Chờ chấm điểm</p>
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-emerald-500 text-[20px]">star_rate</span>
+            <p class="text-3xl font-black text-emerald-600">{{ stats.evaluationPending }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danh sách Thực tập sinh -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-600">group</span>
+            Thực tập sinh đang phụ trách
+          </h3>
+          <button routerLink="/company/manage-interns" class="text-sm font-medium text-blue-600 hover:underline">Xem toàn bộ</button>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-white border-b border-slate-200 text-xs uppercase text-slate-500 font-bold">
+              <tr>
+                <th class="py-3 px-5">Sinh viên</th>
+                <th class="py-3 px-5">Vị trí thực tập</th>
+                <th class="py-3 px-5">Trạng thái</th>
+                <th class="py-3 px-5 text-right">Tuần</th>
+              </tr>
+            </thead>
+            <tbody class="text-sm">
+              <tr *ngFor="let intern of internList" class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                <td class="py-3 px-5">
+                  <p class="font-bold text-slate-800">{{ intern.name }}</p>
+                  <p class="text-xs text-slate-500 font-mono">{{ intern.mssv }}</p>
+                </td>
+                <td class="py-3 px-5 font-medium text-slate-700">{{ intern.position }}</td>
+                <td class="py-3 px-5">
+                  <span class="px-2 py-0.5 rounded text-xs font-semibold"
+                        [ngClass]="{
+                          'bg-blue-100 text-blue-800': intern.status === 'Đang thực tập',
+                          'bg-amber-100 text-amber-800': intern.status === 'Chờ duyệt KH',
+                          'bg-purple-100 text-purple-800': intern.status === 'Cần xác nhận Tuần'
+                        }">
+                    {{ intern.status }}
+                  </span>
+                </td>
+                <td class="py-3 px-5 text-right font-bold text-slate-700">Tuần {{ intern.week }} / 8</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột phải (Cảnh báo & Lịch trình) -->
+    <div class="space-y-6">
+      
+      <!-- Cần Xử Lý Ngay (To-do List) -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-red-50 px-5 py-4 border-b border-red-100 flex items-center gap-2">
+          <span class="material-symbols-outlined text-red-600 animate-pulse">notifications_active</span>
+          <h3 class="text-base font-bold text-red-800">Cần Xử Lý Ngay</h3>
+        </div>
+        
+        <div class="divide-y divide-slate-100">
+          <div *ngFor="let item of actionItems" class="p-4 hover:bg-slate-50 transition-colors flex flex-col gap-2">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5">
+                <span *ngIf="item.priority === 'high'" class="w-2 h-2 rounded-full bg-red-500 inline-block shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
+                <span *ngIf="item.priority === 'medium'" class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+              </div>
+              <p class="text-sm text-slate-700 font-medium leading-relaxed">{{ item.message }}</p>
+            </div>
+            <div class="flex justify-end">
+              <button [routerLink]="item.link" class="text-sm font-bold transition-colors"
+                      [ngClass]="{'text-red-600 hover:text-red-800': item.priority === 'high', 'text-amber-600 hover:text-amber-800': item.priority === 'medium'}">
+                {{ item.action }} &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

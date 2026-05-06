@@ -42,5 +42,12 @@ export const companyMenu: MenuItem[] = [
 
 export const tncmMenu: MenuItem[] = [
   { title: 'Bảng điều khiển', icon: 'dashboard', route: '/tncm/dashboard', exact: true },
+  { title: 'Phân công GVHD', icon: 'assignment_ind', route: '/tncm/student-assignment' },
   { title: 'Phê duyệt Bảng điểm', icon: 'verified', route: '/tncm/score-approval' },
+];
+
+export const qaMenu: MenuItem[] = [
+  { title: 'Bảng điều khiển', icon: 'dashboard', route: '/qa/dashboard', exact: true },
+  { title: 'Báo cáo AUN-QA', icon: 'analytics', route: '/qa/aun-qa' },
+  { title: 'Quản lý CAPA', icon: 'report_problem', route: '/qa/capa' }
 ];

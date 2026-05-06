@@ -1,0 +1,136 @@
+<div class="max-w-7xl mx-auto space-y-6">
+  <!-- Header Welcome -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900">Xin chào, {{ adminName }}! 👋</h2>
+      <p class="text-slate-600 mt-1">Tổng quan Hệ thống Quản lý Thực tập toàn Trường ({{ currentSemester }})</p>
+    </div>
+    <div class="text-right">
+      <div class="inline-flex items-center gap-2 bg-[#00429D] text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-800 transition-colors cursor-pointer" routerLink="/admin/campaigns">
+        <span class="material-symbols-outlined text-[20px]">add</span>
+        Tạo Đợt thực tập mới
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- Cột trái (Chính) -->
+    <div class="xl:col-span-2 space-y-6">
+      
+      <!-- Card Thống kê Vĩ mô -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
+          <p class="text-slate-500 text-sm font-medium mb-2 text-center">Đợt TT Active</p>
+          <p class="text-3xl font-black text-[#00429D]">{{ systemStats.activeCampaigns }}</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
+          <p class="text-slate-500 text-sm font-medium mb-2 text-center">Khoa Tham gia</p>
+          <p class="text-3xl font-black text-amber-600">{{ systemStats.totalFaculties }}</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
+          <p class="text-slate-500 text-sm font-medium mb-2 text-center">Tổng Sinh viên</p>
+          <p class="text-3xl font-black text-slate-800">{{ systemStats.totalStudents }}</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center relative overflow-hidden">
+          <!-- Progress Background -->
+          <div class="absolute bottom-0 left-0 h-1 bg-emerald-500 transition-all duration-1000" [style.width.%]="placementPercent"></div>
+          <p class="text-slate-500 text-sm font-medium mb-2 text-center">Đã phân bổ</p>
+          <p class="text-3xl font-black text-emerald-600">{{ systemStats.placedStudents }}</p>
+        </div>
+      </div>
+
+      <!-- Card Tiến độ các đợt thực tập -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#00429D]">analytics</span>
+            Tiến độ Phân bổ theo Đợt thực tập
+          </h3>
+          <button routerLink="/admin/campaigns" class="text-sm font-medium text-[#00429D] hover:underline">Xem tất cả</button>
+        </div>
+        
+        <div class="divide-y divide-slate-100">
+          <div *ngFor="let campaign of campaignStats" class="p-6 hover:bg-slate-50 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center gap-3">
+                <h4 class="font-bold text-slate-800">{{ campaign.name }}</h4>
+                <span class="px-2 py-0.5 rounded text-xs font-semibold"
+                      [ngClass]="{'bg-blue-100 text-blue-800': campaign.status === 'Đang diễn ra', 'bg-slate-100 text-slate-600': campaign.status === 'Sắp bắt đầu'}">
+                  {{ campaign.status }}
+                </span>
+              </div>
+              <span class="text-sm font-medium text-slate-600">{{ campaign.placed }} / {{ campaign.students }} SV</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+              <div class="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div class="h-2 rounded-full transition-all duration-1000"
+                     [ngClass]="{'bg-emerald-500': campaign.percentage >= 80, 'bg-amber-500': campaign.percentage >= 40 && campaign.percentage < 80, 'bg-slate-300': campaign.percentage < 40}"
+                     [style.width.%]="campaign.percentage"></div>
+              </div>
+              <span class="text-sm font-bold text-slate-800 min-w-[40px] text-right">{{ campaign.percentage }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột phải (Phụ) -->
+    <div class="space-y-6">
+      
+      <!-- Card Cảnh báo & Rủi ro Hệ thống -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-red-50 px-5 py-4 border-b border-red-100 flex justify-between items-center">
+          <h3 class="text-base font-bold text-red-800 flex items-center gap-2">
+            <span class="material-symbols-outlined">gpp_maybe</span>
+            Cảnh báo Hệ thống
+          </h3>
+          <span class="bg-red-200 text-red-800 text-xs font-bold px-2 py-0.5 rounded-full">{{ systemAlerts.length }}</span>
+        </div>
+        <div class="p-5 space-y-4">
+          <div *ngFor="let alert of systemAlerts" class="flex items-start gap-3">
+            <span class="material-symbols-outlined mt-0.5" 
+                  [ngClass]="{'text-amber-500': alert.type === 'warning', 'text-red-500': alert.type === 'danger'}">
+              {{ alert.type === 'warning' ? 'warning' : 'error' }}
+            </span>
+            <div>
+              <p class="text-sm font-bold text-slate-800">{{ alert.title }}</p>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">{{ alert.message }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 text-center">
+          <button class="text-sm font-medium text-slate-500 hover:text-[#00429D] transition-colors">Đánh dấu đã đọc</button>
+        </div>
+      </div>
+
+      <!-- Lối tắt Công việc (Quick Actions) -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#00429D]">bolt</span>
+          Lối tắt Công việc
+        </h3>
+        
+        <div class="grid grid-cols-2 gap-3">
+          <button routerLink="/admin/campaigns" class="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-slate-200 hover:border-[#00429D] hover:bg-blue-50 transition-colors text-slate-700 hover:text-[#00429D]">
+            <span class="material-symbols-outlined text-2xl">assignment_ind</span>
+            <span class="text-xs font-medium text-center">Quản lý<br>Đợt TT</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-slate-200 hover:border-[#00429D] hover:bg-blue-50 transition-colors text-slate-700 hover:text-[#00429D]">
+            <span class="material-symbols-outlined text-2xl">apartment</span>
+            <span class="text-xs font-medium text-center">Quản lý<br>Khoa/BM</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-slate-200 hover:border-[#00429D] hover:bg-blue-50 transition-colors text-slate-700 hover:text-[#00429D]">
+            <span class="material-symbols-outlined text-2xl">group_add</span>
+            <span class="text-xs font-medium text-center">Tài khoản<br>Nhân sự</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-slate-200 hover:border-[#00429D] hover:bg-blue-50 transition-colors text-slate-700 hover:text-[#00429D]">
+            <span class="material-symbols-outlined text-2xl">settings</span>
+            <span class="text-xs font-medium text-center">Cài đặt<br>Hệ thống</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

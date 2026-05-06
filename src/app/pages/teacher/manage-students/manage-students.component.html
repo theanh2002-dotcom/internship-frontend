@@ -1,0 +1,88 @@
+<div class="max-w-7xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900">Danh sách Sinh viên Hướng dẫn</h2>
+      <p class="text-slate-600 mt-1">Quản lý tổng quan tiến độ của các sinh viên do bạn phụ trách.</p>
+    </div>
+    
+    <!-- Search & Filter -->
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+        <input type="text" placeholder="Tìm tên, MSSV..." class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-[#00429D] focus:border-[#00429D] w-64">
+      </div>
+      <button class="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
+        <span class="material-symbols-outlined text-[18px]">filter_list</span>
+        Bộ lọc
+      </button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+          <th class="py-3 px-6">Sinh viên</th>
+          <th class="py-3 px-6">Lớp</th>
+          <th class="py-3 px-6">Đơn vị Thực tập</th>
+          <th class="py-3 px-6">Trạng thái chung</th>
+          <th class="py-3 px-6">Tiến độ Nhật ký</th>
+          <th class="py-3 px-6 text-right">Hành động</th>
+        </tr>
+      </thead>
+      <tbody class="text-sm text-slate-700 divide-y divide-slate-200">
+        <tr *ngFor="let student of students" class="hover:bg-slate-50 transition-colors">
+          <td class="py-4 px-6">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-blue-100 text-[#00429D] font-bold flex items-center justify-center text-xs">
+                {{ student.name.charAt(0) }}
+              </div>
+              <div>
+                <p class="font-bold text-slate-900">{{ student.name }}</p>
+                <div class="flex flex-col gap-1 mt-1">
+                  <p class="text-xs text-slate-500 font-mono">{{ student.id }}</p>
+                  <p class="text-xs text-slate-500 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">call</span> 
+                    {{ student.phone }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="py-4 px-6 font-medium">{{ student.class }}</td>
+          <td class="py-4 px-6">
+            <span class="flex items-center gap-1.5" [ngClass]="{'text-slate-400 italic': student.company === 'Chưa có đơn vị', 'text-slate-800 font-medium': student.company !== 'Chưa có đơn vị'}">
+              <span class="material-symbols-outlined text-[16px] text-slate-400" *ngIf="student.company !== 'Chưa có đơn vị'">domain</span>
+              {{ student.company }}
+            </span>
+          </td>
+          <td class="py-4 px-6">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800 border border-green-200': student.statusColor === 'green',
+                    'bg-red-100 text-red-800 border border-red-200': student.statusColor === 'red',
+                    'bg-slate-100 text-slate-600 border border-slate-200': student.statusColor === 'gray',
+                    'bg-yellow-100 text-yellow-800 border border-yellow-200': student.statusColor === 'yellow'
+                  }">
+              {{ student.progressStatus }}
+            </span>
+          </td>
+          <td class="py-4 px-6 font-medium" [ngClass]="{'text-red-600': student.logStatus.includes('Trễ')}">
+            {{ student.logStatus }}
+          </td>
+          <td class="py-4 px-6 text-right flex justify-end gap-2">
+            <button routerLink="/teacher/rubric-evaluation" class="text-white bg-[#00429D] hover:bg-blue-800 px-3 py-1.5 rounded-md font-medium text-sm transition-colors shadow-sm flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">edit_note</span>
+              Chấm điểm
+            </button>
+            <button (click)="viewDetails(student)" class="text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-md font-medium text-sm transition-colors border border-slate-200 hover:border-slate-300">
+              Chi tiết
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
