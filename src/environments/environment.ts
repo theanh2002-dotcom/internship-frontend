@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api/v1' // Tuỳ chỉnh theo cổng thực tế của Backend
+  apiUrl: 'http://localhost:8081' // Backend chạy port 8080, không có context-path
 };

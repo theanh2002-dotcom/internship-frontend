@@ -4,14 +4,31 @@
 <h2 class="font-headline-xl text-[24px] font-bold text-slate-800">Quản lý Đợt thực tập</h2>
 <p class="font-body-md text-[14px] text-slate-500 mt-1">Quản lý và thiết lập các đợt thực tập tốt nghiệp cho sinh viên.</p>
 </div>
-<button class="flex items-center gap-2 px-4 py-2 bg-[#00429D] text-white font-label-md text-[13px] rounded hover:bg-blue-800 transition-colors shadow-sm" (click)="openModal()">
+<button class="flex items-center gap-2 px-4 py-2 bg-[#00429D] text-white font-label-md text-[13px] rounded hover:bg-blue-800 transition-colors shadow-sm" (click)="openCreateModal()">
 <span class="material-symbols-outlined text-[18px]">add</span>
     Thêm đợt mới
 </button>
 </section>
 
+<!-- Error global -->
+<div *ngIf="errorMessage && !isModalOpen" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+  <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
+  <p class="font-medium flex-1">{{ errorMessage }}</p>
+  <button (click)="errorMessage = ''" class="text-red-400 hover:text-red-600 transition-colors">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="isLoading && campaigns.length === 0" class="flex items-center justify-center py-20">
+  <div class="flex flex-col items-center gap-3">
+    <span class="material-symbols-outlined animate-spin text-[40px] text-[#00429D]">progress_activity</span>
+    <p class="text-slate-500 text-sm font-medium">Đang tải dữ liệu...</p>
+  </div>
+</div>
+
 <!-- Data Management Canvas -->
-<section class="flex flex-col bg-white border border-slate-200 rounded-lg shadow-sm">
+<section *ngIf="!isLoading || campaigns.length > 0" class="flex flex-col bg-white border border-slate-200 rounded-lg shadow-sm">
 <!-- Toolbar -->
 <div class="px-5 py-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50 rounded-t-lg">
 <div class="flex items-center gap-3 w-full md:w-auto">
@@ -21,75 +38,87 @@
 </div>
 </div>
 <div class="flex items-center gap-4 w-full md:w-auto">
-<div class="flex items-center gap-2">
-<span class="font-label-md text-[13px] text-slate-500">Kỳ học:</span>
-<select class="bg-white border border-slate-300 text-slate-700 font-body-md text-[14px] rounded px-3 py-1.5 focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
-<option>Tất cả</option>
-<option>Kỳ 1 (2023-2024)</option>
-<option>Kỳ 2 (2023-2024)</option>
-</select>
-</div>
-<div class="flex items-center gap-2">
-<span class="font-label-md text-[13px] text-slate-500">Trạng thái:</span>
-<select class="bg-white border border-slate-300 text-slate-700 font-body-md text-[14px] rounded px-3 py-1.5 focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
-<option>Tất cả</option>
-<option>Đang diễn ra</option>
-<option>Đã kết thúc</option>
-<option>Sắp tới</option>
-</select>
+<div class="flex items-center gap-2 text-sm text-slate-500">
+  <span class="material-symbols-outlined text-[18px]">info</span>
+  Tổng: <span class="font-bold text-slate-700">{{ totalItems }}</span> đợt thực tập
 </div>
 </div>
 </div>
 
+<!-- Empty State -->
+<div *ngIf="campaigns.length === 0 && !isLoading" class="flex flex-col items-center justify-center py-16 px-4">
+  <span class="material-symbols-outlined text-[64px] text-slate-300 mb-4">inbox</span>
+  <p class="text-slate-500 font-medium text-lg">Chưa có đợt thực tập nào</p>
+  <p class="text-slate-400 text-sm mt-1 mb-4">Nhấn "Thêm đợt mới" để tạo đợt thực tập đầu tiên</p>
+  <button class="flex items-center gap-2 px-4 py-2 bg-[#00429D] text-white text-sm rounded hover:bg-blue-800 transition-colors" (click)="openCreateModal()">
+    <span class="material-symbols-outlined text-[18px]">add</span>
+    Thêm đợt mới
+  </button>
+</div>
+
 <!-- Data Table -->
-<div class="overflow-x-auto">
+<div *ngIf="campaigns.length > 0" class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
 <thead class="bg-[#f3f3fb] border-b border-slate-200">
 <tr>
 <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Mã đợt</th>
 <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Tên đợt thực tập</th>
 <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Thời gian</th>
-<th class="py-3 px-4 text-right font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">SV dự kiến</th>
-<th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Tiến độ</th>
+<th class="py-3 px-4 text-center font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Khoa</th>
+<th class="py-3 px-4 text-center font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Sinh viên</th>
+<th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Trạng thái</th>
 <th class="py-3 px-4 text-center font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Thao tác</th>
 </tr>
 </thead>
 <tbody class="font-body-md text-[14px] text-slate-800">
-<!-- Dynamic Row -->
 <tr *ngFor="let campaign of campaigns" class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
-<td class="py-3 px-4 font-data-mono text-[13px] font-medium">{{ campaign.id }}</td>
 <td class="py-3 px-4">
-<div class="font-medium text-[#002d70]">{{ campaign.name }} ({{ campaign.academicYear }})</div>
-<div class="text-[12px] text-slate-500 mt-0.5">{{ campaign.department }}</div>
+  <span class="font-data-mono text-[13px] font-bold text-[#00429D]">{{ campaign.code || '#' + campaign.id }}</span>
 </td>
 <td class="py-3 px-4">
-<div class="text-slate-700">{{ campaign.startDate }} - {{ campaign.endDate }}</div>
-</td>
-<td class="py-3 px-4 text-right font-medium text-slate-800">
-{{ campaign.expectedStudents }}
-</td>
-<td class="py-3 px-4">
-<div class="w-full bg-slate-200 rounded-full h-1.5 max-w-[120px] mb-1">
-<div class="h-1.5 rounded-full" 
-     [ngClass]="{
-       'bg-[#00429D]': campaign.progressValue > 0 && campaign.progressValue < 100,
-       'bg-green-600': campaign.progressValue === 100,
-       'bg-slate-300': campaign.progressValue === 0
-     }"
-     [style.width.%]="campaign.progressValue"></div>
+<div class="font-medium text-[#002d70]">{{ campaign.name }}</div>
+<div *ngIf="campaign.academic_year" class="text-[12px] text-slate-500 mt-0.5">
+  {{ campaign.academic_year }}
+  <span *ngIf="campaign.semester"> · {{ getSemesterLabel(campaign.semester) }}</span>
 </div>
-<span class="text-[11px] text-slate-500">{{ campaign.progressLabel }}</span>
 </td>
 <td class="py-3 px-4">
-<div class="flex items-center justify-center gap-2">
-<button class="p-1.5 text-slate-400 hover:text-[#00429D] hover:bg-blue-50 rounded transition-colors" title="Chỉnh sửa">
+<div class="text-slate-700 text-sm">{{ formatDate(campaign.start_date) }} — {{ formatDate(campaign.end_date) }}</div>
+</td>
+<td class="py-3 px-4 text-center">
+  <span class="inline-flex items-center gap-1 text-sm font-medium text-slate-700">
+    <span class="material-symbols-outlined text-[16px] text-slate-400">apartment</span>
+    {{ campaign.department_count }}
+  </span>
+</td>
+<td class="py-3 px-4 text-center">
+  <span class="inline-flex items-center gap-1 text-sm font-medium text-slate-700">
+    <span class="material-symbols-outlined text-[16px] text-slate-400">group</span>
+    {{ campaign.student_count }}
+  </span>
+</td>
+<td class="py-3 px-4">
+  <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+        [ngClass]="{
+          'bg-emerald-100 text-emerald-700': campaign.status === 'ACTIVE',
+          'bg-slate-100 text-slate-500': campaign.status === 'INACTIVE'
+        }">
+    {{ getStatusLabel(campaign.status) }}
+  </span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center justify-center gap-1">
+<button class="p-1.5 text-slate-400 hover:text-[#00429D] hover:bg-blue-50 rounded transition-colors" title="Chỉnh sửa"
+        (click)="openEditModal(campaign)">
 <span class="material-symbols-outlined text-[18px]">edit</span>
 </button>
-<button class="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded transition-colors" title="Khóa đợt">
-<span class="material-symbols-outlined text-[18px]">lock</span>
-</button>
-<button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Xóa">
-<span class="material-symbols-outlined text-[18px]">delete</span>
+<button class="p-1.5 rounded transition-colors" 
+        [title]="campaign.status === 'ACTIVE' ? 'Tạm ngừng' : 'Kích hoạt'"
+        [ngClass]="campaign.status === 'ACTIVE' 
+          ? 'text-slate-400 hover:text-orange-500 hover:bg-orange-50' 
+          : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'"
+        (click)="toggleStatus(campaign)">
+<span class="material-symbols-outlined text-[18px]">{{ campaign.status === 'ACTIVE' ? 'pause_circle' : 'play_circle' }}</span>
 </button>
 </div>
 </td>
@@ -99,45 +128,81 @@
 </div>
 
 <!-- Pagination Component -->
-<app-pagination [currentPage]="currentPage" [totalItems]="totalItems" [pageSize]="pageSize" (pageChange)="onPageChange($event)"></app-pagination>
+<app-pagination *ngIf="campaigns.length > 0" [currentPage]="currentPage" [totalItems]="totalItems" [pageSize]="pageSize" (pageChange)="onPageChange($event)"></app-pagination>
 </section>
 
 <!-- Modal Component -->
-<app-modal [isOpen]="isModalOpen" title="Thêm đợt thực tập mới" saveText="Tạo đợt" (close)="closeModal()" (save)="saveCampaign()">
+<app-modal [isOpen]="isModalOpen" 
+           [title]="isEditMode ? 'Chỉnh sửa đợt thực tập' : 'Thêm đợt thực tập mới'" 
+           [saveText]="isEditMode ? 'Cập nhật' : 'Tạo đợt'" 
+           (close)="closeModal()" 
+           (save)="saveCampaign()">
   <div class="space-y-4">
+    
+    <!-- Error trong modal -->
+    <div *ngIf="errorMessage && isModalOpen" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+      <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
+      <p class="font-medium flex-1">{{ errorMessage }}</p>
+    </div>
+
+    <!-- Row 1: Mã đợt + Năm học -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="flex flex-col gap-1.5">
         <label class="font-label-md text-[13px] text-slate-600">Mã đợt <span class="text-red-500">*</span></label>
-        <input class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: TTTN.2023.1" type="text"/>
+        <input [(ngModel)]="formCode" 
+               class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
+               placeholder="VD: TTTN.2024.1" type="text"/>
       </div>
       <div class="flex flex-col gap-1.5">
-        <label class="font-label-md text-[13px] text-slate-600">Kỳ học <span class="text-red-500">*</span></label>
-        <select class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
-          <option>Kỳ 1 (2023-2024)</option>
-          <option>Kỳ 2 (2023-2024)</option>
+        <label class="font-label-md text-[13px] text-slate-600">Năm học</label>
+        <select [(ngModel)]="formAcademicYear" 
+                class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
+          <option value="">— Chọn năm học —</option>
+          <option *ngFor="let year of academicYears" [value]="year">{{ year }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Row 2: Tên + Học kỳ -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="flex flex-col gap-1.5 md:col-span-2">
+        <label class="font-label-md text-[13px] text-slate-600">Tên đợt thực tập <span class="text-red-500">*</span></label>
+        <input [(ngModel)]="formName" 
+               class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
+               placeholder="VD: Thực tập Tốt nghiệp Khoa CNTT K64" type="text"/>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Học kỳ</label>
+        <select [(ngModel)]="formSemester" 
+                class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
+          <option [ngValue]="null">— Chọn —</option>
+          <option *ngFor="let s of semesters" [ngValue]="s.value">{{ s.label }}</option>
         </select>
       </div>
     </div>
     
-    <div class="flex flex-col gap-1.5">
-      <label class="font-label-md text-[13px] text-slate-600">Tên đợt thực tập <span class="text-red-500">*</span></label>
-      <input class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="Nhập tên đợt thực tập" type="text"/>
-    </div>
-    
+    <!-- Row 3: Ngày bắt đầu + Ngày kết thúc -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="flex flex-col gap-1.5">
         <label class="font-label-md text-[13px] text-slate-600">Ngày bắt đầu <span class="text-red-500">*</span></label>
-        <input class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" type="date"/>
+        <input [(ngModel)]="formStartDate" 
+               class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
+               type="date"/>
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="font-label-md text-[13px] text-slate-600">Ngày kết thúc <span class="text-red-500">*</span></label>
-        <input class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" type="date"/>
+        <input [(ngModel)]="formEndDate" 
+               class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
+               type="date"/>
       </div>
     </div>
-    
+
+    <!-- Row 4: Ghi chú -->
     <div class="flex flex-col gap-1.5">
       <label class="font-label-md text-[13px] text-slate-600">Ghi chú</label>
-      <textarea class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] resize-y" placeholder="Nhập ghi chú (nếu có)" rows="3"></textarea>
+      <textarea [(ngModel)]="formDescription" 
+                class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] resize-y" 
+                placeholder="Nhập ghi chú / mô tả (nếu có)" rows="3"></textarea>
     </div>
   </div>
 </app-modal>

@@ -1,5 +1,9 @@
-<div class="max-w-5xl mx-auto flex flex-col gap-10">
-    <!-- Page Header & Student Context -->
+<div *ngIf="isLoading" class="p-12 text-center text-gray-500">
+    <span class="material-symbols-outlined animate-spin text-4xl mb-4">autorenew</span>
+    <p>Đang tải dữ liệu nhật ký...</p>
+</div>
+
+<div *ngIf="!isLoading" class="max-w-5xl mx-auto flex flex-col gap-10">
     <div class="flex flex-col gap-4">
         <div>
             <h2 class="text-2xl font-bold text-slate-900">Sổ Nhật Ký &amp; Tiến Độ Thực Tập</h2>
@@ -151,14 +155,23 @@
                                 <p class="text-sm text-slate-500 mt-1">Hỗ trợ JPG, PNG, PDF (Max: 5MB)</p>
                             </div>
                         </div>
+                        <!-- Messages -->
+                        <div *ngIf="successMessage" class="px-6 py-3 bg-green-50 text-green-700 border-t border-green-100 text-sm font-medium">
+                            {{ successMessage }}
+                        </div>
+                        <div *ngIf="errorMessage" class="px-6 py-3 bg-red-50 text-red-700 border-t border-red-100 text-sm font-medium">
+                            {{ errorMessage }}
+                        </div>
+
                         <!-- Actions -->
                         <div class="flex justify-end gap-4 pt-4 border-t border-slate-200">
                             <button class="px-5 py-2.5 rounded-lg border border-slate-400 text-slate-900 text-sm hover:bg-slate-100 transition-colors">
                                 Lưu bản nháp
                             </button>
-                            <button class="px-5 py-2.5 rounded-lg bg-[#00429D] text-white text-sm hover:bg-[#002d70] transition-colors flex items-center gap-2 shadow-sm">
-                                <span class="material-symbols-outlined text-[18px]">send</span>
-                                Gửi xác nhận
+                            <button (click)="submitLog()" [disabled]="isSaving" class="px-5 py-2.5 rounded-lg bg-[#00429D] text-white text-sm hover:bg-[#002d70] transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="material-symbols-outlined text-[18px]" *ngIf="!isSaving">send</span>
+                                <span class="material-symbols-outlined text-[18px] animate-spin" *ngIf="isSaving">autorenew</span>
+                                {{ isSaving ? 'Đang gửi...' : 'Gửi xác nhận' }}
                             </button>
                         </div>
                     </div>

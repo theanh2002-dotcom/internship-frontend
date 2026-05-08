@@ -1,20 +1,40 @@
 export interface LoginRequest {
-  username?: string;
-  password?: string;
-  code?: string;
-  loginType: 'NORMAL' | 'OAUTH2';
+  email: string;
+  password: string;
+}
+
+/**
+ * Khớp với backend RegisterRequest.java
+ * Backend dùng @JsonProperty("full_name") và @JsonProperty("department_id")
+ */
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  full_name: string;
+  role: 'ADMIN' | 'LDKBM' | 'GVHD' | 'STUDENT' | 'COMPANY_SUPERVISOR';
+  department_id?: number | null;
+}
+
+export interface StudentItem {
+  student_code: string;
+  full_name: string;
+  class_name: string;
 }
 
 export interface ImportStudentRequest {
-  campaignId: number;
-  departmentId: number;
-  fileBase64?: string; // Tùy chọn nếu dùng JSON, thực tế có thể dùng FormData
+  campaign_id: number;
+  department_id: number;
+  students: StudentItem[];
+}
+
+export interface AssignItem {
+  student_campaign_id: number;
+  gvhd_id?: number;
+  committee_id?: number;
 }
 
 export interface AssignRequest {
-  studentCampaignIds: number[];
-  teacherId: number;
-  role: 'GVHD' | 'HĐ'; // Hoặc enum tương ứng backend
+  assignments: AssignItem[];
 }
 
 export interface CompanyInfoRequest {
@@ -39,7 +59,20 @@ export interface InternshipPlanRequest {
 }
 
 export interface WeeklyLogRequest {
-  weekNumber: number;
+  week_number: number;
   content: string;
-  studentCampaignId: number;
+  results: string;
+  student_campaign_id: number;
+}
+
+export interface ReportItem {
+  file_name: string;
+  file_url: string;
+  file_size: number;
+  file_type: string;
+}
+
+export interface FinalReportRequest {
+  student_campaign_id: number;
+  reports: ReportItem[];
 }

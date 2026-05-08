@@ -99,7 +99,7 @@
 
       <div *ngIf="actionType !== 'DECLARATION'" class="mt-4">
         <label class="block text-sm font-medium text-gray-700 mb-2">Nhận xét của Cán bộ Hướng dẫn (Bắt buộc đối với xác nhận tuần)</label>
-        <textarea rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-[#00429D] focus:border-[#00429D] sm:text-sm" placeholder="Nhập nhận xét đánh giá chất lượng công việc..."></textarea>
+        <textarea [(ngModel)]="logComment" rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-[#00429D] focus:border-[#00429D] sm:text-sm" placeholder="Nhập nhận xét đánh giá chất lượng công việc..."></textarea>
       </div>
     </div>
     

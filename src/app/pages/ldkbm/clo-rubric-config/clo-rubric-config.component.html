@@ -1,146 +1,141 @@
-<!-- Page Header & Global Actions -->
-<div class="flex justify-between items-end pb-4 border-b border-border-neutral mb-8">
-<div>
-<h2 class="font-headline-xl text-[24px] font-bold text-[#002d70] mb-2">Cấu hình CLO & Rubric Đánh Giá</h2>
-<p class="font-body-md text-[14px] text-slate-500 max-w-3xl">
-                        Thiết lập ma trận chuẩn đầu ra (CLO) và tiêu chí đánh giá (Rubric) áp dụng chung cho đợt thực tập. Vui lòng đảm bảo tổng trọng số các CLO đạt 100% và tỷ lệ đồng chấm phù hợp với quy chế.
-                    </p>
-</div>
-<div class="flex gap-3">
-<button class="px-4 py-2 border border-slate-300 text-slate-700 font-label-md text-[13px] rounded hover:bg-slate-50 transition-colors">
-                        Hủy thay đổi
-                    </button>
-<button class="px-6 py-2 bg-[#00429D] text-white font-label-md text-[13px] rounded flex items-center gap-2 hover:bg-blue-800 transition-colors shadow-sm">
-<span class="material-symbols-outlined" style="font-size: 18px;">save</span>
-                        Lưu cấu hình
-                    </button>
-</div>
-</div>
-<!-- Section 1: Co-grading Ratio (β) Configuration -->
-<section class="bg-white border border-slate-200 rounded-lg p-6 flex flex-col gap-4 shadow-sm mb-8">
-<h3 class="font-headline-md text-[16px] font-semibold text-slate-800 flex items-center gap-2">
-<span class="material-symbols-outlined text-[#00429D]">tune</span>
-                    Tỷ lệ đồng chấm (β)
-                </h3>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
-<div class="flex flex-col gap-2">
-<label class="font-label-md text-[13px] text-slate-500">
-                            Tỷ trọng Giảng viên HD (β<sub>GV</sub>) <span class="text-red-600">*</span>
-</label>
-<div class="relative">
-<input class="w-full border border-slate-300 rounded px-3 py-2 font-data-mono text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" max="100" min="0" type="number" value="40"/>
-<span class="absolute right-3 top-2 text-slate-500 font-data-mono text-[13px]">%</span>
-</div>
-</div>
-<div class="flex flex-col gap-2">
-<label class="font-label-md text-[13px] text-slate-500">
-                            Tỷ trọng Đơn vị HD (β<sub>ĐV</sub>) <span class="text-red-600">*</span>
-</label>
-<div class="relative">
-<input class="w-full border border-slate-300 rounded px-3 py-2 font-data-mono text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] bg-slate-50" max="100" min="0" readonly="" title="Tự động tính toán (100% - βGV)" type="number" value="60"/>
-<span class="absolute right-3 top-2 text-slate-500 font-data-mono text-[13px]">%</span>
-</div>
-</div>
-</div>
+<!-- Header Section -->
+<section class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+  <div>
+    <h2 class="font-headline-xl text-[24px] font-bold text-slate-800">Cấu hình CLO & Rubric</h2>
+    <p class="font-body-md text-[14px] text-slate-500 mt-1">Thiết lập Chuẩn đầu ra (CLO), tỷ trọng điểm và chi tiết chấm điểm (Rubric) cho đợt thực tập.</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <!-- Dropdown Đợt thực tập -->
+    <div class="flex items-center gap-2 bg-white px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm">
+      <span class="material-symbols-outlined text-slate-400 text-[18px]">event</span>
+      <select [(ngModel)]="selectedCampaignId" (change)="onCampaignChange()" class="bg-transparent text-[13px] font-medium text-slate-700 focus:outline-none pr-4 cursor-pointer">
+        <option *ngFor="let camp of campaigns" [value]="camp.id">{{ camp.name }}</option>
+      </select>
+    </div>
+
+    <!-- Nút Lưu -->
+    <button class="flex items-center gap-2 px-6 py-2 bg-[#00429D] text-white font-label-md text-[14px] rounded hover:bg-blue-800 transition-colors shadow-sm disabled:opacity-50" 
+            (click)="saveConfigs()" [disabled]="isLoading || isSaving">
+      <span *ngIf="isSaving" class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+      <span *ngIf="!isSaving" class="material-symbols-outlined text-[18px]">save</span>
+      Lưu cấu hình
+    </button>
+  </div>
 </section>
-<!-- Section 2 & 3: Rubric Matrix Setup (Grid Layout) -->
-<section class="flex flex-col gap-4">
-<div class="flex justify-between items-center">
-<h3 class="font-headline-md text-[16px] font-semibold text-slate-800 flex items-center gap-2">
-<span class="material-symbols-outlined text-[#00429D]">table_chart</span>
-                        Ma trận Chuẩn đầu ra (CLO) & Mức độ đánh giá
-                    </h3>
-<div class="font-label-md text-[13px] bg-slate-100 px-3 py-1.5 rounded-full text-slate-600 border border-slate-200">
-                        Tổng trọng số hiện tại: <span class="font-data-mono text-[13px] text-green-700 font-bold">100%</span>
+
+<!-- Alerts -->
+<div *ngIf="successMessage" class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+  <span class="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
+  <p class="font-medium flex-1">{{ successMessage }}</p>
+  <button (click)="successMessage = ''" class="text-emerald-400 hover:text-emerald-600 transition-colors">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
 </div>
+
+<div *ngIf="errorMessage" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+  <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
+  <p class="font-medium flex-1">{{ errorMessage }}</p>
+  <button (click)="errorMessage = ''" class="text-red-400 hover:text-red-600 transition-colors">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
 </div>
-<!-- Complex Table Wrapper for Horizontal Scroll if needed -->
-<div class="w-full overflow-x-auto border border-slate-200 rounded-lg bg-white">
-<table class="w-full border-collapse text-left min-w-[1200px]">
-<thead>
-<tr class="bg-slate-50 border-b border-slate-200">
-<th class="p-3 border-r border-slate-200 w-16 text-center font-headline-md text-[16px] font-semibold text-slate-800">Mã</th>
-<th class="p-3 border-r border-slate-200 w-48 font-headline-md text-[16px] font-semibold text-slate-800">Tên Chuẩn đầu ra</th>
-<th class="p-3 border-r border-slate-200 w-24 text-center font-headline-md text-[16px] font-semibold text-slate-800">
-                                    Trọng số<br/><span class="font-label-md text-[13px] font-normal text-slate-500">(α<sub>i</sub> %)</span>
-</th>
-<!-- Rubric Levels Columns -->
-<th class="p-3 border-r border-slate-200 bg-red-50 border-t-4 border-t-red-600 text-center font-headline-md text-[16px] font-semibold text-slate-800 w-64">
-                                    Mức 0<br/><span class="font-label-md text-[13px] font-normal text-red-600">(Kém)</span>
-</th>
-<th class="p-3 border-r border-slate-200 bg-orange-50 border-t-4 border-t-orange-500 text-center font-headline-md text-[16px] font-semibold text-slate-800 w-64">
-                                    Mức 1<br/><span class="font-label-md text-[13px] font-normal text-orange-500">(Yếu)</span>
-</th>
-<th class="p-3 border-r border-slate-200 bg-yellow-50 border-t-4 border-t-yellow-500 text-center font-headline-md text-[16px] font-semibold text-slate-800 w-64">
-                                    Mức 2<br/><span class="font-label-md text-[13px] font-normal text-yellow-600">(Trung bình)</span>
-</th>
-<th class="p-3 border-r border-slate-200 bg-lime-50 border-t-4 border-t-lime-500 text-center font-headline-md text-[16px] font-semibold text-slate-800 w-64">
-                                    Mức 3<br/><span class="font-label-md text-[13px] font-normal text-lime-600">(Khá)</span>
-</th>
-<th class="p-3 border-t-4 border-t-green-700 bg-green-50 text-center font-headline-md text-[16px] font-semibold text-slate-800 w-64">
-                                    Mức 4<br/><span class="font-label-md text-[13px] font-normal text-green-700">(Tốt/Xuất sắc)</span>
-</th>
-</tr>
-</thead>
-<tbody class="align-top">
-<!-- CLO 1 Row -->
-<tr class="border-b border-slate-200 even:bg-white odd:bg-slate-50 group">
-<td class="p-3 border-r border-slate-200 text-center font-data-mono text-[13px] font-bold">CLO1</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent group-hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-[#00429D]" placeholder="Mô tả nội dung CLO...">Kiến thức chuyên môn và khả năng áp dụng lý thuyết vào thực tiễn.</textarea>
-</td>
-<td class="p-3 border-r border-slate-200 text-center">
-<input class="w-16 text-center border border-slate-300 rounded px-2 py-1 font-data-mono text-[13px] focus:outline-none focus:ring-1 focus:ring-[#00429D]" type="number" value="15"/>
-</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-red-600" placeholder="Mô tả mức 0...">Không nắm vững kiến thức, không thể áp dụng vào công việc được giao.</textarea>
-</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-orange-500" placeholder="Mô tả mức 1...">Nắm kiến thức hời hợt, áp dụng sai sót nhiều, cần hướng dẫn liên tục.</textarea>
-</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-yellow-500" placeholder="Mô tả mức 2...">Nắm được kiến thức cơ bản, thỉnh thoảng áp dụng được vào công việc đơn giản.</textarea>
-</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-lime-500" placeholder="Mô tả mức 3...">Nắm vững kiến thức, áp dụng tốt vào hầu hết công việc, ít sai sót.</textarea>
-</td>
-<td class="p-3">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-green-700" placeholder="Mô tả mức 4...">Hiểu sâu sắc lý thuyết, áp dụng linh hoạt, sáng tạo trong giải quyết vấn đề thực tế.</textarea>
-</td>
-</tr>
-<!-- CLO 2 Row -->
-<tr class="border-b border-slate-200 even:bg-white odd:bg-slate-50 group">
-<td class="p-3 border-r border-slate-200 text-center font-data-mono text-[13px] font-bold">CLO2</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent group-hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-[#00429D]" placeholder="Mô tả nội dung CLO...">Kỹ năng sử dụng công cụ, phần mềm chuyên ngành.</textarea>
-</td>
-<td class="p-3 border-r border-slate-200 text-center">
-<input class="w-16 text-center border border-slate-300 rounded px-2 py-1 font-data-mono text-[13px] focus:outline-none focus:ring-1 focus:ring-[#00429D]" type="number" value="15"/>
-</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-red-600"></textarea>
-</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-orange-500"></textarea>
-</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-yellow-500"></textarea>
-</td>
-<td class="p-3 border-r border-slate-200">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-lime-500"></textarea>
-</td>
-<td class="p-3">
-<textarea class="w-full min-h-[100px] p-2 bg-transparent border border-transparent hover:border-slate-300 focus:bg-white rounded font-body-md text-[14px] resize-y outline-none focus:ring-1 focus:ring-green-700"></textarea>
-</td>
-</tr>
-</tbody>
-<tfoot class="bg-slate-100 border-t-2 border-slate-300">
-<tr>
-<td class="p-3 text-right font-headline-md text-[16px] font-semibold text-slate-800" colspan="2">Tổng cộng:</td>
-<td class="p-3 border-r border-slate-200 text-center font-data-mono text-[13px] font-bold text-green-700">100%</td>
-<td colspan="5"></td>
-</tr>
-</tfoot>
-</table>
+
+<!-- Loading State -->
+<div *ngIf="isLoading" class="flex items-center justify-center py-20">
+  <div class="flex flex-col items-center gap-3">
+    <span class="material-symbols-outlined animate-spin text-[40px] text-[#00429D]">progress_activity</span>
+    <p class="text-slate-500 text-sm font-medium">Đang tải cấu hình...</p>
+  </div>
 </div>
-</section>
+
+<!-- Form Cấu hình -->
+<div *ngIf="!isLoading && departmentCampaignId" class="space-y-6">
+  
+  <div *ngFor="let clo of clos; let i = index" class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 relative group">
+    
+    <!-- Xóa CLO -->
+    <button *ngIf="clos.length > 1" (click)="removeClo(i)" 
+            class="absolute top-4 right-4 text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors opacity-0 group-hover:opacity-100" title="Xóa CLO này">
+      <span class="material-symbols-outlined text-[20px]">delete</span>
+    </button>
+
+    <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+      <span class="bg-[#00429D] text-white w-6 h-6 rounded-full flex items-center justify-center text-[13px]">{{ i + 1 }}</span>
+      Cấu hình CLO
+    </h3>
+
+    <!-- Hàng 1: Mã CLO & Trọng số Alpha -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+      <div class="col-span-1 md:col-span-3 flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Mã CLO <span class="text-red-500">*</span></label>
+        <input [(ngModel)]="clo.clo_code" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: CLO1"/>
+      </div>
+      <div class="col-span-1 md:col-span-6 flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Mô tả CLO</label>
+        <input [(ngModel)]="clo.description" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="Nội dung chuẩn đầu ra..."/>
+      </div>
+      <div class="col-span-1 md:col-span-3 flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Trọng số Tổng (Alpha) (%) <span class="text-red-500">*</span></label>
+        <input [(ngModel)]="clo.alpha_weight" type="number" step="1" min="0" max="100" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: 30"/>
+      </div>
+    </div>
+
+    <!-- Hàng 2: Trọng số Beta -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-slate-50 p-4 rounded-lg border border-slate-100">
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Trọng số chấm điểm GVHD (Beta 1) (%) <span class="text-red-500">*</span></label>
+        <input [(ngModel)]="clo.gvhd_beta" type="number" step="1" min="0" max="100" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: 60"/>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Trọng số chấm điểm DN (Beta 2) (%) <span class="text-red-500">*</span></label>
+        <input [(ngModel)]="clo.company_beta" type="number" step="1" min="0" max="100" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: 40"/>
+      </div>
+      <div class="col-span-1 md:col-span-2">
+        <p class="text-xs text-slate-500 italic">* Lưu ý: Beta 1 + Beta 2 phải bằng 100%</p>
+      </div>
+    </div>
+
+    <!-- Danh sách Rubric -->
+    <div>
+      <div class="flex justify-between items-center mb-3">
+        <h4 class="font-bold text-slate-700 text-[14px]">Tiêu chí chấm (Rubrics)</h4>
+        <button (click)="addRubric(clo)" class="text-[13px] font-medium text-[#00429D] hover:underline flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">add_circle</span> Thêm tiêu chí
+        </button>
+      </div>
+
+      <div *ngIf="!clo.rubrics || clo.rubrics.length === 0" class="text-center py-4 bg-slate-50 border border-dashed border-slate-300 rounded-lg text-slate-400 text-[13px]">
+        Chưa có tiêu chí Rubric nào cho CLO này.
+      </div>
+
+      <div *ngIf="clo.rubrics && clo.rubrics.length > 0" class="space-y-3">
+        <div *ngFor="let rubric of clo.rubrics; let j = index" class="flex items-start gap-3 bg-white border border-slate-200 p-3 rounded shadow-sm">
+          <div class="flex flex-col gap-1 w-24">
+            <label class="text-[12px] font-medium text-slate-500">Mức điểm</label>
+            <input [(ngModel)]="rubric.score_level" type="number" min="0" max="10" class="w-full border border-slate-300 rounded px-2 py-1.5 text-[13px] text-center focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="Điểm"/>
+          </div>
+          <div class="flex flex-col gap-1 flex-1">
+            <label class="text-[12px] font-medium text-slate-500">Mô tả tiêu chí</label>
+            <textarea [(ngModel)]="rubric.description" rows="2" class="w-full border border-slate-300 rounded px-3 py-1.5 text-[13px] focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="Nhập mô tả cụ thể mức điểm này..."></textarea>
+          </div>
+          <button (click)="removeRubric(clo, j)" class="mt-6 text-slate-400 hover:text-red-500 p-1 rounded transition-colors" title="Xóa Rubric">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button (click)="addClo()" class="w-full py-4 border-2 border-dashed border-slate-300 text-slate-500 font-medium rounded-xl hover:bg-slate-50 hover:text-[#00429D] hover:border-[#00429D] transition-colors flex items-center justify-center gap-2">
+    <span class="material-symbols-outlined">add_circle</span>
+    Thêm Chuẩn đầu ra (CLO) mới
+  </button>
+
+</div>
+
+<!-- Empty State -->
+<div *ngIf="!isLoading && (!campaigns || campaigns.length === 0 || !departmentCampaignId)" class="flex flex-col items-center justify-center py-16 px-4 bg-white border border-slate-200 rounded-lg shadow-sm">
+  <span class="material-symbols-outlined text-[64px] text-slate-300 mb-4">event_busy</span>
+  <p class="text-slate-500 font-medium text-lg">Chưa có đợt thực tập nào</p>
+  <p class="text-slate-400 text-sm mt-1">Vui lòng chờ Quản trị viên tạo đợt thực tập mới.</p>
+</div>

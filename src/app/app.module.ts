@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
@@ -28,21 +29,20 @@ import { SurveyCompanyComponent } from './pages/company/survey-company/survey-co
 import { SurveyDashboardComponent } from './pages/ldkbm/survey-dashboard/survey-dashboard.component';
 import { GeneralDashboardComponent } from './pages/ldkbm/general-dashboard/general-dashboard.component';
 import { CompanyLayoutComponent } from './layout/company-layout/company-layout.component';
-import { TncmLayoutComponent } from './layout/tncm-layout/tncm-layout.component';
+import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ManageInternsComponent } from './pages/company/manage-interns/manage-interns.component';
 import { ApprovalRequestsComponent } from './pages/teacher/approval-requests/approval-requests.component';
-import { ScoreApprovalComponent } from './pages/tncm/score-approval/score-approval.component';
 import { StudentDashboardComponent } from './pages/student/student-dashboard/student-dashboard.component';
 import { TeacherDashboardComponent } from './pages/teacher/teacher-dashboard/teacher-dashboard.component';
 import { ManageStudentsComponent } from './pages/teacher/manage-students/manage-students.component';
 import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-dashboard.component';
-import { TncmDashboardComponent } from './pages/tncm/tncm-dashboard/tncm-dashboard.component';
 import { CompanyDashboardComponent } from './pages/company/company-dashboard/company-dashboard.component';
-import { QaLayoutComponent } from './layout/qa-layout/qa-layout.component';
-import { QaDashboardComponent } from './pages/qa/qa-dashboard/qa-dashboard.component';
-import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { AuthLayoutComponent } from './layout/auth-layout/auth-layout.component';
 import { LoginComponent } from './pages/auth/login/login.component';
+import { RegisterComponent } from './pages/auth/register/register.component';
+import { DepartmentManagementComponent } from './pages/admin/department-management/department-management.component';
+import { UserManagementComponent } from './pages/admin/user-management/user-management.component';
+import { SystemSettingsComponent } from './pages/admin/system-settings/system-settings.component';
 
 @NgModule({
   declarations: [
@@ -70,23 +70,23 @@ import { LoginComponent } from './pages/auth/login/login.component';
     SurveyDashboardComponent,
     GeneralDashboardComponent,
     CompanyLayoutComponent,
-    TncmLayoutComponent,
     ManageInternsComponent,
     ApprovalRequestsComponent,
-    ScoreApprovalComponent,
     StudentDashboardComponent,
     TeacherDashboardComponent,
     ManageStudentsComponent,
     AdminDashboardComponent,
-    TncmDashboardComponent,
     CompanyDashboardComponent,
-    QaLayoutComponent,
-    QaDashboardComponent,
     AuthLayoutComponent,
-    LoginComponent
+    LoginComponent,
+    RegisterComponent,
+    DepartmentManagementComponent,
+    UserManagementComponent,
+    SystemSettingsComponent
   ],
   imports: [
     BrowserModule,
+    CommonModule,
     AppRoutingModule,
     FormsModule,
     HttpClientModule

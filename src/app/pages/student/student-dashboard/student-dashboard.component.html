@@ -1,4 +1,10 @@
 <div class="max-w-6xl mx-auto space-y-6">
+  <div *ngIf="isLoading" class="p-12 text-center text-gray-500">
+      <span class="material-symbols-outlined animate-spin text-4xl mb-4">autorenew</span>
+      <p>Đang tải dữ liệu...</p>
+  </div>
+  
+  <ng-container *ngIf="!isLoading">
   <!-- Header Welcome -->
   <div class="flex items-center justify-between">
     <div>
@@ -147,4 +153,5 @@
       </div>
     </div>
   </div>
+  </ng-container>
 </div>

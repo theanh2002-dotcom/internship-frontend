@@ -3,18 +3,22 @@ import {
   HttpRequest,
   HttpHandler,
   HttpEvent,
-  HttpInterceptor
+  HttpInterceptor,
+  HttpErrorResponse
 } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
+import { Router } from '@angular/router';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
-  constructor() {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    const token = localStorage.getItem('token');
-    
+    const token = this.authService.getToken();
+
     if (token) {
       request = request.clone({
         setHeaders: {
@@ -23,6 +27,18 @@ export class AuthInterceptor implements HttpInterceptor {
       });
     }
 
-    return next.handle(request);
+    return next.handle(request).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          // Token hết hạn hoặc không hợp lệ → auto logout
+          this.authService.logout();
+        } else if (error.status === 403) {
+          // Không có quyền → redirect về dashboard của user (không logout)
+          const dashboardRoute = this.authService.getRoleDashboardRoute();
+          this.router.navigate([dashboardRoute]);
+        }
+        return throwError(() => error);
+      })
+    );
   }
 }

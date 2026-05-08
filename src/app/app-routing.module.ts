@@ -3,6 +3,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { CampaignManagementComponent } from './pages/admin/campaign-management/campaign-management.component';
 import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-dashboard.component';
+import { DepartmentManagementComponent } from './pages/admin/department-management/department-management.component';
+import { UserManagementComponent } from './pages/admin/user-management/user-management.component';
+import { SystemSettingsComponent } from './pages/admin/system-settings/system-settings.component';
 import { CloRubricConfigComponent } from './pages/ldkbm/clo-rubric-config/clo-rubric-config.component';
 import { StudentAssignmentComponent } from './pages/ldkbm/student-assignment/student-assignment.component';
 import { CompanyDeclarationComponent } from './pages/student/company-declaration/company-declaration.component';
@@ -25,31 +28,34 @@ import { SurveyCompanyComponent } from './pages/company/survey-company/survey-co
 import { SurveyDashboardComponent } from './pages/ldkbm/survey-dashboard/survey-dashboard.component';
 import { GeneralDashboardComponent } from './pages/ldkbm/general-dashboard/general-dashboard.component';
 import { CompanyLayoutComponent } from './layout/company-layout/company-layout.component';
-import { TncmLayoutComponent } from './layout/tncm-layout/tncm-layout.component';
-import { QaLayoutComponent } from './layout/qa-layout/qa-layout.component';
 import { ManageInternsComponent } from './pages/company/manage-interns/manage-interns.component';
 import { CompanyDashboardComponent } from './pages/company/company-dashboard/company-dashboard.component';
 import { ApprovalRequestsComponent } from './pages/teacher/approval-requests/approval-requests.component';
-import { ScoreApprovalComponent } from './pages/tncm/score-approval/score-approval.component';
-import { TncmDashboardComponent } from './pages/tncm/tncm-dashboard/tncm-dashboard.component';
-import { QaDashboardComponent } from './pages/qa/qa-dashboard/qa-dashboard.component';
 import { AuthLayoutComponent } from './layout/auth-layout/auth-layout.component';
 import { LoginComponent } from './pages/auth/login/login.component';
+import { RegisterComponent } from './pages/auth/register/register.component';
+
+import { AuthGuard, LoginGuard } from './core/guards/auth.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
   {
     path: 'admin',
     component: AdminLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'campaigns', component: CampaignManagementComponent },
+      { path: 'departments', component: DepartmentManagementComponent },
+      { path: 'users', component: UserManagementComponent },
+      { path: 'settings', component: SystemSettingsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
   {
     path: 'ldkbm',
     component: LdkbmLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       { path: 'general-dashboard', component: GeneralDashboardComponent },
       { path: 'clo-config', component: CloRubricConfigComponent },
@@ -61,6 +67,7 @@ const routes: Routes = [
   {
     path: 'student',
     component: StudentLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       { path: 'dashboard', component: StudentDashboardComponent },
       { path: 'company-declaration', component: CompanyDeclarationComponent },
@@ -74,6 +81,7 @@ const routes: Routes = [
   {
     path: 'teacher',
     component: TeacherLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       { path: 'dashboard', component: TeacherDashboardComponent },
       { path: 'students', component: ManageStudentsComponent },
@@ -86,6 +94,7 @@ const routes: Routes = [
   {
     path: 'company',
     component: CompanyLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       { path: 'dashboard', component: CompanyDashboardComponent },
       { path: 'manage-interns', component: ManageInternsComponent },
@@ -94,28 +103,12 @@ const routes: Routes = [
     ]
   },
   {
-    path: 'tncm',
-    component: TncmLayoutComponent,
-    children: [
-      { path: 'dashboard', component: TncmDashboardComponent },
-      { path: 'student-assignment', component: StudentAssignmentComponent },
-      { path: 'score-approval', component: ScoreApprovalComponent },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
-    ]
-  },
-  {
-    path: 'qa',
-    component: QaLayoutComponent,
-    children: [
-      { path: 'dashboard', component: QaDashboardComponent },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
-    ]
-  },
-  {
     path: 'auth',
     component: AuthLayoutComponent,
+    canActivate: [LoginGuard],
     children: [
       { path: 'login', component: LoginComponent },
+      { path: 'register', component: RegisterComponent },
       { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]
   }

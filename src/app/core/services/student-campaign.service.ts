@@ -21,9 +21,17 @@ export class StudentCampaignService {
       .set('campaign_id', campaignId.toString())
       .set('department_id', departmentId.toString())
       .set('page', pageRequest.page.toString())
-      .set('size', pageRequest.size.toString());
+      .set('limit', pageRequest.limit.toString());
       
     return this.apiService.get<BasePagination<any>>('/base/student-campaigns', params);
+  }
+
+  getMyCampaigns(): Observable<any> {
+    return this.apiService.get<any>('/base/student-campaigns/my-campaigns');
+  }
+
+  getMyAssignedStudents(): Observable<any> {
+    return this.apiService.get<any>('/base/student-campaigns/my-students');
   }
 
   importStudents(request: ImportStudentRequest): Observable<any> {
@@ -48,5 +56,13 @@ export class StudentCampaignService {
 
   approveInternshipPlan(id: number): Observable<any> {
     return this.apiService.patch<any>(`/base/student-campaigns/${id}/internship-plan/approve`);
+  }
+
+  getCompanyStudents(): Observable<any> {
+    return this.apiService.get<any>('/base/student-campaigns/company-students');
+  }
+
+  approvePlanByCompany(id: number): Observable<any> {
+    return this.apiService.patch<any>(`/base/student-campaigns/${id}/internship-plan/company-approve`);
   }
 }

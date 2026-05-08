@@ -1,0 +1,106 @@
+<!-- Header Section -->
+<section class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+  <div>
+    <h2 class="font-headline-xl text-[24px] font-bold text-slate-800">Cài đặt Hệ thống</h2>
+    <p class="font-body-md text-[14px] text-slate-500 mt-1">Thiết lập các thông số cấu hình chung cho toàn bộ hệ thống.</p>
+  </div>
+  <button class="flex items-center gap-2 px-6 py-2.5 bg-[#00429D] text-white font-label-md text-[14px] rounded-lg hover:bg-blue-800 transition-colors shadow-sm disabled:opacity-50" 
+          (click)="saveSettings()" [disabled]="isLoading || isSaving">
+    <span *ngIf="isSaving" class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+    <span *ngIf="!isSaving" class="material-symbols-outlined text-[18px]">save</span>
+    Lưu cấu hình
+  </button>
+</section>
+
+<!-- Alerts -->
+<div *ngIf="successMessage" class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+  <span class="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
+  <p class="font-medium flex-1">{{ successMessage }}</p>
+  <button (click)="successMessage = ''" class="text-emerald-400 hover:text-emerald-600 transition-colors">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
+</div>
+
+<div *ngIf="errorMessage" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+  <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
+  <p class="font-medium flex-1">{{ errorMessage }}</p>
+  <button (click)="errorMessage = ''" class="text-red-400 hover:text-red-600 transition-colors">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="isLoading" class="flex items-center justify-center py-20">
+  <div class="flex flex-col items-center gap-3">
+    <span class="material-symbols-outlined animate-spin text-[40px] text-[#00429D]">progress_activity</span>
+    <p class="text-slate-500 text-sm font-medium">Đang tải cấu hình...</p>
+  </div>
+</div>
+
+<!-- Settings Form -->
+<section *ngIf="!isLoading" class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 max-w-4xl">
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+    
+    <!-- Cấu hình năm học -->
+    <div class="space-y-4">
+      <h3 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#00429D]">calendar_month</span>
+        Thời gian & Học kỳ
+      </h3>
+      
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600 font-medium">Năm học hiện tại</label>
+        <input [(ngModel)]="settings.current_academic_year" 
+               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] transition-shadow" 
+               placeholder="VD: 2024-2025" type="text"/>
+        <span class="text-xs text-slate-400">Áp dụng làm giá trị mặc định khi tạo mới đợt thực tập.</span>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600 font-medium">Học kỳ hiện tại</label>
+        <select [(ngModel)]="settings.current_semester" 
+                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] bg-white transition-shadow">
+          <option value="">— Chọn học kỳ —</option>
+          <option value="1">Học kỳ 1</option>
+          <option value="2">Học kỳ 2</option>
+          <option value="3">Học kỳ Hè</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Cấu hình nghiệp vụ -->
+    <div class="space-y-4">
+      <h3 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#00429D]">settings_suggest</span>
+        Thông số nghiệp vụ
+      </h3>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600 font-medium">Số SV tối đa / Giáo viên</label>
+        <input [(ngModel)]="settings.max_students_per_teacher" 
+               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] transition-shadow" 
+               placeholder="VD: 15" type="number" min="1"/>
+        <span class="text-xs text-slate-400">Giới hạn số lượng sinh viên mà một giảng viên có thể hướng dẫn.</span>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600 font-medium">Thông báo Email</label>
+        <div class="flex items-center gap-3 mt-1">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" 
+                   [(ngModel)]="enableEmailNotification" 
+                   class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00429D]"></div>
+            <span class="ml-3 text-[14px] font-medium text-slate-700">
+              {{ settings.enable_email_notification === 'true' ? 'Đang bật' : 'Đang tắt' }}
+            </span>
+          </label>
+        </div>
+        <span class="text-xs text-slate-400">Bật/tắt tính năng tự động gửi email thông báo cho sinh viên và giáo viên.</span>
+      </div>
+    </div>
+    
+  </div>
+  
+</section>

@@ -1,161 +1,159 @@
-<!-- Section 1: Header & Actions -->
+<!-- Header Section -->
 <section class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-<div>
-<h2 class="font-headline-xl text-[24px] font-bold text-slate-800">Import & Phân công</h2>
-<p class="font-body-md text-[14px] text-slate-500 mt-1">Tải lên danh sách sinh viên đủ điều kiện và thực hiện phân công Giảng viên hướng dẫn, Hội đồng.</p>
-</div>
-<div class="flex items-center gap-3">
-<button class="flex items-center gap-2 px-4 py-2 border border-slate-300 text-[#002d70] font-label-md text-[13px] font-medium rounded hover:bg-slate-50 transition-colors">
-<span class="material-symbols-outlined text-[18px]">download</span>
-                            Tải file mẫu
-                        </button>
-<button class="flex items-center gap-2 px-4 py-2 bg-[#00429D] text-white font-label-md text-[13px] font-medium rounded hover:bg-blue-800 transition-colors shadow-sm">
-<span class="material-symbols-outlined text-[18px]">upload_file</span>
-                            Import Excel
-                        </button>
-</div>
+  <div>
+    <h2 class="font-headline-xl text-[24px] font-bold text-slate-800">Danh sách Sinh viên</h2>
+    <p class="font-body-md text-[14px] text-slate-500 mt-1">Import và phân công Giảng viên hướng dẫn cho sinh viên thuộc khoa.</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <!-- Dropdown Đợt thực tập -->
+    <div class="flex items-center gap-2 bg-white px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm">
+      <span class="material-symbols-outlined text-slate-400 text-[18px]">event</span>
+      <select [(ngModel)]="selectedCampaignId" (change)="onCampaignChange()" class="bg-transparent text-[13px] font-medium text-slate-700 focus:outline-none pr-4 cursor-pointer">
+        <option *ngFor="let camp of campaigns" [value]="camp.id">{{ camp.name }}</option>
+      </select>
+    </div>
+
+    <!-- Nút Upload Excel -->
+    <button class="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 font-label-md text-[13px] rounded hover:bg-slate-200 transition-colors border border-slate-200 shadow-sm" (click)="triggerFileInput()">
+      <span class="material-symbols-outlined text-[18px] text-emerald-600">upload_file</span>
+      Nhập Excel
+    </button>
+    <input type="file" #fileInput (change)="onFileChange($event)" accept=".xlsx, .xls" class="hidden">
+
+    <!-- Nút Download Template -->
+    <button class="flex items-center gap-2 px-3 py-2 text-slate-500 hover:text-[#00429D] hover:bg-blue-50 transition-colors rounded text-[13px] font-medium" (click)="downloadTemplate()" title="Tải file mẫu Excel">
+      <span class="material-symbols-outlined text-[18px]">download</span>
+      Mẫu
+    </button>
+
+    <!-- Nút Thêm Thủ công -->
+    <button class="flex items-center gap-2 px-4 py-2 bg-[#00429D] text-white font-label-md text-[13px] rounded hover:bg-blue-800 transition-colors shadow-sm" (click)="openManualModal()">
+      <span class="material-symbols-outlined text-[18px]">person_add</span>
+      Thêm SV
+    </button>
+  </div>
 </section>
-<!-- Section 2: Data Management Canvas -->
-<section class="flex flex-col gap-4 bg-white border border-slate-200 rounded-lg shadow-sm">
-<!-- Toolbar / Bulk Actions -->
-<div class="px-5 py-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50 rounded-t-lg">
-<div class="flex items-center gap-3 w-full md:w-auto">
-<span class="font-label-md text-[13px] text-slate-500 whitespace-nowrap">Hành động:</span>
-<select class="w-full md:w-48 bg-white border border-slate-300 text-slate-700 font-body-md text-[14px] rounded px-3 py-1.5 focus:ring-[#00429D] focus:border-[#00429D] outline-none">
-<option>Chọn thao tác...</option>
-<option>Phân công GVHD ngẫu nhiên</option>
-<option>Gán Hội đồng hàng loạt</option>
-<option>Xóa sinh viên đã chọn</option>
-</select>
-<button class="px-4 py-1.5 bg-white border border-slate-300 text-slate-500 font-label-md text-[13px] rounded hover:bg-slate-50 transition-colors disabled:opacity-50" disabled="">
-                                Thực thi
-                            </button>
+
+<!-- Alerts -->
+<div *ngIf="successMessage && !isManualModalOpen && !isAssignModalOpen" class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+  <span class="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
+  <p class="font-medium flex-1">{{ successMessage }}</p>
+  <button (click)="successMessage = ''" class="text-emerald-400 hover:text-emerald-600 transition-colors">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
 </div>
-<div class="flex items-center gap-4 w-full md:w-auto">
-<div class="flex items-center gap-2">
-<span class="font-label-md text-[13px] text-slate-500">Lọc:</span>
-<select class="bg-white border border-slate-300 text-slate-700 font-body-md text-[14px] rounded px-3 py-1.5 focus:ring-[#00429D] focus:border-[#00429D] outline-none">
-<option>Tất cả trạng thái</option>
-<option>Chưa phân công</option>
-<option>Đã phân công GV</option>
-<option>Hoàn tất phân công</option>
-</select>
+
+<div *ngIf="errorMessage && !isManualModalOpen && !isAssignModalOpen" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+  <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
+  <p class="font-medium flex-1">{{ errorMessage }}</p>
+  <button (click)="errorMessage = ''" class="text-red-400 hover:text-red-600 transition-colors">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
 </div>
-</div>
-</div>
-<!-- Data Table -->
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead class="bg-[#f3f3fb] border-b border-slate-200">
-<tr>
-<th class="py-3 px-4 w-12 text-center">
-<input class="rounded-sm border-slate-300 text-[#00429D] focus:ring-[#00429D]" type="checkbox"/>
-</th>
-<th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Mã SV</th>
-<th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Họ và tên</th>
-<th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Lớp</th>
-<th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Trạng thái</th>
-<th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Giảng viên HD</th>
-<th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Hội đồng</th>
-</tr>
-</thead>
-<tbody class="font-body-md text-[14px] text-slate-800">
-<!-- Row 1 -->
-<tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
-<td class="py-3 px-4 text-center">
-<input class="rounded-sm border-slate-300 text-[#00429D] focus:ring-[#00429D]" type="checkbox"/>
-</td>
-<td class="py-3 px-4 font-data-mono text-[13px] font-medium">64PM1234</td>
-<td class="py-3 px-4 font-medium text-slate-800">Nguyễn Văn A</td>
-<td class="py-3 px-4 text-slate-500">64PM2</td>
-<td class="py-3 px-4">
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-200 text-slate-600 border border-slate-300">
-                                            Chưa phân công
-                                        </span>
-</td>
-<td class="py-2 px-4">
-<select class="w-full min-w-[180px] bg-white border border-slate-300 text-slate-800 text-sm rounded px-3 py-1.5 focus:ring-[#00429D] focus:border-[#00429D] outline-none">
-<option value="">-- Chọn GVHD --</option>
-<option>TS. Lê Hoàng Sơn</option>
-<option>ThS. Trần Thị B</option>
-<option>PGS.TS Phạm Văn C</option>
-</select>
-</td>
-<td class="py-2 px-4">
-<select class="w-full min-w-[160px] bg-white border border-slate-300 text-slate-800 text-sm rounded px-3 py-1.5 focus:ring-[#00429D] focus:border-[#00429D] outline-none">
-<option value="">-- Chọn HĐ --</option>
-<option>HĐ 01 - HTTT</option>
-<option>HĐ 02 - CNPM</option>
-</select>
-</td>
-</tr>
-<!-- Row 2 (Assigned) -->
-<tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-slate-50/50">
-<td class="py-3 px-4 text-center">
-<input class="rounded-sm border-slate-300 text-[#00429D] focus:ring-[#00429D]" type="checkbox"/>
-</td>
-<td class="py-3 px-4 font-data-mono text-[13px] font-medium">64PM5678</td>
-<td class="py-3 px-4 font-medium text-slate-800">Trần Thị Bé</td>
-<td class="py-3 px-4 text-slate-500">64PM1</td>
-<td class="py-3 px-4">
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-700 text-white border border-green-700">
-                                            Hoàn tất
-                                        </span>
-</td>
-<td class="py-2 px-4">
-<select class="w-full min-w-[180px] bg-white border border-slate-300 text-slate-800 text-sm rounded px-3 py-1.5 focus:ring-[#00429D] focus:border-[#00429D] outline-none">
-<option>TS. Lê Hoàng Sơn</option>
-<option>ThS. Trần Thị B</option>
-<option>PGS.TS Phạm Văn C</option>
-</select>
-</td>
-<td class="py-2 px-4">
-<select class="w-full min-w-[160px] bg-white border border-slate-300 text-slate-800 text-sm rounded px-3 py-1.5 focus:ring-[#00429D] focus:border-[#00429D] outline-none">
-<option>HĐ 01 - HTTT</option>
-<option>HĐ 02 - CNPM</option>
-</select>
-</td>
-</tr>
-<!-- Row 3 (Partial) -->
-<tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
-<td class="py-3 px-4 text-center">
-<input class="rounded-sm border-slate-300 text-[#00429D] focus:ring-[#00429D]" type="checkbox"/>
-</td>
-<td class="py-3 px-4 font-data-mono text-[13px] font-medium">64HT9012</td>
-<td class="py-3 px-4 font-medium text-slate-800">Phạm Văn Cường</td>
-<td class="py-3 px-4 text-slate-500">64HT1</td>
-<td class="py-3 px-4">
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-orange-500 text-white border border-orange-500">
-                                            Đã có GVHD
-                                        </span>
-</td>
-<td class="py-2 px-4">
-<select class="w-full min-w-[180px] bg-white border border-slate-300 text-slate-800 text-sm rounded px-3 py-1.5 focus:ring-[#00429D] focus:border-[#00429D] outline-none">
-<option>ThS. Trần Thị B</option>
-<option>TS. Lê Hoàng Sơn</option>
-<option>PGS.TS Phạm Văn C</option>
-</select>
-</td>
-<td class="py-2 px-4">
-<select class="w-full min-w-[160px] bg-white border border-slate-300 text-slate-800 text-sm rounded px-3 py-1.5 focus:ring-[#00429D] focus:border-[#00429D] outline-none">
-<option value="">-- Chọn HĐ --</option>
-<option>HĐ 01 - HTTT</option>
-<option>HĐ 02 - CNPM</option>
-</select>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<!-- Pagination -->
-<div class="px-5 py-3 border-t border-slate-200 flex justify-between items-center text-sm text-slate-500">
-<div>Hiển thị 1 - 3 của 120 sinh viên</div>
-<div class="flex gap-1">
-<button class="px-3 py-1 border border-slate-300 rounded hover:bg-slate-100 transition-colors disabled:opacity-50">Trước</button>
-<button class="px-3 py-1 bg-[#00429D] text-white rounded font-medium">1</button>
-<button class="px-3 py-1 border border-slate-300 rounded hover:bg-slate-100 transition-colors text-slate-700">2</button>
-<button class="px-3 py-1 border border-slate-300 rounded hover:bg-slate-100 transition-colors text-slate-700">3</button>
-<button class="px-3 py-1 border border-slate-300 rounded hover:bg-slate-100 transition-colors">Sau</button>
-</div>
-</div>
+
+<!-- Data Canvas -->
+<section class="flex flex-col bg-white border border-slate-200 rounded-lg shadow-sm">
+  <div class="px-5 py-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50 rounded-t-lg">
+    <div class="flex items-center gap-3 w-full md:w-auto">
+      <span class="text-[14px] font-medium text-slate-600">Đã chọn <strong class="text-[#00429D]">{{ selectedStudentIds.size }}</strong> sinh viên</span>
+      <button class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 text-slate-700 font-medium text-[13px] rounded hover:border-[#00429D] hover:text-[#00429D] transition-colors shadow-sm disabled:opacity-50"
+              [disabled]="selectedStudentIds.size === 0" (click)="openAssignModal()">
+        <span class="material-symbols-outlined text-[16px]">assignment_ind</span>
+        Phân công GVHD
+      </button>
+    </div>
+    <div class="flex items-center gap-4 w-full md:w-auto text-[13px] text-slate-500">
+      Tổng: <strong class="text-slate-800">{{ totalItems }}</strong> SV
+    </div>
+  </div>
+
+  <div *ngIf="isLoading && students.length === 0" class="flex flex-col items-center justify-center py-20">
+    <span class="material-symbols-outlined animate-spin text-[40px] text-[#00429D] mb-3">progress_activity</span>
+    <p class="text-slate-500 font-medium text-sm">Đang tải danh sách...</p>
+  </div>
+
+  <div *ngIf="!isLoading && students.length === 0" class="flex flex-col items-center justify-center py-16 px-4">
+    <span class="material-symbols-outlined text-[64px] text-slate-300 mb-4">group_off</span>
+    <p class="text-slate-500 font-medium text-lg">Chưa có sinh viên nào trong đợt này</p>
+    <p class="text-slate-400 text-sm mt-1">Hãy thêm sinh viên bằng tay hoặc Import Excel.</p>
+  </div>
+
+  <div *ngIf="students.length > 0" class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-[#f3f3fb] border-b border-slate-200">
+        <tr>
+          <th class="py-3 px-4 w-12 text-center">
+            <input type="checkbox" [checked]="isAllSelected()" (change)="toggleAll($event)" class="rounded border-slate-300 text-[#00429D] focus:ring-[#00429D] w-4 h-4">
+          </th>
+          <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Mã SV</th>
+          <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Họ và tên</th>
+          <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Lớp</th>
+          <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">GV Hướng dẫn</th>
+          <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody class="font-body-md text-[14px] text-slate-800">
+        <tr *ngFor="let student of students" class="border-b border-slate-100 hover:bg-slate-50 transition-colors bg-white">
+          <td class="py-3 px-4 text-center">
+            <input type="checkbox" [checked]="selectedStudentIds.has(student.id)" (change)="toggleStudent(student.id, $event)" class="rounded border-slate-300 text-[#00429D] focus:ring-[#00429D] w-4 h-4">
+          </td>
+          <td class="py-3 px-4 font-medium text-slate-700">{{ student.student_code }}</td>
+          <td class="py-3 px-4 font-bold text-[#002d70]">{{ student.full_name }}</td>
+          <td class="py-3 px-4 text-slate-500 text-[13px]">{{ student.class_name || '—' }}</td>
+          <td class="py-3 px-4">
+            <div *ngIf="student.gvhd_name" class="flex items-center gap-1.5 text-[13px] font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded w-fit border border-emerald-100">
+              <span class="material-symbols-outlined text-[16px]">person</span>
+              {{ student.gvhd_name }}
+            </div>
+            <span *ngIf="!student.gvhd_name" class="text-[13px] text-slate-400 italic">Chưa phân công</span>
+          </td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-1 rounded-full text-[11px] font-bold border"
+                  [ngClass]="{
+                    'bg-slate-100 text-slate-600 border-slate-200': student.status === 'IMPORTED',
+                    'bg-blue-50 text-blue-600 border-blue-200': student.status === 'PLAN_APPROVED',
+                    'bg-emerald-50 text-emerald-600 border-emerald-200': student.status === 'COMPLETED'
+                  }">
+              {{ student.status }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <app-pagination *ngIf="students.length > 0" [currentPage]="currentPage" [totalItems]="totalItems" [pageSize]="pageSize" (pageChange)="onPageChange($event)"></app-pagination>
 </section>
+
+<!-- Modal Thêm Thủ công -->
+<app-modal [isOpen]="isManualModalOpen" title="Thêm Sinh viên" saveText="Thêm" (close)="closeManualModal()" (save)="saveManualStudent()">
+  <div class="space-y-4">
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Mã sinh viên <span class="text-red-500">*</span></label>
+      <input [(ngModel)]="formStudentCode" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: 000000" type="text"/>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Họ và tên <span class="text-red-500">*</span></label>
+      <input [(ngModel)]="formFullName" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: Nguyễn Văn A" type="text"/>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Lớp <span class="text-slate-400 font-normal">(tùy chọn)</span></label>
+      <input [(ngModel)]="formClassName" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: 64PM1" type="text"/>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Phân công GVHD -->
+<app-modal [isOpen]="isAssignModalOpen" title="Phân công Giảng viên Hướng dẫn" saveText="Phân công" (close)="closeAssignModal()" (save)="saveAssignment()">
+  <div class="space-y-4">
+    <p class="text-[14px] text-slate-600 mb-2">Đang chọn phân công cho <strong class="text-[#00429D]">{{ selectedStudentIds.size }}</strong> sinh viên.</p>
+    
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Chọn GV Hướng dẫn <span class="text-red-500">*</span></label>
+      <select [(ngModel)]="selectedTeacherId" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
+        <option [ngValue]="null">— Chọn giáo viên —</option>
+        <option *ngFor="let t of teachers" [ngValue]="t.id">{{ t.full_name }} - {{ t.email }}</option>
+      </select>
+    </div>
+  </div>
+</app-modal>

@@ -1,57 +1,99 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { StudentCampaignService } from '../../../core/services/student-campaign.service';
+import { StudentCampaignResponse } from '../../../core/models/base.model';
 
 @Component({
   selector: 'app-manage-students',
   templateUrl: './manage-students.component.html',
   styleUrls: ['./manage-students.component.scss']
 })
-export class ManageStudentsComponent {
-  students = [
-    {
-      id: '64PM2024',
-      name: 'Nguyễn Văn A',
-      class: '64PM2',
-      company: 'Công ty TNHH Phần mềm FPT',
-      phone: '0987.123.456',
-      progressStatus: 'Đang thực tập',
-      logStatus: 'Đã nộp Tuần 4',
-      statusColor: 'green'
-    },
-    {
-      id: '64PM2025',
-      name: 'Phạm Thị B',
-      class: '64PM1',
-      company: 'Viettel Solutions',
-      phone: '0912.345.678',
-      progressStatus: 'Cảnh báo',
-      logStatus: 'Trễ nộp Tuần 3',
-      statusColor: 'red'
-    },
-    {
-      id: '64PM2026',
-      name: 'Lê Hoàng C',
-      class: '64PM3',
-      company: 'Chưa có đơn vị',
-      phone: '0933.111.222',
-      progressStatus: 'Chưa bắt đầu',
-      logStatus: 'Chưa có',
-      statusColor: 'gray'
-    },
-    {
-      id: '64PM2027',
-      name: 'Trần Minh Khang',
-      class: '64PM2',
-      company: 'VNPT IT',
-      phone: '0966.999.888',
-      progressStatus: 'Chờ duyệt Kế hoạch',
-      logStatus: 'Tuần 1',
-      statusColor: 'yellow'
-    }
-  ];
+export class ManageStudentsComponent implements OnInit {
+  isLoading = true;
+  isApproving = false;
+  students: StudentCampaignResponse[] = [];
+  
+  selectedStudent: StudentCampaignResponse | null = null;
+  showModal = false;
+  successMessage = '';
+  errorMessage = '';
 
-  selectedStudent: any = null;
+  constructor(private studentCampaignService: StudentCampaignService) {}
 
-  viewDetails(student: any) {
+  ngOnInit(): void {
+    this.loadMyStudents();
+  }
+
+  loadMyStudents(): void {
+    this.isLoading = true;
+    this.studentCampaignService.getMyAssignedStudents().subscribe({
+      next: (res) => {
+        this.students = Array.isArray(res) ? res : [];
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  openReviewModal(student: StudentCampaignResponse): void {
     this.selectedStudent = student;
+    this.showModal = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.selectedStudent = null;
+  }
+
+  approveCompany(): void {
+    if (!this.selectedStudent) return;
+    
+    this.isApproving = true;
+    this.errorMessage = '';
+    
+    this.studentCampaignService.approveCompanyInfo(this.selectedStudent.id).subscribe({
+      next: () => {
+        this.successMessage = 'Đã duyệt thông tin Đơn vị thực tập thành công!';
+        this.isApproving = false;
+        
+        // Update local status
+        if (this.selectedStudent) {
+          this.selectedStudent.status = 'COMPANY_APPROVED';
+        }
+        
+        setTimeout(() => this.closeModal(), 1500);
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'Có lỗi xảy ra khi duyệt.';
+        this.isApproving = false;
+      }
+    });
+  }
+
+  getStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'IMPORTED': return 'bg-slate-100 text-slate-600';
+      case 'COMPANY_DECLARED': return 'bg-amber-100 text-amber-700';
+      case 'COMPANY_APPROVED': return 'bg-blue-100 text-blue-700';
+      case 'PLAN_SUBMITTED': return 'bg-purple-100 text-purple-700';
+      case 'PLAN_APPROVED': return 'bg-emerald-100 text-emerald-700';
+      case 'COMPLETED': return 'bg-green-100 text-green-700';
+      default: return 'bg-slate-100 text-slate-600';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'IMPORTED': return 'Chưa kê khai';
+      case 'COMPANY_DECLARED': return 'Chờ duyệt ĐVHD';
+      case 'COMPANY_APPROVED': return 'Đã duyệt ĐVHD';
+      case 'PLAN_SUBMITTED': return 'Chờ duyệt Kế hoạch';
+      case 'PLAN_APPROVED': return 'Đang thực tập';
+      case 'COMPLETED': return 'Hoàn thành';
+      default: return status;
+    }
   }
 }

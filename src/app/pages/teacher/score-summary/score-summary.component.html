@@ -21,25 +21,30 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <p class="text-sm text-slate-500 font-medium">Tổng Sinh viên</p>
-            <p class="text-3xl font-bold text-slate-900 mt-2">{{ students.length }}</p>
+            <p class="text-3xl font-bold text-slate-900 mt-2">{{ totalStudents }}</p>
         </div>
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <p class="text-sm text-slate-500 font-medium">Đã có kết quả</p>
-            <p class="text-3xl font-bold text-[#00429D] mt-2">5</p>
+            <p class="text-3xl font-bold text-[#00429D] mt-2">{{ studentsWithResult }}</p>
         </div>
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <p class="text-sm text-slate-500 font-medium">Đạt (Qua môn)</p>
-            <p class="text-3xl font-bold text-green-600 mt-2">4</p>
+            <p class="text-3xl font-bold text-green-600 mt-2">{{ studentsPassed }}</p>
         </div>
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <p class="text-sm text-slate-500 font-medium">Không đạt</p>
-            <p class="text-3xl font-bold text-red-600 mt-2">1</p>
+            <p class="text-3xl font-bold text-red-600 mt-2">{{ studentsFailed }}</p>
         </div>
     </div>
 
     <!-- Data Grid (Excel-like Table) -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto relative">
+        <div *ngIf="isLoading" class="p-12 text-center text-gray-500">
+            <span class="material-symbols-outlined animate-spin text-4xl mb-4">autorenew</span>
+            <p>Đang tổng hợp điểm từ hệ thống...</p>
+        </div>
+
+        <div *ngIf="!isLoading" class="overflow-x-auto relative">
             <table class="w-full text-left text-sm whitespace-nowrap">
                 <!-- Table Header -->
                 <thead class="bg-slate-50 text-slate-700 uppercase text-xs font-semibold border-b border-slate-200">
@@ -60,6 +65,11 @@
                 </thead>
                 <!-- Table Body -->
                 <tbody class="divide-y divide-slate-200 text-slate-800">
+                    <tr *ngIf="students.length === 0">
+                        <td colspan="9" class="py-8 text-center text-gray-500">
+                            Chưa có sinh viên nào được phân công.
+                        </td>
+                    </tr>
                     <tr *ngFor="let student of students; let i = index" class="hover:bg-slate-50 transition-colors group">
                         <td class="px-6 py-3 border-r border-slate-200 text-center text-slate-500">{{ i + 1 }}</td>
                         <td class="px-6 py-3 border-r border-slate-200 font-medium">{{ student.mssv }}</td>
@@ -102,9 +112,8 @@
             </table>
         </div>
         <!-- Pagination Placeholder -->
-        <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
-            <span class="text-sm text-slate-600">Hiển thị <span class="font-medium">1</span> đến <span class="font-medium">7</span> trong số <span class="font-medium">7</span> kết quả</span>
-            <app-pagination></app-pagination>
+        <div *ngIf="!isLoading" class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
+            <span class="text-sm text-slate-600">Tổng cộng <span class="font-medium">{{ students.length }}</span> kết quả</span>
         </div>
     </div>
 </div>

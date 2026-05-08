@@ -1,88 +1,169 @@
-<div class="max-w-7xl mx-auto space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-    <div>
-      <h2 class="text-2xl font-bold text-slate-900">Danh sách Sinh viên Hướng dẫn</h2>
-      <p class="text-slate-600 mt-1">Quản lý tổng quan tiến độ của các sinh viên do bạn phụ trách.</p>
-    </div>
-    
-    <!-- Search & Filter -->
-    <div class="flex items-center gap-3">
-      <div class="relative">
-        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-        <input type="text" placeholder="Tìm tên, MSSV..." class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-[#00429D] focus:border-[#00429D] w-64">
-      </div>
-      <button class="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
-        <span class="material-symbols-outlined text-[18px]">filter_list</span>
-        Bộ lọc
-      </button>
-    </div>
+<!-- Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+  <div>
+    <h2 class="font-headline-xl text-[24px] font-bold text-slate-800">Danh sách Sinh viên</h2>
+    <p class="font-body-md text-[14px] text-slate-500 mt-1">Quản lý và theo dõi tiến độ sinh viên do bạn hướng dẫn.</p>
   </div>
+</div>
 
-  <!-- Table -->
-  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+<!-- Loading -->
+<div *ngIf="isLoading" class="flex justify-center items-center py-20">
+  <div class="flex flex-col items-center gap-3">
+    <span class="material-symbols-outlined animate-spin text-[40px] text-[#00429D]">progress_activity</span>
+    <p class="text-slate-500 text-sm font-medium">Đang tải danh sách...</p>
+  </div>
+</div>
+
+<!-- Empty -->
+<div *ngIf="!isLoading && students.length === 0" class="flex flex-col items-center justify-center py-16 bg-white border border-slate-200 rounded-lg shadow-sm">
+  <span class="material-symbols-outlined text-[64px] text-slate-300 mb-4">groups</span>
+  <p class="text-slate-500 font-medium text-lg">Bạn chưa được phân công hướng dẫn sinh viên nào.</p>
+</div>
+
+<!-- Table -->
+<div *ngIf="!isLoading && students.length > 0" class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
     <table class="w-full text-left border-collapse">
       <thead>
-        <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-          <th class="py-3 px-6">Sinh viên</th>
-          <th class="py-3 px-6">Lớp</th>
-          <th class="py-3 px-6">Đơn vị Thực tập</th>
-          <th class="py-3 px-6">Trạng thái chung</th>
-          <th class="py-3 px-6">Tiến độ Nhật ký</th>
-          <th class="py-3 px-6 text-right">Hành động</th>
+        <tr class="bg-slate-50 border-b border-slate-200 text-[13px] font-bold text-slate-600 uppercase tracking-wider">
+          <th class="px-5 py-4">Mã SV</th>
+          <th class="px-5 py-4">Họ và tên</th>
+          <th class="px-5 py-4">Lớp</th>
+          <th class="px-5 py-4">Đơn vị TT</th>
+          <th class="px-5 py-4">Trạng thái</th>
+          <th class="px-5 py-4 text-center">Hành động</th>
         </tr>
       </thead>
-      <tbody class="text-sm text-slate-700 divide-y divide-slate-200">
-        <tr *ngFor="let student of students" class="hover:bg-slate-50 transition-colors">
-          <td class="py-4 px-6">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-blue-100 text-[#00429D] font-bold flex items-center justify-center text-xs">
-                {{ student.name.charAt(0) }}
-              </div>
-              <div>
-                <p class="font-bold text-slate-900">{{ student.name }}</p>
-                <div class="flex flex-col gap-1 mt-1">
-                  <p class="text-xs text-slate-500 font-mono">{{ student.id }}</p>
-                  <p class="text-xs text-slate-500 flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[14px]">call</span> 
-                    {{ student.phone }}
-                  </p>
-                </div>
-              </div>
-            </div>
+      <tbody class="divide-y divide-slate-100 text-[14px] text-slate-700">
+        <tr *ngFor="let sv of students" class="hover:bg-slate-50 transition-colors">
+          <td class="px-5 py-4 font-medium text-slate-800">{{ sv.student_code }}</td>
+          <td class="px-5 py-4 font-medium">{{ sv.full_name }}</td>
+          <td class="px-5 py-4">{{ sv.class_name }}</td>
+          <td class="px-5 py-4">
+            <span *ngIf="sv.company_info?.company_name" class="text-slate-800">{{ sv.company_info?.company_name }}</span>
+            <span *ngIf="!sv.company_info?.company_name" class="text-slate-400 italic">Chưa có</span>
           </td>
-          <td class="py-4 px-6 font-medium">{{ student.class }}</td>
-          <td class="py-4 px-6">
-            <span class="flex items-center gap-1.5" [ngClass]="{'text-slate-400 italic': student.company === 'Chưa có đơn vị', 'text-slate-800 font-medium': student.company !== 'Chưa có đơn vị'}">
-              <span class="material-symbols-outlined text-[16px] text-slate-400" *ngIf="student.company !== 'Chưa có đơn vị'">domain</span>
-              {{ student.company }}
+          <td class="px-5 py-4">
+            <span class="px-2.5 py-1 rounded-full text-[12px] font-semibold tracking-wide {{ getStatusBadgeClass(sv.status) }}">
+              {{ getStatusLabel(sv.status) }}
             </span>
           </td>
-          <td class="py-4 px-6">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                  [ngClass]="{
-                    'bg-green-100 text-green-800 border border-green-200': student.statusColor === 'green',
-                    'bg-red-100 text-red-800 border border-red-200': student.statusColor === 'red',
-                    'bg-slate-100 text-slate-600 border border-slate-200': student.statusColor === 'gray',
-                    'bg-yellow-100 text-yellow-800 border border-yellow-200': student.statusColor === 'yellow'
-                  }">
-              {{ student.progressStatus }}
-            </span>
-          </td>
-          <td class="py-4 px-6 font-medium" [ngClass]="{'text-red-600': student.logStatus.includes('Trễ')}">
-            {{ student.logStatus }}
-          </td>
-          <td class="py-4 px-6 text-right flex justify-end gap-2">
-            <button routerLink="/teacher/rubric-evaluation" class="text-white bg-[#00429D] hover:bg-blue-800 px-3 py-1.5 rounded-md font-medium text-sm transition-colors shadow-sm flex items-center gap-1">
-              <span class="material-symbols-outlined text-[16px]">edit_note</span>
-              Chấm điểm
+          <td class="px-5 py-4 text-center">
+            <!-- Nút Duyệt ĐVHD -->
+            <button *ngIf="sv.status === 'COMPANY_DECLARED'" (click)="openReviewModal(sv)"
+                    class="px-3 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 font-medium rounded text-[13px] transition-colors border border-amber-200 flex items-center gap-1 mx-auto">
+              <span class="material-symbols-outlined text-[16px]">rule</span>
+              Duyệt ĐVHD
             </button>
-            <button (click)="viewDetails(student)" class="text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-md font-medium text-sm transition-colors border border-slate-200 hover:border-slate-300">
-              Chi tiết
+            
+            <!-- Trạng thái khác -->
+            <button *ngIf="sv.status !== 'COMPANY_DECLARED'" (click)="openReviewModal(sv)"
+                    class="px-3 py-1.5 text-[#00429D] hover:bg-blue-50 font-medium rounded text-[13px] transition-colors flex items-center gap-1 mx-auto">
+              <span class="material-symbols-outlined text-[16px]">visibility</span>
+              Xem chi tiết
             </button>
           </td>
         </tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- Modal Duyệt/Xem ĐVHD -->
+<div *ngIf="showModal && selectedStudent" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+      <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#00429D]">domain_verification</span>
+        Thông tin Đơn vị Thực tập
+      </h3>
+      <button (click)="closeModal()" class="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 overflow-y-auto">
+      <!-- Info Sinh viên -->
+      <div class="flex items-center gap-4 mb-6 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+        <div class="w-12 h-12 bg-[#00429D] text-white rounded-full flex items-center justify-center text-xl font-bold">
+          {{ selectedStudent.full_name.charAt(0) }}
+        </div>
+        <div>
+          <p class="font-bold text-slate-800 text-base">{{ selectedStudent.full_name }} <span class="text-slate-500 font-normal ml-2">({{ selectedStudent.student_code })</span></p>
+          <p class="text-sm text-slate-600 mt-0.5">Lớp: {{ selectedStudent.class_name }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="successMessage" class="mb-4 bg-emerald-50 text-emerald-700 px-4 py-3 rounded-lg text-sm border border-emerald-200">
+        {{ successMessage }}
+      </div>
+      <div *ngIf="errorMessage" class="mb-4 bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm border border-red-200">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="!selectedStudent.company_info?.company_name" class="text-center py-8 text-slate-500">
+        Sinh viên chưa cập nhật thông tin Đơn vị thực tập.
+      </div>
+
+      <!-- Info ĐVHD -->
+      <div *ngIf="selectedStudent.company_info?.company_name" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tên Doanh nghiệp / Đơn vị</p>
+            <p class="font-medium text-slate-800 text-[15px]">{{ selectedStudent.company_info?.company_name }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Mã số thuế</p>
+            <p class="font-medium text-slate-800 text-[14px]">{{ selectedStudent.company_info?.tax_code || '---' }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Địa chỉ</p>
+            <p class="font-medium text-slate-800 text-[14px]">{{ selectedStudent.company_info?.address || '---' }}</p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 pt-5">
+          <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-slate-400 text-[18px]">person</span>
+            Người hướng dẫn trực tiếp (CBHD)
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Họ và tên</p>
+              <p class="font-medium text-slate-800 text-[14px]">{{ selectedStudent.company_info?.supervisor_name }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Chức vụ / Định hướng</p>
+              <p class="font-medium text-slate-800 text-[14px]">{{ selectedStudent.company_info?.expected_domain || '---' }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Số điện thoại</p>
+              <p class="font-medium text-slate-800 text-[14px]">{{ selectedStudent.company_info?.supervisor_phone || '---' }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Email</p>
+              <p class="font-medium text-slate-800 text-[14px]">{{ selectedStudent.company_info?.supervisor_email || '---' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t border-slate-100 px-6 py-4 bg-slate-50 flex justify-end gap-3 rounded-b-xl">
+      <button (click)="closeModal()" class="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors text-sm">
+        Đóng
+      </button>
+      <button *ngIf="selectedStudent.status === 'COMPANY_DECLARED'" 
+              (click)="approveCompany()" 
+              [disabled]="isApproving"
+              class="px-5 py-2 bg-[#00429D] text-white font-medium rounded-lg hover:bg-blue-800 transition-colors shadow-sm disabled:opacity-50 text-sm flex items-center gap-2">
+        <span *ngIf="isApproving" class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+        <span *ngIf="!isApproving" class="material-symbols-outlined text-[18px]">check_circle</span>
+        Phê duyệt ĐVHD
+      </button>
+    </div>
   </div>
 </div>

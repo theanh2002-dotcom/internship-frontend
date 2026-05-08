@@ -1,0 +1,217 @@
+<!-- Header Section -->
+<section class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+  <div>
+    <h2 class="font-headline-xl text-[24px] font-bold text-slate-800">Quản lý Khoa / Bộ môn</h2>
+    <p class="font-body-md text-[14px] text-slate-500 mt-1">Quản lý cấu trúc tổ chức: Khoa và các Bộ môn trực thuộc.</p>
+  </div>
+  <button class="flex items-center gap-2 px-4 py-2 bg-[#00429D] text-white font-label-md text-[13px] rounded hover:bg-blue-800 transition-colors shadow-sm" (click)="openCreateFacultyModal()">
+    <span class="material-symbols-outlined text-[18px]">domain_add</span>
+    Thêm Khoa
+  </button>
+</section>
+
+<!-- Alerts -->
+<div *ngIf="successMessage && !isModalOpen" class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+  <span class="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
+  <p class="font-medium flex-1">{{ successMessage }}</p>
+  <button (click)="successMessage = ''" class="text-emerald-400 hover:text-emerald-600 transition-colors">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
+</div>
+
+<div *ngIf="errorMessage && !isModalOpen" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+  <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
+  <p class="font-medium flex-1">{{ errorMessage }}</p>
+  <button (click)="errorMessage = ''" class="text-red-400 hover:text-red-600 transition-colors">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="isLoading && faculties.length === 0" class="flex items-center justify-center py-20">
+  <div class="flex flex-col items-center gap-3">
+    <span class="material-symbols-outlined animate-spin text-[40px] text-[#00429D]">progress_activity</span>
+    <p class="text-slate-500 text-sm font-medium">Đang tải dữ liệu...</p>
+  </div>
+</div>
+
+<!-- 2-Panel Layout -->
+<div *ngIf="!isLoading || faculties.length > 0" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+  <!-- LEFT PANEL: Danh sách Khoa -->
+  <div class="lg:col-span-4">
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm">
+      <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 rounded-t-lg flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px] text-[#00429D]">apartment</span>
+          <span class="text-[14px] font-bold text-slate-700">Danh sách Khoa</span>
+        </div>
+        <span class="text-[12px] text-slate-400">{{ totalFaculties }} khoa</span>
+      </div>
+
+      <div *ngIf="faculties.length === 0 && !isLoading" class="flex flex-col items-center py-12 px-4">
+        <span class="material-symbols-outlined text-[48px] text-slate-300 mb-3">domain_disabled</span>
+        <p class="text-slate-400 text-sm">Chưa có Khoa nào</p>
+      </div>
+
+      <div class="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
+        <div *ngFor="let faculty of faculties"
+             class="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors group"
+             [ngClass]="{
+               'bg-blue-50 border-l-[3px] border-l-[#00429D]': selectedFaculty?.id === faculty.id,
+               'hover:bg-slate-50 border-l-[3px] border-l-transparent': selectedFaculty?.id !== faculty.id
+             }"
+             (click)="selectFaculty(faculty)">
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-[13px] font-bold text-[#00429D]">{{ faculty.code }}</span>
+              <span *ngIf="faculty.status === 'INACTIVE'" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-400">OFF</span>
+            </div>
+            <p class="text-[13px] text-slate-700 font-medium truncate mt-0.5">{{ faculty.name }}</p>
+            <span class="text-[11px] text-slate-400">{{ faculty.children_count || 0 }} bộ môn</span>
+          </div>
+
+          <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-1 text-slate-400 hover:text-[#00429D] hover:bg-blue-50 rounded transition-colors" title="Sửa"
+                    (click)="openEditModal(faculty, 'faculty'); $event.stopPropagation()">
+              <span class="material-symbols-outlined text-[16px]">edit</span>
+            </button>
+            <button class="p-1 rounded transition-colors"
+                    [title]="faculty.status === 'ACTIVE' ? 'Tạm ngừng' : 'Kích hoạt'"
+                    [ngClass]="faculty.status === 'ACTIVE'
+                      ? 'text-slate-400 hover:text-orange-500 hover:bg-orange-50'
+                      : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'"
+                    (click)="toggleFacultyStatus(faculty); $event.stopPropagation()">
+              <span class="material-symbols-outlined text-[16px]">{{ faculty.status === 'ACTIVE' ? 'pause_circle' : 'play_circle' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <app-pagination *ngIf="faculties.length > 0" [currentPage]="currentPage" [totalItems]="totalFaculties" [pageSize]="pageSize" (pageChange)="onPageChange($event)"></app-pagination>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: Danh sách Bộ môn -->
+  <div class="lg:col-span-8">
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm">
+      <div class="px-5 py-3 border-b border-slate-200 bg-slate-50 rounded-t-lg flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px] text-emerald-600">account_tree</span>
+          <span class="text-[14px] font-bold text-slate-700">
+            <ng-container *ngIf="selectedFaculty">Bộ môn — {{ selectedFaculty.name }}</ng-container>
+            <ng-container *ngIf="!selectedFaculty">Chọn Khoa để xem Bộ môn</ng-container>
+          </span>
+        </div>
+        <button *ngIf="selectedFaculty"
+                class="flex items-center gap-1.5 px-3 py-1.5 bg-[#00429D] text-white text-[12px] font-medium rounded hover:bg-blue-800 transition-colors shadow-sm"
+                (click)="openCreateSubModal()">
+          <span class="material-symbols-outlined text-[16px]">add</span>
+          Thêm Bộ môn
+        </button>
+      </div>
+
+      <!-- No faculty selected -->
+      <div *ngIf="!selectedFaculty" class="flex flex-col items-center justify-center py-20 px-4">
+        <span class="material-symbols-outlined text-[64px] text-slate-200 mb-4">arrow_back</span>
+        <p class="text-slate-400 text-sm">Chọn một Khoa ở bên trái để xem danh sách Bộ môn</p>
+      </div>
+
+      <!-- Loading subs -->
+      <div *ngIf="selectedFaculty && isLoadingSubs" class="flex items-center justify-center py-16">
+        <span class="material-symbols-outlined animate-spin text-[32px] text-[#00429D]">progress_activity</span>
+      </div>
+
+      <!-- Empty subs -->
+      <div *ngIf="selectedFaculty && !isLoadingSubs && subDepartments.length === 0" class="flex flex-col items-center justify-center py-16 px-4">
+        <span class="material-symbols-outlined text-[56px] text-slate-300 mb-3">folder_open</span>
+        <p class="text-slate-500 font-medium">Chưa có Bộ môn nào</p>
+        <p class="text-slate-400 text-sm mt-1">Thêm Bộ môn trực thuộc Khoa "{{ selectedFaculty.name }}"</p>
+      </div>
+
+      <!-- Sub-departments table -->
+      <div *ngIf="selectedFaculty && !isLoadingSubs && subDepartments.length > 0" class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-[#f3f3fb] border-b border-slate-200">
+            <tr>
+              <th class="py-3 px-5 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider w-36">Mã BM</th>
+              <th class="py-3 px-5 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Tên Bộ môn</th>
+              <th class="py-3 px-5 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider w-40">Trạng thái</th>
+              <th class="py-3 px-5 text-center font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider w-28">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody class="font-body-md text-[14px] text-slate-800">
+            <tr *ngFor="let sub of subDepartments" class="border-b border-slate-100 hover:bg-slate-50 transition-colors bg-white">
+              <td class="py-3 px-5">
+                <span class="font-data-mono text-[13px] font-bold text-[#00429D]">{{ sub.code }}</span>
+              </td>
+              <td class="py-3 px-5">
+                <div class="font-medium text-[#002d70]">{{ sub.name }}</div>
+              </td>
+              <td class="py-3 px-5">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+                      [ngClass]="{
+                        'bg-emerald-100 text-emerald-700': sub.status === 'ACTIVE',
+                        'bg-slate-100 text-slate-500': sub.status === 'INACTIVE'
+                      }">
+                  {{ getStatusLabel(sub.status) }}
+                </span>
+              </td>
+              <td class="py-3 px-5">
+                <div class="flex items-center justify-center gap-1">
+                  <button class="p-1.5 text-slate-400 hover:text-[#00429D] hover:bg-blue-50 rounded transition-colors" title="Chỉnh sửa"
+                          (click)="openEditModal(sub, 'sub')">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                  <button class="p-1.5 rounded transition-colors"
+                          [title]="sub.status === 'ACTIVE' ? 'Tạm ngừng' : 'Kích hoạt'"
+                          [ngClass]="sub.status === 'ACTIVE'
+                            ? 'text-slate-400 hover:text-orange-500 hover:bg-orange-50'
+                            : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'"
+                          (click)="toggleSubStatus(sub)">
+                    <span class="material-symbols-outlined text-[18px]">{{ sub.status === 'ACTIVE' ? 'pause_circle' : 'play_circle' }}</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tạo/Sửa -->
+<app-modal [isOpen]="isModalOpen"
+           [title]="getModalTitle()"
+           [saveText]="isEditMode ? 'Cập nhật' : 'Tạo mới'"
+           (close)="closeModal()"
+           (save)="saveDepartment()">
+  <div class="space-y-4">
+    <div *ngIf="errorMessage && isModalOpen" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+      <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
+      <p class="font-medium flex-1">{{ errorMessage }}</p>
+    </div>
+
+    <!-- Info badge -->
+    <div *ngIf="modalType === 'sub' && selectedFaculty" class="bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded text-[13px] flex items-center gap-2">
+      <span class="material-symbols-outlined text-[16px]">info</span>
+      Thuộc Khoa: <strong>{{ selectedFaculty.name }}</strong>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Mã {{ modalType === 'faculty' ? 'Khoa' : 'Bộ môn' }} <span class="text-red-500">*</span></label>
+      <input [(ngModel)]="formCode"
+             class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
+             [placeholder]="modalType === 'faculty' ? 'VD: CNTT' : 'VD: CNPM'" type="text"/>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Tên {{ modalType === 'faculty' ? 'Khoa' : 'Bộ môn' }} <span class="text-red-500">*</span></label>
+      <input [(ngModel)]="formName"
+             class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
+             [placeholder]="modalType === 'faculty' ? 'VD: Khoa Công nghệ Thông tin' : 'VD: Bộ môn Công nghệ Phần mềm'" type="text"/>
+    </div>
+  </div>
+</app-modal>

@@ -8,6 +8,8 @@ export interface MenuItem {
 export const adminMenu: MenuItem[] = [
   { title: 'Bảng điều khiển', icon: 'dashboard', route: '/admin/dashboard', exact: true },
   { title: 'Quản lý đợt thực tập', icon: 'assignment_ind', route: '/admin/campaigns' },
+  { title: 'Quản lý Khoa/Bộ môn', icon: 'apartment', route: '/admin/departments' },
+  { title: 'Tài khoản Nhân sự', icon: 'group_add', route: '/admin/users' },
 ];
 
 export const ldkbmMenu: MenuItem[] = [
@@ -40,14 +42,3 @@ export const companyMenu: MenuItem[] = [
   { title: 'Phản hồi Đánh giá', icon: 'rate_review', route: '/company/survey' },
 ];
 
-export const tncmMenu: MenuItem[] = [
-  { title: 'Bảng điều khiển', icon: 'dashboard', route: '/tncm/dashboard', exact: true },
-  { title: 'Phân công GVHD', icon: 'assignment_ind', route: '/tncm/student-assignment' },
-  { title: 'Phê duyệt Bảng điểm', icon: 'verified', route: '/tncm/score-approval' },
-];
-
-export const qaMenu: MenuItem[] = [
-  { title: 'Bảng điều khiển', icon: 'dashboard', route: '/qa/dashboard', exact: true },
-  { title: 'Báo cáo AUN-QA', icon: 'analytics', route: '/qa/aun-qa' },
-  { title: 'Quản lý CAPA', icon: 'report_problem', route: '/qa/capa' }
-];
