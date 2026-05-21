@@ -1,23 +1,14 @@
 <div class="max-w-6xl mx-auto space-y-6">
-  <div *ngIf="isLoading" class="p-12 text-center text-gray-500">
-      <span class="material-symbols-outlined animate-spin text-4xl mb-4">autorenew</span>
-      <p>Đang tải dữ liệu...</p>
-  </div>
+  <app-dashboard-loading *ngIf="isLoading" message="Đang tải dữ liệu..." icon="autorenew"></app-dashboard-loading>
   
   <ng-container *ngIf="!isLoading">
   <!-- Header Welcome -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h2 class="text-2xl font-bold text-slate-900">Xin chào, {{ studentName }}! 👋</h2>
-      <p class="text-slate-600 mt-1">Tổng quan tiến độ thực tập tốt nghiệp của bạn (MSSV: {{ studentId }})</p>
-    </div>
-    <div class="text-right">
-      <div class="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg text-[#00429D] font-medium border border-blue-100">
-        <span class="material-symbols-outlined text-[20px]">calendar_today</span>
-        Tuần thực tập: {{ currentWeek }}/{{ totalWeeks }}
-      </div>
-    </div>
-  </div>
+  <app-welcome-header
+    [title]="'Xin chào, ' + studentName + '! 👋'"
+    [subtitle]="'Tổng quan tiến độ thực tập tốt nghiệp của bạn (MSSV: ' + studentId + ')'"
+    [infoTagText]="'Tuần thực tập: ' + currentWeek + '/' + totalWeeks"
+    infoTagIcon="calendar_today">
+  </app-welcome-header>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Cột trái (Chính) -->
@@ -73,7 +64,7 @@
         </div>
         
         <div class="w-full bg-slate-100 rounded-full h-3 mb-2 overflow-hidden">
-          <div class="bg-[#00429D] h-3 rounded-full transition-all duration-1000" [style.width.%]="progressPercent"></div>
+          <div class="bg-[#00429D] h-3 rounded-full transition-all duration-1000" [style.width]="progressPercent + '%'"></div>
         </div>
         <div class="flex justify-between text-xs text-slate-500 font-medium">
           <span>Bắt đầu</span>
@@ -115,6 +106,7 @@
           </button>
         </div>
       </div>
+
 
       <!-- Card Thông tin liên hệ -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">

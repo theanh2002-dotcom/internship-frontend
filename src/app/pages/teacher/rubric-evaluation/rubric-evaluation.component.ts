@@ -29,7 +29,9 @@ export class RubricEvaluationComponent implements OnInit {
   isLoading = true;
   isSaving = false;
   
+  allStudents: StudentCampaignResponse[] = [];
   students: StudentCampaignResponse[] = [];
+  searchTerm: string = '';
   selectedStudent: StudentCampaignResponse | null = null;
   
   criteria: RubricCriterion[] = [];
@@ -51,17 +53,59 @@ export class RubricEvaluationComponent implements OnInit {
 
   loadEligibleStudents(): void {
     this.isLoading = true;
-    this.studentCampaignService.getMyAssignedStudents().subscribe({
+    const currentUser = this.authService.getCurrentUser();
+    const source$ = currentUser?.role === 'COMPANY_SUPERVISOR' 
+      ? this.studentCampaignService.getCompanyStudents()
+      : this.studentCampaignService.getMyAssignedStudents();
+      
+    source$.subscribe({
       next: (res) => {
         const all = Array.isArray(res) ? res : (res.data || res.payload || []);
-        this.students = all.filter((s: any) => s.status === 'PLAN_APPROVED' || s.status === 'COMPLETED');
+        this.allStudents = all.filter((s: any) => 
+          ['PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(s.status)
+        ).map((s: any) => ({ ...s, gradingStatus: 'Đang tải...' }));
+        this.students = [...this.allStudents];
         this.isLoading = false;
+        this.checkAllEvaluationsStatus();
       },
       error: () => {
         this.isLoading = false;
         this.errorMessage = 'Lỗi tải danh sách sinh viên.';
       }
     });
+  }
+
+  checkAllEvaluationsStatus(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
+    const evaluatorType = currentUser.role === 'COMPANY_SUPERVISOR' ? 'COMPANY_SUPERVISOR' : 'GVHD';
+
+    this.allStudents.forEach(student => {
+      this.evaluationService.findEvaluations(student.id).subscribe({
+        next: (res) => {
+          const evals = Array.isArray(res) ? res : (res.data || res.payload || []);
+          const myEval = evals.find((e: any) => e.evaluator_type === evaluatorType && e.evaluator_id === currentUser.userId);
+          (student as any).gradingStatus = myEval ? 'Đã chấm' : 'Chưa chấm';
+        },
+        error: () => {
+          (student as any).gradingStatus = 'Lỗi trạng thái';
+        }
+      });
+    });
+  }
+
+  filterStudents(): void {
+    if (!this.searchTerm.trim()) {
+      this.students = [...this.allStudents];
+      return;
+    }
+    
+    const term = this.searchTerm.toLowerCase().trim();
+    this.students = this.allStudents.filter(s => 
+      s.full_name.toLowerCase().includes(term) || 
+      s.student_code.toLowerCase().includes(term) ||
+      (s.company_info?.company_name && s.company_info.company_name.toLowerCase().includes(term))
+    );
   }
 
   selectStudent(student: StudentCampaignResponse): void {
@@ -116,12 +160,13 @@ export class RubricEvaluationComponent implements OnInit {
     if (!this.selectedStudent) return;
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) return;
+    const evaluatorType = currentUser.role === 'COMPANY_SUPERVISOR' ? 'COMPANY_SUPERVISOR' : 'GVHD';
 
     this.evaluationService.findEvaluations(this.selectedStudent.id).subscribe({
       next: (res) => {
         const evaluations = Array.isArray(res) ? res : (res.data || res.payload || []);
-        // Tìm bài chấm của GVHD này
-        const myEval = evaluations.find((e: any) => e.evaluator_type === 'GVHD' && e.evaluator_id === currentUser.userId);
+        // Tìm bài chấm
+        const myEval = evaluations.find((e: any) => e.evaluator_type === evaluatorType && e.evaluator_id === currentUser.userId);
         if (myEval) {
           this.existingEvaluation = myEval;
           // Fill lại điểm cũ
@@ -157,6 +202,7 @@ export class RubricEvaluationComponent implements OnInit {
 
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) return;
+    const evaluatorType = currentUser.role === 'COMPANY_SUPERVISOR' ? 'COMPANY_SUPERVISOR' : 'GVHD';
 
     this.isSaving = true;
     this.errorMessage = '';
@@ -164,7 +210,7 @@ export class RubricEvaluationComponent implements OnInit {
 
     const payload: EvaluationRequest = {
       student_campaign_id: this.selectedStudent.id,
-      evaluator_type: 'GVHD',
+      evaluator_type: evaluatorType as any,
       evaluator_id: currentUser.userId,
       stage: 'STAGE_1',
       scores: this.criteria.map(c => ({
@@ -177,6 +223,14 @@ export class RubricEvaluationComponent implements OnInit {
       next: () => {
         this.successMessage = 'Lưu bảng điểm thành công!';
         this.isSaving = false;
+        // Auto-calculate final result so it shows up in Bảng tổng hợp
+        this.evaluationService.calculateFinalResult(this.selectedStudent!.id).subscribe();
+        
+        // Update local status
+        if (this.selectedStudent) {
+            const index = this.allStudents.findIndex(s => s.id === this.selectedStudent!.id);
+            if (index !== -1) (this.allStudents[index] as any).gradingStatus = 'Đã chấm';
+        }
       },
       error: (err) => {
         this.errorMessage = err.error?.message || 'Có lỗi khi lưu bảng điểm.';

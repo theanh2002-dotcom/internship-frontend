@@ -1,86 +1,80 @@
 <!-- Header Section -->
-<section class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-  <div>
-    <h2 class="font-headline-xl text-[24px] font-bold text-slate-800">Bảng điều khiển (Dashboard)</h2>
-    <p class="font-body-md text-[14px] text-slate-500 mt-1">Tổng quan thông tin thực tập của sinh viên thuộc Khoa / Bộ môn.</p>
+<app-welcome-header
+  title="Bảng điều khiển (Dashboard)"
+  subtitle="Tổng quan thông tin thực tập của sinh viên thuộc Khoa / Bộ môn."
+  class="mb-6 block">
+  <!-- Dropdown Đợt thực tập -->
+  <div class="flex items-center gap-2 bg-white px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm">
+    <span class="material-symbols-outlined text-slate-400 text-[18px]">event</span>
+    <select [(ngModel)]="selectedCampaignId" (change)="onCampaignChange()" class="bg-transparent text-[13px] font-medium text-slate-700 focus:outline-none pr-4 cursor-pointer">
+      <option *ngFor="let camp of campaigns" [value]="camp.id">{{ camp.name }}</option>
+    </select>
   </div>
-  <div class="flex items-center gap-3">
-    <!-- Dropdown Đợt thực tập -->
-    <div class="flex items-center gap-2 bg-white px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm">
-      <span class="material-symbols-outlined text-slate-400 text-[18px]">event</span>
-      <select [(ngModel)]="selectedCampaignId" (change)="onCampaignChange()" class="bg-transparent text-[13px] font-medium text-slate-700 focus:outline-none pr-4 cursor-pointer">
-        <option *ngFor="let camp of campaigns" [value]="camp.id">{{ camp.name }}</option>
-      </select>
-    </div>
-  </div>
-</section>
+</app-welcome-header>
 
 <!-- Loading State -->
-<div *ngIf="isLoading" class="flex items-center justify-center py-20">
-  <div class="flex flex-col items-center gap-3">
-    <span class="material-symbols-outlined animate-spin text-[40px] text-[#00429D]">progress_activity</span>
-    <p class="text-slate-500 text-sm font-medium">Đang tải dữ liệu thống kê...</p>
-  </div>
-</div>
+<app-dashboard-loading *ngIf="isLoading" message="Đang tải dữ liệu thống kê..."></app-dashboard-loading>
 
 <div *ngIf="!isLoading">
   <!-- Key Metrics -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <!-- Thẻ 1 -->
-    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow transition-shadow flex items-center gap-4 relative overflow-hidden">
-      <div class="absolute w-1 h-full bg-[#00429D] top-0 left-0"></div>
-      <div class="w-12 h-12 bg-blue-50 text-[#00429D] rounded-full flex justify-center items-center shrink-0">
-        <span class="material-symbols-outlined text-2xl">school</span>
-      </div>
-      <div>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Tổng Sinh viên</p>
-        <p class="text-2xl font-bold text-slate-800">{{ totalStudents }}</p>
-      </div>
-    </div>
+    <app-metric-card
+      title="Tổng Sinh viên"
+      [value]="totalStudents"
+      icon="school"
+      iconBgClass="bg-blue-50 text-[#00429D]"
+      sideAccentColor="#00429D">
+    </app-metric-card>
 
     <!-- Thẻ 2 -->
-    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow transition-shadow flex items-center gap-4 relative overflow-hidden">
-      <div class="absolute w-1 h-full bg-amber-500 top-0 left-0"></div>
-      <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex justify-center items-center shrink-0">
-        <span class="material-symbols-outlined text-2xl">assignment_ind</span>
-      </div>
-      <div>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Đã gán GVHD</p>
-        <p class="text-2xl font-bold text-slate-800">{{ assignedStudents }}</p>
-      </div>
-    </div>
+    <app-metric-card
+      title="Đã gán GVHD"
+      [value]="assignedStudents"
+      icon="assignment_ind"
+      iconBgClass="bg-amber-50 text-amber-600"
+      sideAccentColor="#f59e0b">
+    </app-metric-card>
 
     <!-- Thẻ 3 -->
-    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow transition-shadow flex items-center gap-4 relative overflow-hidden">
-      <div class="absolute w-1 h-full bg-emerald-500 top-0 left-0"></div>
-      <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex justify-center items-center shrink-0">
-        <span class="material-symbols-outlined text-2xl">check_circle</span>
-      </div>
-      <div>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Đã duyệt Kế hoạch</p>
-        <p class="text-2xl font-bold text-slate-800">{{ approvedPlans }}</p>
-      </div>
-    </div>
+    <app-metric-card
+      title="Đã duyệt Kế hoạch"
+      [value]="approvedPlans"
+      icon="check_circle"
+      iconBgClass="bg-emerald-50 text-emerald-600"
+      sideAccentColor="#10b981">
+    </app-metric-card>
 
     <!-- Thẻ 4 -->
-    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow transition-shadow flex items-center gap-4 relative overflow-hidden">
-      <div class="absolute w-1 h-full bg-purple-500 top-0 left-0"></div>
-      <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-full flex justify-center items-center shrink-0">
-        <span class="material-symbols-outlined text-2xl">workspace_premium</span>
-      </div>
-      <div>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Đã hoàn thành</p>
-        <p class="text-2xl font-bold text-slate-800">{{ completedStudents }}</p>
-      </div>
-    </div>
+    <app-metric-card
+      title="Đã hoàn thành"
+      [value]="completedStudents"
+      icon="workspace_premium"
+      iconBgClass="bg-purple-50 text-purple-600"
+      sideAccentColor="#8b5cf6">
+    </app-metric-card>
   </div>
 
-  <!-- Báo cáo phụ (Placeholder) -->
+  <!-- Báo cáo phụ -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-      <h3 class="font-bold text-slate-800 text-base mb-4">Tiến độ đợt thực tập</h3>
-      <div class="h-48 flex items-center justify-center border-2 border-dashed border-slate-100 rounded-lg text-slate-400">
-        (Đang chờ cập nhật tính năng Biểu đồ tiến độ)
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-slate-800 text-base">Tiến độ đợt thực tập</h3>
+        <span class="text-xs font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">Phân phối tiến trình</span>
+      </div>
+      <div class="flex flex-col gap-4">
+        <div *ngFor="let group of statusGroups" class="space-y-1.5">
+          <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full" [ngClass]="group.color"></span>
+              {{ group.label }}
+            </span>
+            <span class="text-slate-500 font-mono">{{ group.count }} / {{ totalStudents }} SV ({{ group.percentage }}%)</span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+            <div class="h-2.5 rounded-full transition-all duration-1000" [ngClass]="group.color" [style.width.%]="group.percentage"></div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
@@ -93,6 +87,267 @@
           <strong>{{ assignedStudents - approvedPlans }}</strong> sinh viên chưa nộp / chưa được duyệt Kế hoạch TT.
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Bảng theo dõi tiến độ chi tiết -->
+  <div class="bg-white border border-slate-200 rounded-xl shadow-sm mt-6 overflow-hidden">
+    <div class="p-6 border-b border-slate-200">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h3 class="font-bold text-slate-800 text-lg">Giám sát Tiến độ Thực tập Chi tiết</h3>
+          <p class="text-sm text-slate-500 mt-1">Theo dõi việc nộp biểu mẫu & hoàn thành các chặng (TTTN-01 đến TTTN-07) của từng sinh viên</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Chú thích nhanh -->
+          <div class="flex items-center gap-4 text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">
+            <div class="flex items-center gap-1">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span>Đã hoàn thành / Duyệt</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <span>Đang chờ duyệt</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+              <span>Chưa thực hiện</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+        <div class="md:col-span-2 relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="material-symbols-outlined text-slate-400">search</span>
+          </span>
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery" 
+            (ngModelChange)="onSearchChange()" 
+            placeholder="Tìm kiếm theo Mã SV, Họ tên, Lớp, GVHD..." 
+            class="pl-10 pr-4 py-2 w-full border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          />
+        </div>
+        <div>
+          <select 
+            [(ngModel)]="statusFilter" 
+            (change)="onFilterChange()" 
+            class="px-3 py-2 w-full border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="IMPORTED">Mới nhập (Chưa bắt đầu)</option>
+            <option value="COMPANY_DECLARED">Kê khai nơi thực tập (TTTN-01)</option>
+            <option value="COMPANY_APPROVED">Đã duyệt nơi thực tập</option>
+            <option value="PLAN_SUBMITTED">Đã nộp kế hoạch (TTTN-02)</option>
+            <option value="PLAN_APPROVED">Đã duyệt kế hoạch</option>
+            <option value="IN_PROGRESS">Đang thực tập (TTTN-03)</option>
+            <option value="STAGE1_EVALUATED">Đã chấm chặng 1 (TTTN-04)</option>
+            <option value="REPORT_SUBMITTED">Đã nộp báo cáo (TTTN-06)</option>
+            <option value="STAGE2_EVALUATED">Đã chấm chặng 2 (TTTN-05)</option>
+            <option value="COMPLETED">Đã hoàn thành (TTTN-07)</option>
+            <option value="SUSPENDED">Bị đình chỉ</option>
+          </select>
+        </div>
+        <div class="text-right flex items-center justify-end text-sm text-slate-500">
+          Hiển thị <strong>{{ filteredStudents.length }}</strong> kết quả
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+            <th class="px-6 py-3">Sinh viên</th>
+            <th class="px-6 py-3">GVHD</th>
+            <th class="px-6 py-3">Đơn vị thực tập</th>
+            <th class="px-6 py-3 text-center">Tiến trình biểu mẫu</th>
+            <th class="px-6 py-3">Trạng thái chung</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-sm">
+          <tr *ngFor="let student of pagedStudents" class="hover:bg-slate-50 transition-colors">
+            <!-- Student details -->
+            <td class="px-6 py-4">
+              <div class="font-medium text-slate-800">{{ student.full_name }}</div>
+              <div class="text-xs text-slate-500 mt-0.5">MSV: {{ student.student_code }} • Lớp: {{ student.class_name }}</div>
+            </td>
+            <!-- Lecturer -->
+            <td class="px-6 py-4">
+              <span *ngIf="student.gvhd_name" class="text-slate-700">{{ student.gvhd_name }}</span>
+              <span *ngIf="!student.gvhd_name" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-50 text-rose-700 border border-rose-100">
+                Chưa phân công
+              </span>
+            </td>
+            <!-- Company -->
+            <td class="px-6 py-4">
+              <span *ngIf="student.company_info?.company_name" class="text-slate-700 block max-w-[200px] truncate" [title]="student.company_info.company_name">
+                {{ student.company_info.company_name }}
+              </span>
+              <span *ngIf="!student.company_info?.company_name" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-500">
+                Chưa đăng ký
+              </span>
+            </td>
+            <!-- Checklist progress -->
+            <td class="px-6 py-4">
+              <div class="flex items-center justify-center gap-1.5">
+                <!-- TTTN-01 -->
+                <div class="flex flex-col items-center" title="TTTN-01: Đăng ký nơi thực tập">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
+                    [ngClass]="{
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-01') === 'success',
+                      'bg-amber-500 text-white animate-pulse shadow-sm': getStatusStep(student.status, 'TTTN-01') === 'warning',
+                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-01') === 'none'
+                    }">
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-01') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-01') !== 'success'">01</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">01</span>
+                </div>
+
+                <div class="w-3 h-0.5 bg-slate-200 -mt-3"></div>
+
+                <!-- TTTN-02 -->
+                <div class="flex flex-col items-center" title="TTTN-02: Kế hoạch thực tập">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
+                    [ngClass]="{
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-02') === 'success',
+                      'bg-amber-500 text-white animate-pulse shadow-sm': getStatusStep(student.status, 'TTTN-02') === 'warning',
+                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-02') === 'none'
+                    }">
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-02') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-02') !== 'success'">02</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">02</span>
+                </div>
+
+                <div class="w-3 h-0.5 bg-slate-200 -mt-3"></div>
+
+                <!-- TTTN-03 -->
+                <div class="flex flex-col items-center" title="TTTN-03: Nhật ký tuần">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
+                    [ngClass]="{
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-03') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-03') === 'none'
+                    }">
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-03') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-03') !== 'success'">03</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">03</span>
+                </div>
+
+                <div class="w-3 h-0.5 bg-slate-200 -mt-3"></div>
+
+                <!-- TTTN-04 -->
+                <div class="flex flex-col items-center" title="TTTN-04: Đánh giá giữa kỳ">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
+                    [ngClass]="{
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-04') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-04') === 'none'
+                    }">
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-04') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-04') !== 'success'">04</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">04</span>
+                </div>
+
+                <div class="w-3 h-0.5 bg-slate-200 -mt-3"></div>
+
+                <!-- TTTN-06 -->
+                <div class="flex flex-col items-center" title="TTTN-06: Báo cáo thực tập">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
+                    [ngClass]="{
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-06') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-06') === 'none'
+                    }">
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-06') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-06') !== 'success'">06</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">06</span>
+                </div>
+
+                <div class="w-3 h-0.5 bg-slate-200 -mt-3"></div>
+
+                <!-- TTTN-05 -->
+                <div class="flex flex-col items-center" title="TTTN-05: Đánh giá cuối kỳ">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
+                    [ngClass]="{
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-05') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-05') === 'none'
+                    }">
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-05') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-05') !== 'success'">05</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">05</span>
+                </div>
+
+                <div class="w-3 h-0.5 bg-slate-200 -mt-3"></div>
+
+                <!-- TTTN-07 -->
+                <div class="flex flex-col items-center" title="TTTN-07: Bảng điểm tổng hợp">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
+                    [ngClass]="{
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-07') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-07') === 'none'
+                    }">
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-07') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student.status, 'TTTN-07') !== 'success'">07</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">07</span>
+                </div>
+              </div>
+            </td>
+            <!-- General status badge -->
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold" [ngClass]="getStatusClass(student.status)">
+                {{ getStatusLabel(student.status) }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="filteredStudents.length === 0">
+            <td colspan="5" class="px-6 py-8 text-center text-slate-400">
+              Không tìm thấy sinh viên nào khớp với bộ lọc
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="p-6 border-t border-slate-200 flex items-center justify-between" *ngIf="totalPages > 1">
+      <button 
+        (click)="onTablePageChange(tableCurrentPage - 1)" 
+        [disabled]="tableCurrentPage === 1"
+        class="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+      >
+        <span class="material-symbols-outlined text-sm">chevron_left</span>
+        Trước
+      </button>
+      <div class="flex items-center gap-1">
+        <button 
+          *ngFor="let page of getPages()" 
+          (click)="onTablePageChange(page)"
+          class="w-9 h-9 rounded-lg text-sm font-medium transition-colors"
+          [ngClass]="{
+            'bg-blue-600 text-white': tableCurrentPage === page,
+            'text-slate-700 hover:bg-slate-50': tableCurrentPage !== page
+          }"
+        >
+          {{ page }}
+        </button>
+      </div>
+      <button 
+        (click)="onTablePageChange(tableCurrentPage + 1)" 
+        [disabled]="tableCurrentPage === totalPages"
+        class="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+      >
+        Sau
+        <span class="material-symbols-outlined text-sm">chevron_right</span>
+      </button>
     </div>
   </div>
 </div>

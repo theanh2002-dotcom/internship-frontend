@@ -1,0 +1,15 @@
+node_modules
+dist
+.angular
+.git
+.vscode
+.agents
+.aider-desk
+.augment
+.claude
+.codebuddy
+.codemaker
+.codestudio
+*.md
+screen*.html
+skills-lock.json

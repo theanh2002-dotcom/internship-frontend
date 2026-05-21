@@ -65,4 +65,8 @@ export class StudentCampaignService {
   approvePlanByCompany(id: number): Observable<any> {
     return this.apiService.patch<any>(`/base/student-campaigns/${id}/internship-plan/company-approve`);
   }
+
+  deleteStudentCampaign(id: number): Observable<any> {
+    return this.apiService.delete<any>(`/base/student-campaigns/${id}`);
+  }
 }

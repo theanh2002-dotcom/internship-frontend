@@ -119,4 +119,11 @@ export class AuthService {
       })
     );
   }
+
+  /**
+   * Gọi API thiết lập mật khẩu
+   */
+  setupPassword(request: any): Observable<any> {
+    return this.apiService.post<any>('/base/auth/setup-password', request);
+  }
 }

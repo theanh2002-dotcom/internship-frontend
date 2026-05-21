@@ -33,5 +33,9 @@ export class EvaluationService {
   getFinalResult(studentCampaignId: number): Observable<any> {
     return this.apiService.get<any>(`/base/evaluations/final-result/${studentCampaignId}`);
   }
+
+  calculateFinalResult(studentCampaignId: number): Observable<any> {
+    return this.apiService.post<any>(`/base/evaluations/final-result/${studentCampaignId}`, {});
+  }
 }
 

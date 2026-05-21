@@ -1,0 +1,421 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+  <!-- Alerts -->
+  <div *ngIf="success" class="fixed top-5 right-5 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-[9999] flex items-center gap-2 transition-all duration-300">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <span>{{ success }}</span>
+  </div>
+
+  <div *ngIf="error" class="fixed top-5 right-5 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg z-[9999] flex items-center gap-2 transition-all duration-300">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Header & Campaign Selector -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Quản lý Hội đồng bảo vệ</h1>
+      <p class="text-sm text-gray-500 mt-1">Lập danh sách hội đồng và phân công sinh viên bảo vệ khóa luận / báo cáo thực tập.</p>
+    </div>
+    
+    <div class="flex items-center gap-3 w-full md:w-auto">
+      <div class="relative min-w-[240px]">
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Chọn Đợt Thực Tập</label>
+        <select 
+          [(ngModel)]="selectedCampaignId" 
+          (change)="onCampaignChange()"
+          class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition appearance-none">
+          <option *ngFor="let camp of campaigns" [value]="camp.id">
+            {{ camp.name }}
+          </option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 pt-5 text-gray-500">
+          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+          </svg>
+        </div>
+      </div>
+
+      <button 
+        (click)="openCreateModal()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 mt-5 rounded-lg shadow-sm transition flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Tạo hội đồng
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+      <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tổng hội đồng</p>
+        <p class="text-2xl font-bold text-gray-800">{{ committees.length }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+      <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">GV tham gia</p>
+        <p class="text-2xl font-bold text-gray-800">{{ uniqueLecturersCount }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+      <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tổng sinh viên</p>
+        <p class="text-2xl font-bold text-gray-800">{{ allStudents.length }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+      <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sinh viên đã gán</p>
+        <p class="text-2xl font-bold text-gray-800">{{ assignedStudentsCount }} / {{ allStudents.length }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading / Empty states -->
+  <div *ngIf="loading" class="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-3"></div>
+    <p class="text-gray-500">Đang tải danh sách hội đồng...</p>
+  </div>
+  
+  <div *ngIf="!loading && committees.length === 0" class="bg-white p-16 text-center rounded-xl shadow-sm border border-dashed border-gray-300">
+    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+    <p class="text-gray-600 font-medium mb-1">Chưa có hội đồng nào được tạo</p>
+    <p class="text-gray-400 text-sm mb-4">Hãy tạo hội đồng đầu tiên để bắt đầu phân công bảo vệ khóa luận.</p>
+    <button 
+      (click)="openCreateModal()" 
+      class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition">
+      Tạo hội đồng đầu tiên
+    </button>
+  </div>
+
+  <!-- Committee Grid -->
+  <div *ngIf="!loading && committees.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let committee of committees" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition duration-300">
+      
+      <!-- Card Header -->
+      <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-gray-800 text-lg">{{ committee.name }}</h3>
+        </div>
+        <div class="flex items-center gap-1">
+          <button 
+            (click)="openEditModal(committee)"
+            class="text-gray-500 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-gray-150 transition" 
+            title="Sửa thông tin">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+            </svg>
+          </button>
+          <button 
+            (click)="deleteCommittee(committee)"
+            class="text-gray-500 hover:text-red-600 p-1.5 rounded-lg hover:bg-gray-150 transition" 
+            title="Xóa hội đồng">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Card Content -->
+      <div class="p-4 flex-grow space-y-4">
+        <!-- Date & Room Info -->
+        <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-gray-500 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+          <div>
+            <span class="block uppercase tracking-wider text-gray-400 text-[10px] mb-0.5">Thời gian</span>
+            <span class="text-gray-700 font-medium">{{ committee.evaluation_date ? committee.evaluation_date : 'Chưa thiết lập' }}</span>
+          </div>
+          <div>
+            <span class="block uppercase tracking-wider text-gray-400 text-[10px] mb-0.5">Phòng bảo vệ</span>
+            <span class="text-gray-700 font-medium">{{ committee.room ? committee.room : 'Chưa thiết lập' }}</span>
+          </div>
+        </div>
+
+        <!-- Members list -->
+        <div>
+          <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Thành viên hội đồng</span>
+          <div class="space-y-2">
+            <div *ngFor="let member of committee.members" class="flex items-center justify-between text-sm bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+              <div>
+                <p class="font-medium text-gray-800">{{ member.full_name }}</p>
+                <p class="text-xs text-gray-400">{{ member.email }}</p>
+              </div>
+              <span 
+                [class.bg-indigo-50]="member.role === 'PRESIDENT'"
+                [class.text-indigo-700]="member.role === 'PRESIDENT'"
+                [class.border-indigo-100]="member.role === 'PRESIDENT'"
+                [class.bg-emerald-50]="member.role === 'SECRETARY'"
+                [class.text-emerald-700]="member.role === 'SECRETARY'"
+                [class.border-emerald-100]="member.role === 'SECRETARY'"
+                [class.bg-slate-50]="member.role !== 'PRESIDENT' && member.role !== 'SECRETARY'"
+                [class.text-slate-700]="member.role !== 'PRESIDENT' && member.role !== 'SECRETARY'"
+                [class.border-slate-100]="member.role !== 'PRESIDENT' && member.role !== 'SECRETARY'"
+                class="px-2 py-0.5 text-xs font-semibold border rounded-full">
+                {{ getRoleLabel(member.role) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assigned Students Count -->
+        <div class="flex items-center justify-between text-sm text-gray-600 bg-gray-50/50 p-2.5 rounded-lg">
+          <span class="font-medium">Sinh viên phân công:</span>
+          <span class="font-bold text-indigo-600 text-base">{{ getStudentCountForCommittee(committee.id) }}</span>
+        </div>
+      </div>
+
+      <!-- Card Footer -->
+      <div class="p-3 bg-gray-50 border-t flex justify-end gap-2">
+        <button 
+          (click)="openEditModal(committee)"
+          class="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
+          Sửa thành viên
+        </button>
+        <button 
+          (click)="openStudentModal(committee)" 
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          Gán sinh viên
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div *ngIf="isCreateModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[5000] p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+        <h2 class="text-lg font-bold text-gray-800">
+          {{ isEditing ? 'Cập Nhật Hội Đồng' : 'Tạo Hội Đồng Mới' }}
+        </h2>
+        <button (click)="closeCreateModal()" class="text-gray-400 hover:text-gray-600 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Content -->
+      <div class="p-6 overflow-y-auto flex-grow space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tên hội đồng <span class="text-red-500">*</span></label>
+          <input 
+            type="text" 
+            [(ngModel)]="formName"
+            placeholder="VD: Hội đồng CNTT 01" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Thời gian bảo vệ</label>
+            <input 
+              type="datetime-local" 
+              [(ngModel)]="formEvaluationDate"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Phòng</label>
+            <input 
+              type="text" 
+              [(ngModel)]="formRoom"
+              placeholder="VD: Phòng 402-A1" 
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+          </div>
+        </div>
+
+        <div class="border-t pt-4">
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Thêm thành viên hội đồng</label>
+          <div class="flex gap-2">
+            <select 
+              [(ngModel)]="selectedTeacherId"
+              class="flex-grow bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option [value]="null" disabled selected>-- Chọn Giảng viên --</option>
+              <option *ngFor="let teacher of teachers" [value]="teacher.id">
+                {{ teacher.full_name }} ({{ teacher.email }})
+              </option>
+            </select>
+            
+            <select 
+              [(ngModel)]="selectedMemberRole"
+              class="w-32 bg-white border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="PRESIDENT">Chủ tịch</option>
+              <option value="SECRETARY">Thư ký</option>
+              <option value="MEMBER">Ủy viên</option>
+            </select>
+            
+            <button 
+              (click)="addMember()"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition">
+              Thêm
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Danh sách thành viên đã chọn</label>
+          <div *ngIf="committeeMembers.length === 0" class="text-center py-4 bg-gray-50 rounded-lg border text-gray-400 text-xs italic">
+            Chưa có thành viên nào được thêm.
+          </div>
+          <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+            <div *ngFor="let m of committeeMembers" class="flex items-center justify-between bg-gray-50 p-2.5 rounded-lg border text-sm">
+              <div>
+                <p class="font-medium text-gray-800">{{ m.full_name }}</p>
+                <p class="text-xs text-gray-400">{{ m.email }}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                  {{ getRoleLabel(m.role) }}
+                </span>
+                <button 
+                  (click)="removeMember(m.user_id)"
+                  class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+        <button (click)="closeCreateModal()" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100 font-semibold text-sm transition">
+          Hủy
+        </button>
+        <button (click)="saveCommittee()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition">
+          {{ isEditing ? 'Lưu Thay Đổi' : 'Tạo Hội Đồng' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign Student Modal -->
+  <div *ngIf="isStudentModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[5000] p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+        <div>
+          <h2 class="text-lg font-bold text-gray-800">Gán Sinh Viên Vào Hội Đồng</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Hội đồng: {{ selectedCommittee?.name }}</p>
+        </div>
+        <button (click)="closeStudentModal()" class="text-gray-400 hover:text-gray-600 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Search & Filters -->
+      <div class="p-4 bg-gray-50/50 border-b flex items-center">
+        <div class="relative w-full">
+          <input 
+            type="text" 
+            [(ngModel)]="studentsSearchText" 
+            (input)="filterStudents()"
+            placeholder="Tìm kiếm theo Tên, MSSV hoặc Lớp..." 
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6 overflow-y-auto flex-grow">
+        <div *ngIf="filteredStudents.length === 0" class="text-center py-10 text-gray-500 italic">
+          Không tìm thấy sinh viên nào khớp với từ khóa tìm kiếm.
+        </div>
+        
+        <table *ngIf="filteredStudents.length > 0" class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700 uppercase tracking-wider text-[11px] font-bold">
+              <th class="p-3 border-b text-center w-12">Chọn</th>
+              <th class="p-3 border-b">Họ và tên</th>
+              <th class="p-3 border-b text-center">MSSV</th>
+              <th class="p-3 border-b text-center">Lớp</th>
+              <th class="p-3 border-b">Hội đồng hiện tại</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr *ngFor="let student of filteredStudents" class="hover:bg-gray-50 transition duration-150">
+              <td class="p-3 text-center">
+                <input 
+                  type="checkbox" 
+                  [checked]="isStudentSelected(student.id)"
+                  (change)="toggleStudentSelection(student.id, $event)"
+                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+              </td>
+              <td class="p-3 font-semibold text-gray-800">{{ student.full_name }}</td>
+              <td class="p-3 text-center text-gray-600">{{ student.student_code }}</td>
+              <td class="p-3 text-center text-gray-600">{{ student.class_name }}</td>
+              <td class="p-3 text-gray-500 text-xs">
+                <span *ngIf="!student.committee_id" class="text-gray-400 italic">Chưa gán</span>
+                <span *ngIf="student.committee_id && student.committee_id === selectedCommittee?.id" class="text-indigo-600 font-semibold">
+                  Hội đồng này
+                </span>
+                <span *ngIf="getStudentAssignedCommitteeName(student)" class="text-amber-600 font-medium">
+                  {{ getStudentAssignedCommitteeName(student) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 bg-gray-50 border-t flex justify-between items-center">
+        <span class="text-xs text-gray-500 font-medium">
+          Đã chọn <strong class="text-indigo-600">{{ tempAssignedStudentIds.size }}</strong> sinh viên
+        </span>
+        <div class="flex gap-3">
+          <button (click)="closeStudentModal()" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100 font-semibold text-sm transition">
+            Đóng
+          </button>
+          <button (click)="saveStudentAssignments()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition">
+            Lưu danh sách
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -33,9 +33,29 @@ export class AuthInterceptor implements HttpInterceptor {
           // Token hết hạn hoặc không hợp lệ → auto logout
           this.authService.logout();
         } else if (error.status === 403) {
-          // Không có quyền → redirect về dashboard của user (không logout)
-          const dashboardRoute = this.authService.getRoleDashboardRoute();
-          this.router.navigate([dashboardRoute]);
+          // Nếu token không còn hợp lệ (backend trả 403 do anonymous) → logout
+          const token = this.authService.getToken();
+          if (!token) {
+            // Không có token → chắc chắn phải login lại
+            this.authService.logout();
+          } else {
+            // Có token nhưng vẫn bị 403 → token hết hạn hoặc không có quyền
+            // Thử decode token để kiểm tra hết hạn
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              const isExpired = payload.exp * 1000 < Date.now();
+              if (isExpired) {
+                this.authService.logout();
+              } else {
+                // Token còn hạn nhưng không có quyền → redirect về dashboard
+                const dashboardRoute = this.authService.getRoleDashboardRoute();
+                this.router.navigate([dashboardRoute]);
+              }
+            } catch {
+              // Token không decode được → logout
+              this.authService.logout();
+            }
+          }
         }
         return throwError(() => error);
       })

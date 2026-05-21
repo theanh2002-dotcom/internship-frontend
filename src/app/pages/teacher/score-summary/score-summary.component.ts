@@ -7,10 +7,9 @@ interface StudentScore {
   mssv: string;
   name: string;
   class: string;
-  companyScore: number | null; // Điểm ĐVHD
-  teacherScore: number | null; // Điểm GVHD
-  councilScore: number | null; // Điểm HĐĐG
-  totalScore: number | null;   // Điểm tổng hợp
+  stage1Score: number | null; // Điểm Chặng 1
+  stage2Score: number | null; // Điểm Chặng 2
+  totalScore: number | null;  // Điểm tổng hợp
   status: string;
 }
 
@@ -51,9 +50,8 @@ export class ScoreSummaryComponent implements OnInit {
       mssv: sc.student_code,
       name: sc.full_name,
       class: sc.class_name || 'N/A',
-      companyScore: null,
-      teacherScore: null,
-      councilScore: null,
+      stage1Score: null,
+      stage2Score: null,
       totalScore: null,
       status: 'Chưa có kết quả',
       id: sc.id
@@ -69,13 +67,15 @@ export class ScoreSummaryComponent implements OnInit {
       this.evaluationService.getFinalResult((s as any).id).subscribe({
         next: (scoreRes) => {
           if (!scoreRes) return;
-          const finalData = scoreRes.company_score !== undefined ? scoreRes : (scoreRes.data || scoreRes.payload);
+          const finalData = scoreRes.stage1_score !== undefined ? scoreRes : (scoreRes.data || scoreRes.payload);
           if (finalData) {
-            s.companyScore = finalData.company_score;
-            s.teacherScore = finalData.gvhd_score;
-            s.councilScore = finalData.council_score;
-            s.totalScore = finalData.final_score;
-            s.status = finalData.is_passed ? 'Đạt' : 'Không đạt';
+            s.stage1Score = finalData.stage1_score;
+            s.stage2Score = finalData.stage2_score;
+            s.totalScore = finalData.final_hp_score;
+            
+            if (finalData.grade_level) {
+               s.status = finalData.grade_level !== 'F' ? 'Đạt' : 'Không đạt';
+            }
           }
         },
         error: () => {

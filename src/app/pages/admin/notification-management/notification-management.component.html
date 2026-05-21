@@ -1,0 +1,257 @@
+<div class="max-w-7xl mx-auto space-y-6">
+  <!-- Header Welcome -->
+  <app-welcome-header
+    title="Cấu hình & Phát thông báo hệ thống"
+    subtitle="Phát tin tức, yêu cầu học vụ hoặc thông báo khẩn cấp tới toàn bộ người dùng hoặc các vai trò cụ thể">
+  </app-welcome-header>
+
+  <!-- Alerts -->
+  <div *ngIf="successMsg" class="p-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg flex items-center gap-3 animate-fade-in">
+    <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+    <span class="font-medium text-sm">{{ successMsg }}</span>
+  </div>
+
+  <div *ngIf="errorMsg" class="p-4 bg-rose-50 text-rose-800 border border-rose-200 rounded-lg flex items-center gap-3 animate-fade-in">
+    <span class="material-symbols-outlined text-rose-600">error</span>
+    <span class="font-medium text-sm">{{ errorMsg }}</span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Cột Trái: Biểu mẫu soạn thông báo (col-span-2) -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#00429D]">campaign</span>
+          Soạn thông báo mới
+        </h3>
+
+        <form (ngSubmit)="openConfirm()" class="space-y-5">
+          <!-- Tiêu đề -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Tiêu đề thông báo <span class="text-rose-500">*</span></label>
+            <input
+              type="text"
+              name="title"
+              [(ngModel)]="title"
+              placeholder="Ví dụ: Nhắc nhở hoàn thành nộp Báo cáo thực tập tốt nghiệp..."
+              class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#00429D] focus:ring focus:ring-blue-100 transition-all font-medium text-slate-800 text-sm outline-none"
+              required>
+          </div>
+
+          <!-- Đối tượng nhận -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Đối tượng nhận thông báo <span class="text-rose-500">*</span></label>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <button
+                type="button"
+                (click)="targetRole = 'ALL'"
+                [ngClass]="targetRole === 'ALL' ? 'border-[#00429D] bg-blue-50 text-[#00429D]' : 'border-slate-200 hover:bg-slate-50 text-slate-700'"
+                class="flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all">
+                <span class="material-symbols-outlined text-2xl mb-1">groups</span>
+                <span class="text-xs font-bold">Tất cả</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="targetRole = 'STUDENT'"
+                [ngClass]="targetRole === 'STUDENT' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-slate-200 hover:bg-slate-50 text-slate-700'"
+                class="flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all">
+                <span class="material-symbols-outlined text-2xl mb-1">school</span>
+                <span class="text-xs font-bold">Sinh viên</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="targetRole = 'GVHD'"
+                [ngClass]="targetRole === 'GVHD' ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-slate-200 hover:bg-slate-50 text-slate-700'"
+                class="flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all">
+                <span class="material-symbols-outlined text-2xl mb-1">record_voice_over</span>
+                <span class="text-xs font-bold">Giảng viên</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="targetRole = 'LDKBM'"
+                [ngClass]="targetRole === 'LDKBM' ? 'border-amber-600 bg-amber-50 text-amber-700' : 'border-slate-200 hover:bg-slate-50 text-slate-700'"
+                class="flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all">
+                <span class="material-symbols-outlined text-2xl mb-1">supervisor_account</span>
+                <span class="text-xs font-bold">Bộ môn</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="targetRole = 'ADMIN'"
+                [ngClass]="targetRole === 'ADMIN' ? 'border-rose-600 bg-rose-50 text-rose-700' : 'border-slate-200 hover:bg-slate-50 text-slate-700'"
+                class="flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all">
+                <span class="material-symbols-outlined text-2xl mb-1">admin_panel_settings</span>
+                <span class="text-xs font-bold">Quản trị</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Nội dung chi tiết -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Nội dung chi tiết <span class="text-rose-500">*</span></label>
+            <textarea
+              name="message"
+              [(ngModel)]="message"
+              rows="6"
+              placeholder="Nhập nội dung thông báo chi tiết cần truyền tải..."
+              class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#00429D] focus:ring focus:ring-blue-100 transition-all text-slate-800 text-sm outline-none resize-y"
+              required></textarea>
+          </div>
+
+          <!-- Nút hành động -->
+          <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              (click)="clearForm()"
+              class="px-5 py-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-semibold text-slate-600 text-sm transition-all">
+              Hủy / Nhập lại
+            </button>
+            <button
+              type="submit"
+              [disabled]="isSubmitting"
+              class="px-6 py-2.5 rounded-lg bg-[#00429D] hover:bg-[#00337A] disabled:opacity-50 text-white font-semibold text-sm transition-all flex items-center gap-2">
+              <span *ngIf="isSubmitting" class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+              <span class="material-symbols-outlined text-base" *ngIf="!isSubmitting">send</span>
+              Phát thông báo
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Khung lịch sử thông báo -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#00429D]">history</span>
+            Thông báo gần đây đã nhận
+          </h3>
+          <button (click)="loadHistory()" class="p-1 rounded hover:bg-slate-200 text-slate-500 transition-colors" title="Tải lại">
+            <span class="material-symbols-outlined text-lg block">refresh</span>
+          </button>
+        </div>
+
+        <div *ngIf="isLoadingHistory" class="p-10 text-center">
+          <div class="inline-block w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+          <p class="text-slate-500 text-sm mt-3">Đang tải lịch sử thông báo...</p>
+        </div>
+
+        <div *ngIf="!isLoadingHistory && historyNotifications.length === 0" class="p-10 text-center">
+          <span class="material-symbols-outlined text-[48px] text-slate-300">notifications_off</span>
+          <p class="text-slate-500 mt-2 font-medium">Chưa nhận được thông báo nào</p>
+          <p class="text-slate-400 text-sm mt-1">Thông báo bạn đã nhận được hoặc gửi tới nhóm của bạn sẽ xuất hiện tại đây.</p>
+        </div>
+
+        <div *ngIf="!isLoadingHistory && historyNotifications.length > 0" class="divide-y divide-slate-100">
+          <div *ngFor="let notif of historyNotifications" class="p-5 hover:bg-slate-50 transition-colors">
+            <div class="flex justify-between items-start gap-4">
+              <div class="space-y-1.5 flex-1">
+                <div class="flex items-center flex-wrap gap-2">
+                  <h4 class="font-bold text-slate-800 text-sm">{{ notif.title }}</h4>
+                  <span *ngIf="!notif.is_read" class="px-2 py-0.5 rounded bg-blue-100 text-[#00429D] font-bold text-[10px] uppercase">Mới</span>
+                </div>
+                <p class="text-slate-600 text-sm whitespace-pre-line leading-relaxed">{{ notif.message }}</p>
+                <div class="flex items-center gap-3 text-xs text-slate-400">
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">schedule</span>
+                    {{ formatDate(notif.created_at || notif.createdAt) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột Phải: Thư viện Mẫu thông báo & Hướng dẫn (col-span-1) -->
+    <div class="space-y-6">
+      <!-- Thư viện mẫu -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#00429D]">library_books</span>
+          Mẫu thông báo nhanh
+        </h3>
+        <p class="text-xs text-slate-500 mb-4 leading-relaxed">Chọn một mẫu có sẵn bên dưới để điền nhanh thông tin vào biểu mẫu soạn thảo.</p>
+
+        <div class="space-y-3">
+          <div
+            *ngFor="let preset of presets"
+            (click)="applyTemplate(preset)"
+            class="p-4 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 cursor-pointer transition-all flex items-start gap-3">
+            <span class="material-symbols-outlined text-[#00429D] p-2 bg-blue-50 rounded-lg text-lg">{{ preset.icon }}</span>
+            <div class="flex-1">
+              <h4 class="font-bold text-slate-800 text-xs">{{ preset.name }}</h4>
+              <p class="text-slate-500 text-[11px] mt-1 line-clamp-2">{{ preset.message }}</p>
+              <span class="inline-block mt-2 px-1.5 py-0.5 rounded text-[10px] font-semibold border"
+                    [ngClass]="getTargetRoleClass(preset.targetRole)">
+                {{ getTargetRoleLabel(preset.targetRole) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hướng dẫn sử dụng -->
+      <div class="bg-slate-900 rounded-xl p-6 text-white shadow-md relative overflow-hidden">
+        <div class="absolute -right-4 -bottom-4 opacity-10">
+          <span class="material-symbols-outlined text-[120px]">info</span>
+        </div>
+
+        <h3 class="text-base font-bold mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-400">info</span>
+          Lưu ý nghiệp vụ
+        </h3>
+
+        <ul class="space-y-3.5 text-xs text-slate-300 leading-relaxed list-disc list-inside">
+          <li>Khi gửi thông báo đến <strong class="text-white">Tất cả</strong> hoặc một vai trò cụ thể, hệ thống sẽ tự động tạo bản sao thông báo cho từng người dùng tương ứng.</li>
+          <li>Các thông báo này sẽ hiển thị thời gian thực trên thanh thông báo (chuông báo) của người dùng đích.</li>
+          <li>Quá trình này được xử lý bất đồng bộ thông qua hệ thống tin nhắn sự kiện Kafka (`notification.events`) để đảm bảo hiệu năng tối ưu.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal xác nhận gửi thông báo -->
+<div *ngIf="showConfirmModal" class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+  <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+      <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+        <span class="material-symbols-outlined text-amber-500">warning</span>
+        Xác nhận phát thông báo?
+      </h3>
+      <button (click)="closeConfirm()" class="text-slate-400 hover:text-slate-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <p class="text-sm text-slate-600 leading-relaxed">
+        Bạn chuẩn bị phát thông báo này đến <strong class="text-[#00429D] font-bold">{{ getTargetRoleLabel(targetRole) }}</strong>. Hành động này không thể hoàn tác sau khi đã kích hoạt phát đi.
+      </p>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+        <div>
+          <span class="text-xs text-slate-400 font-semibold uppercase block">Tiêu đề:</span>
+          <span class="text-sm font-bold text-slate-800">{{ title }}</span>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 font-semibold uppercase block">Nội dung:</span>
+          <span class="text-sm text-slate-700 whitespace-pre-line block">{{ message }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+      <button (click)="closeConfirm()" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 font-semibold text-slate-600 text-sm transition-all">
+        Quay lại chỉnh sửa
+      </button>
+      <button (click)="submitNotification()" class="px-5 py-2 rounded-lg bg-[#00429D] hover:bg-[#00337A] text-white font-semibold text-sm transition-all">
+        Xác nhận gửi ngay
+      </button>
+    </div>
+  </div>
+</div>

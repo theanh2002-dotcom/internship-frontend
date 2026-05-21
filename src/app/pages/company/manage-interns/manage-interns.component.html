@@ -86,15 +86,30 @@
         <p class="text-sm text-gray-600">Bằng việc bấm xác nhận, đơn vị đồng ý tiếp nhận sinh viên này vào thực tập theo <strong>Hình thức Thực tập Doanh nghiệp</strong>. Sinh viên sẽ được phân công cho người hướng dẫn trực tiếp theo thông tin đã kê khai.</p>
       </div>
 
-      <div *ngIf="actionType === 'PLAN'" class="bg-gray-50 p-4 rounded border border-gray-200">
-        <h4 class="font-medium text-sm mb-2">Mục tiêu Thực tập:</h4>
-        <p class="text-sm text-gray-600">Nắm vững quy trình phát triển phần mềm Agile/Scrum. Học hỏi kinh nghiệm thực tế về Frontend (Angular).</p>
+      <div *ngIf="actionType === 'PLAN'" class="bg-gray-50 p-4 rounded border border-gray-200 max-h-[400px] overflow-y-auto">
+        <h4 class="font-medium text-sm mb-3">Kế hoạch Thực tập (TTTN-02):</h4>
+        <div *ngIf="!selectedIntern?.originalData?.internship_plans?.length" class="text-sm text-gray-500 italic">
+          Sinh viên chưa nhập chi tiết kế hoạch các tuần.
+        </div>
+        <div *ngIf="selectedIntern?.originalData?.internship_plans?.length" class="space-y-3">
+          <div *ngFor="let plan of selectedIntern.originalData.internship_plans" class="text-sm text-gray-900 p-3 bg-white rounded border border-gray-200">
+            <p class="font-medium text-blue-700">Tuần {{ plan.week }}</p>
+            <p class="mt-1"><strong>Mục tiêu / Công việc dự kiến:</strong></p>
+            <p class="whitespace-pre-wrap text-gray-700 mt-1">{{ plan.task }}</p>
+            <p class="mt-2" *ngIf="plan.expected_result"><strong>Kết quả mong đợi:</strong></p>
+            <p class="whitespace-pre-wrap text-gray-700 mt-1" *ngIf="plan.expected_result">{{ plan.expected_result }}</p>
+            <p class="mt-2" *ngIf="plan.evidence_form"><strong>Hình thức minh chứng:</strong></p>
+            <p class="whitespace-pre-wrap text-gray-700 mt-1" *ngIf="plan.evidence_form">{{ plan.evidence_form }}</p>
+          </div>
+        </div>
       </div>
 
       <div *ngIf="actionType === 'LOG'" class="bg-gray-50 p-4 rounded border border-gray-200">
         <h4 class="font-medium text-sm mb-2">Báo cáo {{ selectedIntern?.currentWeek }}:</h4>
-        <p class="text-sm text-gray-600 mb-2">Đã hoàn thành thiết kế giao diện đăng nhập và kết nối API thành công. Bắt đầu tìm hiểu về State Management.</p>
-        <p class="text-sm font-medium text-green-700">Mức độ hoàn thành: 100%</p>
+        <p class="text-sm text-gray-600 mb-2 whitespace-pre-wrap">{{ selectedIntern?.latestLog?.content }}</p>
+        <p class="text-sm text-gray-800 mt-2"><strong>Kết quả:</strong></p>
+        <p class="text-sm text-gray-600 mb-2 whitespace-pre-wrap">{{ selectedIntern?.latestLog?.results }}</p>
+        <p class="text-sm font-medium text-green-700">Mức độ hoàn thành: {{ selectedIntern?.latestLog?.completion_percentage || 0 }}%</p>
       </div>
 
       <div *ngIf="actionType !== 'DECLARATION'" class="mt-4">

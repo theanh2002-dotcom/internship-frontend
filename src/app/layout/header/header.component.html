@@ -1,53 +1,103 @@
-<header class="h-16 w-full sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex justify-between items-center px-6 border-b border-slate-200 dark:border-slate-800">
-<div class="flex items-center gap-4">
-<span class="font-['Public_Sans'] font-medium text-[#00429D] dark:text-blue-400 font-headline-md text-headline-md">
-                    Hệ thống Quản lý Thực tập Tốt nghiệp
-                </span>
-</div>
-<div class="flex items-center gap-2">
-<!-- Search Bar -->
-<div class="relative hidden md:flex items-center mr-4">
-<span class="material-symbols-outlined absolute left-3 text-slate-400 text-[18px]">search</span>
-<input class="pl-9 pr-4 py-1.5 bg-surface-container rounded-full border-none text-sm focus-within:ring-1 focus-within:ring-[#00429D] outline-none text-on-surface transition-all" placeholder="Tìm kiếm..." type="text"/>
-</div>
-<button class="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-[#00429D] dark:hover:text-blue-300 transition-colors flex items-center justify-center">
-<span class="material-symbols-outlined">notifications</span>
-</button>
-<button class="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-[#00429D] dark:hover:text-blue-300 transition-colors flex items-center justify-center">
-<span class="material-symbols-outlined">settings</span>
-</button>
-<button class="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-[#00429D] dark:hover:text-blue-300 transition-colors flex items-center justify-center mr-2">
-<span class="material-symbols-outlined">help_outline</span>
-</button>
-
-<!-- User Info + Dropdown -->
-<div class="relative">
-  <button (click)="toggleUserMenu()" class="flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
-    <!-- Avatar with initials -->
-    <div class="h-9 w-9 rounded-full bg-[#00429D] flex items-center justify-center text-white text-sm font-bold shadow-md">
-      {{ getInitials() }}
-    </div>
-    <div class="hidden lg:flex flex-col items-start">
-      <span class="text-sm font-bold text-slate-800 leading-tight">{{ currentUser?.fullName || 'Người dùng' }}</span>
-      <span class="text-xs text-slate-500 font-medium">{{ getRoleLabel() }}</span>
-    </div>
-    <span class="material-symbols-outlined text-[18px] text-slate-400 hidden lg:block">expand_more</span>
-  </button>
-
-  <!-- Dropdown Menu -->
-  <div *ngIf="showUserMenu" class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-fade-in">
-    <div class="px-4 py-3 border-b border-slate-100">
-      <p class="text-sm font-bold text-slate-800">{{ currentUser?.fullName }}</p>
-      <p class="text-xs text-slate-500 mt-0.5">{{ currentUser?.email }}</p>
-    </div>
-    <div class="py-1">
-      <button (click)="logout()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium">
-        <span class="material-symbols-outlined text-[18px]">logout</span>
-        Đăng xuất
-      </button>
-    </div>
+<header
+  class="h-16 w-full sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex justify-between items-center px-6 border-b border-slate-200 dark:border-slate-800">
+  <div class="flex items-center gap-4">
+    <span class="font-['Public_Sans'] font-medium text-[#00429D] dark:text-blue-400 font-headline-md text-headline-md">
+      Hệ thống Quản lý Thực tập Tốt nghiệp
+    </span>
   </div>
-</div>
+  <div class="flex items-center gap-2">
+    <!-- Search Bar -->
+    <div class="relative hidden md:flex items-center mr-4">
+      <span class="material-symbols-outlined absolute left-3 text-slate-400 text-[18px]">search</span>
+      <input
+        class="pl-9 pr-4 py-1.5 bg-surface-container rounded-full border-none text-sm focus-within:ring-1 focus-within:ring-[#00429D] outline-none text-on-surface transition-all"
+        placeholder="Tìm kiếm..." type="text" />
+    </div>
+    <div class="relative">
+      <button (click)="toggleNotificationsMenu()"
+        class="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-[#00429D] dark:hover:text-blue-300 transition-colors flex items-center justify-center relative cursor-pointer">
+        <span class="material-symbols-outlined">notifications</span>
+        <span *ngIf="unreadCount > 0"
+          class="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          {{ unreadCount }}
+        </span>
+      </button>
 
-</div>
+      <!-- Notifications Dropdown -->
+      <div *ngIf="showNotificationsMenu" style="left: 50%; transform: translateX(-50%);"
+        class="absolute top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-fade-in">
+        <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+          <span class="text-sm font-bold text-slate-800">Thông báo</span>
+          <button *ngIf="unreadCount > 0" (click)="markAllAsRead()"
+            class="text-xs text-[#00429D] hover:underline font-semibold bg-transparent border-none cursor-pointer">
+            Đánh dấu đọc tất cả
+          </button>
+        </div>
+
+        <div class="max-h-64 overflow-y-auto">
+          <div *ngIf="notifications.length === 0" class="p-4 text-center text-xs text-slate-500 font-medium">
+            Không có thông báo nào.
+          </div>
+          <div *ngFor="let notif of notifications" (click)="markAsRead(notif)"
+            [ngClass]="{'bg-blue-50/50': !notif.is_read}"
+            class="px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer flex flex-col gap-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-800" [ngClass]="{'text-blue-700': !notif.is_read}">
+                {{ notif.title }}
+              </span>
+              <span class="text-[10px] text-slate-400 font-medium">
+                {{ notif.created_at }}
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 leading-normal line-clamp-2">
+              {{ notif.message }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button
+      class="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-[#00429D] dark:hover:text-blue-300 transition-colors flex items-center justify-center">
+      <span class="material-symbols-outlined">settings</span>
+    </button>
+    <button
+      class="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-[#00429D] dark:hover:text-blue-300 transition-colors flex items-center justify-center mr-2">
+      <span class="material-symbols-outlined">help_outline</span>
+    </button>
+
+    <!-- User Info + Dropdown -->
+    <div class="relative">
+      <button (click)="toggleUserMenu()"
+        class="flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+        <!-- Avatar with initials -->
+        <div
+          class="h-9 w-9 rounded-full bg-[#00429D] flex items-center justify-center text-white text-sm font-bold shadow-md">
+          {{ getInitials() }}
+        </div>
+        <div class="hidden lg:flex flex-col items-start">
+          <span class="text-sm font-bold text-slate-800 leading-tight">{{ currentUser?.fullName || 'Người dùng'
+            }}</span>
+          <span class="text-xs text-slate-500 font-medium">{{ getRoleLabel() }}</span>
+        </div>
+        <span class="material-symbols-outlined text-[18px] text-slate-400 hidden lg:block">expand_more</span>
+      </button>
+
+      <!-- Dropdown Menu -->
+      <div *ngIf="showUserMenu"
+        class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-fade-in">
+        <div class="px-4 py-3 border-b border-slate-100">
+          <p class="text-sm font-bold text-slate-800">{{ currentUser?.fullName }}</p>
+          <p class="text-xs text-slate-500 mt-0.5">{{ currentUser?.email }}</p>
+        </div>
+        <div class="py-1">
+          <button (click)="logout()"
+            class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium">
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+            Đăng xuất
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </header>

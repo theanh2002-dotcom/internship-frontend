@@ -1,4 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:8080'
+  // ⚠️ Sau khi deploy backend lên Railway, thay URL này bằng URL Railway cung cấp
+  // Ví dụ: 'https://internship-service-production.up.railway.app'
+  apiUrl: 'https://unsanctioned-unfathered-richelle.ngrok-free.dev'
 };

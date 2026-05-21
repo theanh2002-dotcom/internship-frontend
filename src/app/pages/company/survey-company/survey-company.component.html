@@ -1,122 +1,171 @@
-<div class="mb-10">
-  <h2 class="text-2xl font-bold text-[#002d70] mb-2">Phiếu Phản hồi của Đơn vị hướng dẫn (TTTN-08a)</h2>
-  <p class="text-sm text-gray-600">Vui lòng điền thông tin đánh giá quá trình thực tập của sinh viên một cách khách quan và chính xác.</p>
+<div class="max-w-4xl mx-auto py-6">
+  <!-- Progress Header -->
+  <div class="bg-gradient-to-r from-blue-700 to-[#00429D] text-white p-6 rounded-2xl shadow-md mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+    <div class="relative z-10">
+      <h2 class="text-2xl font-extrabold tracking-tight">Phiếu Phản hồi của Đơn vị hướng dẫn (TTTN-08a)</h2>
+      <p class="text-blue-100 text-sm mt-1 max-w-xl">Vui lòng điền thông tin đánh giá quá trình thực tập của sinh viên một cách khách quan và chính xác.</p>
+    </div>
+    
+    <!-- Progress Indicator -->
+    <div *ngIf="!isLoading && students.length > 0" class="relative z-10 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 w-full md:w-72">
+      <div class="flex justify-between items-center text-xs font-semibold mb-2">
+        <span>Tiến độ đánh giá</span>
+        <span>{{ getCompletedFieldsCount() }}/{{ getTotalFieldsCount() }} tiêu chí</span>
+      </div>
+      <div class="w-full bg-white/20 rounded-full h-2">
+        <div class="bg-emerald-400 h-2 rounded-full transition-all duration-500 ease-out" [style.width.%]="getCompletionPercentage()"></div>
+      </div>
+      <p class="text-[11px] text-blue-200 mt-2 text-right font-medium">Hoàn thành {{ getCompletionPercentage() }}% các tiêu chí bắt buộc</p>
+    </div>
+    
+    <span class="material-symbols-outlined absolute -bottom-6 -right-6 text-[150px] text-white/5 pointer-events-none select-none">domain</span>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#00429D] mb-4"></div>
+    <p class="text-sm text-slate-500 font-medium">Đang tải thông tin đánh giá...</p>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!isLoading && students.length === 0" class="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
+    <span class="material-symbols-outlined text-slate-400 text-6xl mb-4">group</span>
+    <p class="text-slate-600 font-semibold text-lg">Bạn chưa được phân công phụ trách sinh viên nào.</p>
+    <p class="text-slate-400 text-sm mt-1">Vui lòng liên hệ với Lãnh đạo Khoa/Bộ môn nếu có nhầm lẫn.</p>
+  </div>
+
+  <form *ngIf="!isLoading && students.length > 0" (ngSubmit)="submitSurvey()" class="space-y-8">
+    <!-- Student Selection -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="material-symbols-outlined text-blue-600">person_search</span>
+        <h3 class="text-base font-bold text-slate-800">Chọn Thực tập sinh cần đánh giá</h3>
+      </div>
+      <div class="relative max-w-md">
+        <select [(ngModel)]="selectedStudent" (change)="onStudentChange()" name="selectedStudent" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#00429D] focus:border-[#00429D] outline-none appearance-none transition-shadow cursor-pointer font-semibold text-slate-800 pr-10 shadow-sm">
+          <option *ngFor="let s of students" [ngValue]="s">
+            {{ s.full_name }} ({{ s.student_code }})
+          </option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+          <span class="material-symbols-outlined">expand_more</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex items-center gap-3 mb-4 pb-2 border-b border-slate-100">
+        <span class="material-symbols-outlined text-blue-600">badge</span>
+        <h3 class="text-base font-bold text-slate-800">Thông tin hành chính chung</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Họ và tên Sinh viên:</span>
+            <span class="font-semibold text-slate-800">{{ studentInfo.name }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Mã sinh viên:</span>
+            <span class="font-mono font-semibold text-[#00429D] bg-blue-50 px-2 py-0.5 rounded">{{ studentInfo.id }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1">
+            <span class="text-slate-500">Lớp chuyên ngành:</span>
+            <span class="text-slate-800 font-medium">{{ studentInfo.major }}</span>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Cơ quan tiếp nhận:</span>
+            <span class="font-semibold text-slate-800 text-right">{{ companyInfo.name }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Cán bộ hướng dẫn:</span>
+            <span class="text-slate-800 font-semibold">{{ companyInfo.instructor }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1">
+            <span class="text-slate-500">Chức vụ cán bộ:</span>
+            <span class="text-slate-800 font-medium">{{ companyInfo.position }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assessment Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <div class="p-6 border-b border-slate-100 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-blue-50 text-[#00429D] flex items-center justify-center">
+          <span class="material-symbols-outlined text-[24px]">assignment_turned_in</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-slate-800">I. Đánh giá chi tiết các tiêu chí năng lực</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Vui lòng đánh giá theo thang điểm từ 0 (Kém) đến 4 (Tốt/Xuất sắc) cho từng tiêu chí.</p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[850px]">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="p-4 text-xs font-semibold text-slate-600 w-[6%] text-center">STT</th>
+              <th class="p-4 text-xs font-semibold text-slate-600 w-[34%] border-r border-slate-200">Tiêu chí đánh giá</th>
+              <th class="p-4 text-xs font-semibold text-slate-600 text-center w-[40%] border-r border-slate-200">Mức độ đạt được</th>
+              <th class="p-4 text-xs font-semibold text-slate-600 w-[20%]">Nhận xét / Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-sm text-slate-900">
+            <tr *ngFor="let criterion of criteriaList; let i = index" class="hover:bg-slate-50/50 transition-colors">
+              <td class="p-4 text-center font-mono text-slate-400 font-semibold">{{ criterion.id }}</td>
+              <td class="p-4 border-r border-slate-200 font-semibold text-slate-800 text-[13px] align-middle">
+                {{ criterion.title }}
+              </td>
+              <td class="p-4 border-r border-slate-200 align-middle">
+                <div class="flex gap-2.5 justify-center">
+                  <div *ngFor="let lvl of companyLevels" 
+                       (click)="setLevel(i, lvl.value)"
+                       [class]="criterion.level === lvl.value ? lvl.activeClass + ' border shadow-sm scale-[1.03]' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'"
+                       class="flex-1 py-3 px-1 flex flex-col items-center justify-center border rounded-xl cursor-pointer transition-all duration-200 select-none text-center">
+                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold mb-1.5 transition-colors"
+                          [class]="criterion.level === lvl.value ? lvl.circleClass + ' text-white' : 'bg-slate-100 text-slate-600'">
+                      {{ lvl.value }}
+                    </span>
+                    <span class="text-[11px] font-bold leading-tight">{{ lvl.label }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="p-4 align-middle">
+                <input [(ngModel)]="criterion.note" [name]="'note_' + criterion.id" class="w-full border border-slate-200 rounded-xl bg-slate-50/30 p-2.5 text-xs focus:ring-1 focus:ring-[#00429D] focus:border-[#00429D] outline-none placeholder:text-slate-400 transition-all focus:bg-white" placeholder="Nhập ghi chú..."/>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Additional Comments -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-[24px]">rate_review</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-slate-800">II. Nhận xét chung và Đề xuất</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Nhận xét tổng quát về tinh thần trách nhiệm và khả năng thăng tiến của sinh viên.</p>
+        </div>
+      </div>
+      <textarea [(ngModel)]="generalFeedback" name="generalFeedback" class="w-full border border-slate-200 rounded-xl bg-slate-50/30 p-4 text-sm resize-y min-h-[120px] focus:ring-1 focus:ring-[#00429D] focus:border-[#00429D] outline-none placeholder:text-slate-400 transition-all focus:bg-white" placeholder="Nhập ý kiến nhận xét chung về thái độ làm việc, kỹ năng mềm, năng lực tiếp thu và đề xuất cải tiến học phần thực tập (nếu có)..."></textarea>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-between items-center pt-4 border-t border-slate-100 pb-12">
+      <button class="px-6 py-2.5 border border-slate-300 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 hover:text-slate-800 transition-colors" type="button">
+        Lưu nháp
+      </button>
+      
+      <button type="submit" [disabled]="!isFormValid()" class="px-8 py-2.5 bg-gradient-to-r from-blue-700 to-[#00429D] text-white rounded-xl font-semibold text-sm hover:from-blue-800 hover:to-blue-900 transition-all shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-400 flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm font-bold">send</span>
+        Gửi đánh giá Phản hồi
+      </button>
+    </div>
+  </form>
 </div>
-
-<form (ngSubmit)="submitSurvey()" class="space-y-10">
-  <!-- Info Card -->
-  <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-    <h3 class="text-lg font-semibold text-[#002d70] mb-4 pb-2 border-b border-gray-200">Thông tin chung</h3>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="space-y-3 text-sm">
-        <div class="flex">
-          <span class="font-medium text-gray-500 w-32">Họ và tên SV:</span>
-          <span class="font-medium text-gray-900">{{ studentInfo.name }}</span>
-        </div>
-        <div class="flex">
-          <span class="font-medium text-gray-500 w-32">Mã SV:</span>
-          <span class="font-mono text-gray-900">{{ studentInfo.id }}</span>
-        </div>
-        <div class="flex">
-          <span class="font-medium text-gray-500 w-32">Ngành học:</span>
-          <span class="text-gray-900">{{ studentInfo.major }}</span>
-        </div>
-      </div>
-      <div class="space-y-3 text-sm">
-        <div class="flex">
-          <span class="font-medium text-gray-500 w-32">Đơn vị tiếp nhận:</span>
-          <span class="font-medium text-gray-900">{{ companyInfo.name }}</span>
-        </div>
-        <div class="flex">
-          <span class="font-medium text-gray-500 w-32">Người hướng dẫn:</span>
-          <span class="text-gray-900">{{ companyInfo.instructor }}</span>
-        </div>
-        <div class="flex">
-          <span class="font-medium text-gray-500 w-32">Chức vụ:</span>
-          <span class="text-gray-900">{{ companyInfo.position }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Assessment Table -->
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-    <div class="p-6 border-b border-gray-200 bg-white">
-      <h3 class="text-lg font-semibold text-[#002d70]">I. Đánh giá chi tiết các tiêu chí</h3>
-      <p class="text-sm text-gray-600 mt-1">Mức độ đánh giá từ 0 (Kém) đến 4 (Xuất sắc).</p>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-500 uppercase">
-            <th class="p-4 w-12 text-center">STT</th>
-            <th class="p-4 w-1/3">Tiêu chí đánh giá</th>
-            <th class="p-4 text-center">Mức độ (0-4)</th>
-            <th class="p-4 w-1/3">Nhận xét / Ghi chú</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 text-sm">
-          <tr *ngFor="let criterion of criteriaList; let i = index" class="hover:bg-gray-50 transition-colors" [class.bg-gray-50]="i % 2 !== 0">
-            <td class="p-4 text-center text-gray-500">{{ criterion.id }}</td>
-            <td class="p-4 font-medium text-gray-900">{{ criterion.title }}</td>
-            <td class="p-4">
-              <div class="flex justify-center gap-2">
-                
-                <label class="flex flex-col items-center cursor-pointer group">
-                  <input class="hidden" [name]="'crit_' + criterion.id" type="radio" [value]="0" (change)="setLevel(i, 0)" />
-                  <div class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center text-gray-600 transition-colors"
-                       [class.bg-[#B00020]]="criterion.level === 0" [class.text-white]="criterion.level === 0" [class.border-[#B00020]]="criterion.level === 0">0</div>
-                </label>
-                
-                <label class="flex flex-col items-center cursor-pointer group">
-                  <input class="hidden" [name]="'crit_' + criterion.id" type="radio" [value]="1" (change)="setLevel(i, 1)" />
-                  <div class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center text-gray-600 transition-colors"
-                       [class.bg-[#FB8C00]]="criterion.level === 1" [class.text-white]="criterion.level === 1" [class.border-[#FB8C00]]="criterion.level === 1">1</div>
-                </label>
-
-                <label class="flex flex-col items-center cursor-pointer group">
-                  <input class="hidden" [name]="'crit_' + criterion.id" type="radio" [value]="2" (change)="setLevel(i, 2)" />
-                  <div class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center text-gray-600 transition-colors"
-                       [class.bg-[#FDD835]]="criterion.level === 2" [class.text-black]="criterion.level === 2" [class.border-[#FDD835]]="criterion.level === 2">2</div>
-                </label>
-
-                <label class="flex flex-col items-center cursor-pointer group">
-                  <input class="hidden" [name]="'crit_' + criterion.id" type="radio" [value]="3" (change)="setLevel(i, 3)" />
-                  <div class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center text-gray-600 transition-colors"
-                       [class.bg-[#7CB342]]="criterion.level === 3" [class.text-white]="criterion.level === 3" [class.border-[#7CB342]]="criterion.level === 3">3</div>
-                </label>
-
-                <label class="flex flex-col items-center cursor-pointer group">
-                  <input class="hidden" [name]="'crit_' + criterion.id" type="radio" [value]="4" (change)="setLevel(i, 4)" />
-                  <div class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center text-gray-600 transition-colors"
-                       [class.bg-[#2E7D32]]="criterion.level === 4" [class.text-white]="criterion.level === 4" [class.border-[#2E7D32]]="criterion.level === 4">4</div>
-                </label>
-
-              </div>
-            </td>
-            <td class="p-4">
-              <input [(ngModel)]="criterion.note" [name]="'note_' + criterion.id" class="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#002d70] focus:ring-1 focus:ring-[#002d70] outline-none transition-shadow" placeholder="Nhập ghi chú..." type="text"/>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Additional Comments -->
-  <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-    <h3 class="text-lg font-semibold text-[#002d70] mb-4">II. Nhận xét chung và Đề xuất</h3>
-    <textarea [(ngModel)]="generalFeedback" name="generalFeedback" class="w-full bg-white border border-gray-300 rounded-lg p-4 text-sm focus:border-[#002d70] focus:ring-1 focus:ring-[#002d70] outline-none resize-y transition-shadow" placeholder="Nhập nhận xét chung về thái độ, năng lực của sinh viên và các đề xuất cải thiện (nếu có)..." rows="5"></textarea>
-  </div>
-
-  <!-- Action Buttons -->
-  <div class="flex justify-end gap-4 pt-4 pb-12">
-    <button type="button" class="px-6 py-2.5 rounded-lg border border-gray-400 text-gray-600 font-medium text-sm hover:bg-gray-100 transition-colors">
-      Lưu nháp
-    </button>
-    <button type="submit" [disabled]="!isFormValid()" class="px-6 py-2.5 rounded-lg bg-[#00429D] text-white font-medium text-sm hover:bg-[#002d70] transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-      <span class="material-symbols-outlined text-sm">send</span>
-      Gửi phản hồi
-    </button>
-  </div>
-</form>

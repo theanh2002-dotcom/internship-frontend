@@ -6,6 +6,7 @@ import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-das
 import { DepartmentManagementComponent } from './pages/admin/department-management/department-management.component';
 import { UserManagementComponent } from './pages/admin/user-management/user-management.component';
 import { SystemSettingsComponent } from './pages/admin/system-settings/system-settings.component';
+import { NotificationManagementComponent } from './pages/admin/notification-management/notification-management.component';
 import { CloRubricConfigComponent } from './pages/ldkbm/clo-rubric-config/clo-rubric-config.component';
 import { StudentAssignmentComponent } from './pages/ldkbm/student-assignment/student-assignment.component';
 import { CompanyDeclarationComponent } from './pages/student/company-declaration/company-declaration.component';
@@ -14,6 +15,7 @@ import { FinalReportComponent } from './pages/student/final-report/final-report.
 import { InternshipPlanComponent } from './pages/student/internship-plan/internship-plan.component';
 import { WeeklyLogComponent } from './pages/student/weekly-log/weekly-log.component';
 import { StudentDashboardComponent } from './pages/student/student-dashboard/student-dashboard.component';
+import { InternshipReportComponent } from './pages/student/internship-report/internship-report.component';
 
 import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
 import { LdkbmLayoutComponent } from './layout/ldkbm-layout/ldkbm-layout.component';
@@ -34,6 +36,9 @@ import { ApprovalRequestsComponent } from './pages/teacher/approval-requests/app
 import { AuthLayoutComponent } from './layout/auth-layout/auth-layout.component';
 import { LoginComponent } from './pages/auth/login/login.component';
 import { RegisterComponent } from './pages/auth/register/register.component';
+import { CommitteesComponent } from './pages/ldkbm/committees/committees.component';
+import { LdkbmScoreSummaryComponent } from './pages/ldkbm/score-summary/score-summary.component';
+import { SetupPasswordComponent } from './pages/auth/setup-password/setup-password.component';
 
 import { AuthGuard, LoginGuard } from './core/guards/auth.guard';
 
@@ -49,6 +54,7 @@ const routes: Routes = [
       { path: 'departments', component: DepartmentManagementComponent },
       { path: 'users', component: UserManagementComponent },
       { path: 'settings', component: SystemSettingsComponent },
+      { path: 'notifications', component: NotificationManagementComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
@@ -61,6 +67,8 @@ const routes: Routes = [
       { path: 'clo-config', component: CloRubricConfigComponent },
       { path: 'student-assignment', component: StudentAssignmentComponent },
       { path: 'survey-dashboard', component: SurveyDashboardComponent },
+      { path: 'committees', component: CommitteesComponent },
+      { path: 'score-summary', component: LdkbmScoreSummaryComponent },
       { path: '', redirectTo: 'general-dashboard', pathMatch: 'full' }
     ]
   },
@@ -70,10 +78,7 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: 'dashboard', component: StudentDashboardComponent },
-      { path: 'company-declaration', component: CompanyDeclarationComponent },
-      { path: 'internship-plan', component: InternshipPlanComponent },
-      { path: 'weekly-log', component: WeeklyLogComponent },
-      { path: 'final-report', component: FinalReportComponent },
+      { path: 'internship-report', component: InternshipReportComponent },
       { path: 'survey', component: SurveyStudentComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
@@ -98,6 +103,7 @@ const routes: Routes = [
     children: [
       { path: 'dashboard', component: CompanyDashboardComponent },
       { path: 'manage-interns', component: ManageInternsComponent },
+      { path: 'rubric-evaluation', component: RubricEvaluationComponent },
       { path: 'survey', component: SurveyCompanyComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
@@ -109,6 +115,7 @@ const routes: Routes = [
     children: [
       { path: 'login', component: LoginComponent },
       { path: 'register', component: RegisterComponent },
+      { path: 'setup-password', component: SetupPasswordComponent },
       { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]
   }

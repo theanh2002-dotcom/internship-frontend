@@ -18,13 +18,14 @@ export class CompanyDeclarationComponent implements OnInit {
   selectedCampaign: StudentCampaignResponse | null = null;
 
   formData: CompanyInfoRequest = {
-    companyName: '',
-    taxCode: '',
+    company_name: '',
+    tax_code: '',
     address: '',
-    mentorName: '',
-    mentorPhone: '',
-    mentorEmail: '',
-    position: ''
+    supervisor_name: '',
+    supervisor_phone: '',
+    supervisor_email: '',
+    expected_domain: '',
+    internship_type: 'BUSINESS' // Default
   };
 
   constructor(private studentCampaignService: StudentCampaignService) {}
@@ -55,13 +56,14 @@ export class CompanyDeclarationComponent implements OnInit {
   populateForm(): void {
     if (this.selectedCampaign && this.selectedCampaign.company_info?.company_name) {
       this.formData = {
-        companyName: this.selectedCampaign.company_info.company_name,
-        taxCode: this.selectedCampaign.company_info.tax_code || '',
+        company_name: this.selectedCampaign.company_info.company_name,
+        tax_code: this.selectedCampaign.company_info.tax_code || '',
         address: this.selectedCampaign.company_info.address || '',
-        mentorName: this.selectedCampaign.company_info.supervisor_name || '',
-        mentorPhone: this.selectedCampaign.company_info.supervisor_phone || '',
-        mentorEmail: this.selectedCampaign.company_info.supervisor_email || '',
-        position: this.selectedCampaign.company_info.expected_domain || ''
+        supervisor_name: this.selectedCampaign.company_info.supervisor_name || '',
+        supervisor_phone: this.selectedCampaign.company_info.supervisor_phone || '',
+        supervisor_email: this.selectedCampaign.company_info.supervisor_email || '',
+        expected_domain: this.selectedCampaign.company_info.expected_domain || '',
+        internship_type: this.selectedCampaign.company_info.internship_type || 'BUSINESS'
       };
     }
   }
@@ -70,7 +72,7 @@ export class CompanyDeclarationComponent implements OnInit {
     if (!this.selectedCampaign) return;
 
     // Validate simple
-    if (!this.formData.companyName || !this.formData.mentorName) {
+    if (!this.formData.company_name || !this.formData.supervisor_name) {
       this.errorMessage = 'Vui lòng điền đầy đủ các thông tin bắt buộc (*).';
       return;
     }
@@ -102,7 +104,12 @@ export class CompanyDeclarationComponent implements OnInit {
       case 'COMPANY_DECLARED': return 'Chờ duyệt ĐVHD';
       case 'COMPANY_APPROVED': return 'Đã duyệt ĐVHD';
       case 'PLAN_SUBMITTED': return 'Chờ duyệt Kế hoạch';
-      case 'PLAN_APPROVED': return 'Đang thực tập';
+      case 'PLAN_APPROVED': return 'Đã duyệt Kế hoạch (1 phần)';
+      case 'IN_PROGRESS': return 'Đang thực tập';
+      case 'STAGE1_EVALUATED': return 'Đang thực tập (Đã đánh giá GĐ1)';
+      case 'REPORT_SUBMITTED': return 'Đã nộp Báo cáo';
+      case 'STAGE2_EVALUATED': return 'Đã đánh giá GĐ2';
+      case 'COMPLETED': return 'Đã hoàn thành';
       default: return this.selectedCampaign.status;
     }
   }

@@ -18,6 +18,8 @@ export interface CloItem {
 
 export interface CloConfigRequest {
   department_campaign_id: number;
+  stage1_weight: number;
+  stage2_weight: number;
   clos: CloItem[];
 }
 

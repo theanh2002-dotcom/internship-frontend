@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 import { UserInfo } from '../../core/models/base.model';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-header',
@@ -10,11 +11,68 @@ import { UserInfo } from '../../core/models/base.model';
 export class HeaderComponent implements OnInit {
   currentUser: UserInfo | null = null;
   showUserMenu = false;
+  showNotificationsMenu = false;
+  unreadCount = 0;
+  notifications: any[] = [];
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
+    if (this.currentUser) {
+      this.loadNotifications();
+    }
+  }
+
+  loadNotifications(): void {
+    this.notificationService.getUnreadCount().subscribe({
+      next: (res) => {
+        this.unreadCount = typeof res === 'number' ? res : (res?.data || res?.payload || 0);
+      }
+    });
+
+    this.notificationService.getNotifications(1, 5).subscribe({
+      next: (res) => {
+        if (res && Array.isArray(res.data)) {
+          this.notifications = res.data;
+        } else if (res && Array.isArray(res)) {
+          this.notifications = res;
+        } else {
+          this.notifications = [];
+        }
+      }
+    });
+  }
+
+  toggleNotificationsMenu(): void {
+    this.showNotificationsMenu = !this.showNotificationsMenu;
+    if (this.showNotificationsMenu) {
+      this.showUserMenu = false;
+      this.loadNotifications();
+    }
+  }
+
+  markAsRead(notif: any): void {
+    if (!notif.is_read) {
+      this.notificationService.markAsRead(notif.id).subscribe({
+        next: () => {
+          notif.is_read = true;
+          this.unreadCount = Math.max(0, this.unreadCount - 1);
+        }
+      });
+    }
+  }
+
+  markAllAsRead(): void {
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications.forEach(n => n.is_read = true);
+        this.unreadCount = 0;
+      }
+    });
   }
 
   /**

@@ -35,10 +35,11 @@ export class ManageInternsComponent implements OnInit {
           let planStatus = 'Chưa có dữ liệu';
           if (s.internship_plans && s.internship_plans.length > 0) {
             const hasPending = s.internship_plans.some((p: any) => p.company_status === 'PENDING' || !p.company_status);
-            planStatus = hasPending ? 'Chờ duyệt' : 'Đã duyệt';
+            const allApproved = s.internship_plans.every((p: any) => p.company_status === 'APPROVED');
+            planStatus = allApproved ? 'Đã duyệt' : (hasPending ? 'Chờ duyệt' : 'Chưa có dữ liệu');
           }
           
-          let declarationStatus = s.company_info?.company_status === 'ACTIVE' ? 'Đã tiếp nhận' : 'Chờ tiếp nhận';
+          let declarationStatus = s.company_info?.company_status === 'APPROVED' ? 'Đã tiếp nhận' : 'Chờ tiếp nhận';
 
           const mapped = {
             id: s.id,
@@ -72,6 +73,7 @@ export class ManageInternsComponent implements OnInit {
           // Sort by week number descending
           logs.sort((a: any, b: any) => b.week_number - a.week_number);
           const latestLog = logs[0];
+          intern.latestLog = latestLog;
           intern.currentWeek = 'Tuần ' + latestLog.week_number;
           
           if (latestLog.supervisor_status === 'APPROVED') {
@@ -105,6 +107,9 @@ export class ManageInternsComponent implements OnInit {
         next: () => {
           this.selectedIntern.planStatus = 'Đã duyệt';
           this.closeModal();
+        },
+        error: (err) => {
+          alert(err.error?.message || 'Có lỗi xảy ra khi phê duyệt kế hoạch.');
         }
       });
     } else if (this.actionType === 'LOG') {
@@ -116,14 +121,22 @@ export class ManageInternsComponent implements OnInit {
             this.selectedIntern.logStatus = 'Đã xác nhận';
             latestLog.supervisor_status = 'APPROVED';
             this.closeModal();
+          },
+          error: (err) => {
+            alert(err.error?.message || 'Có lỗi xảy ra khi xác nhận nhật ký.');
           }
         });
       }
     } else if (this.actionType === 'DECLARATION') {
-      // In a real flow, company supervisor might not need to approve declaration explicitly since it's already active,
-      // but if they do, we can call an API here. We'll just mark it as accepted for now.
-      this.selectedIntern.declarationStatus = 'Đã tiếp nhận';
-      this.closeModal();
+      this.studentCampaignService.approveCompanyInfo(this.selectedIntern.id).subscribe({
+        next: () => {
+          this.selectedIntern.declarationStatus = 'Đã tiếp nhận';
+          this.closeModal();
+        },
+        error: (err) => {
+          alert(err.error?.message || 'Có lỗi xảy ra khi xác nhận tiếp nhận. Vui lòng kiểm tra lại quyền.');
+        }
+      });
     }
   }
 }

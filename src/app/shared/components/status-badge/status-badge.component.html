@@ -1,0 +1,35 @@
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+     [ngClass]="{
+         'bg-green-50 text-green-700 border-green-200': type === 'success',
+         'bg-yellow-50 text-yellow-700 border-yellow-200': type === 'warning',
+         'bg-red-50 text-red-700 border-red-200': type === 'error',
+         'bg-blue-50 text-blue-700 border-blue-200': type === 'info',
+         'bg-slate-50 text-slate-700 border-slate-200': type === 'default'
+     }">
+    
+    <!-- Dot Icon -->
+    <span *ngIf="showIcon && iconType === 'dot'" 
+          class="w-1.5 h-1.5 rounded-full"
+          [ngClass]="{
+              'bg-green-500': type === 'success',
+              'bg-yellow-500': type === 'warning',
+              'bg-red-500': type === 'error',
+              'bg-blue-500': type === 'info',
+              'bg-slate-400': type === 'default'
+          }"></span>
+
+    <!-- Material Icon -->
+    <span *ngIf="showIcon && iconType === 'icon'" 
+          class="material-symbols-outlined text-[14px]"
+          [ngClass]="{
+              'text-green-600': type === 'success',
+              'text-yellow-600': type === 'warning',
+              'text-red-600': type === 'error',
+              'text-blue-600': type === 'info',
+              'text-slate-500': type === 'default'
+          }">
+          {{ type === 'success' ? 'check_circle' : type === 'warning' ? 'error' : type === 'error' ? 'cancel' : 'info' }}
+    </span>
+
+    {{ text }}
+</div>

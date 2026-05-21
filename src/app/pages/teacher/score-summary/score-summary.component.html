@@ -56,17 +56,16 @@
                             Họ và tên
                         </th>
                         <th class="px-6 py-4 border-r border-slate-200">Lớp</th>
-                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-blue-50/50">Điểm ĐVHD<br/><span class="text-[10px] font-normal text-slate-500">(Doanh nghiệp)</span></th>
-                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-blue-50/50">Điểm GVHD<br/><span class="text-[10px] font-normal text-slate-500">(Giảng viên)</span></th>
-                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-blue-50/50">Điểm HĐĐG<br/><span class="text-[10px] font-normal text-slate-500">(Hội đồng bảo vệ)</span></th>
-                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-orange-50/50">Tổng điểm<br/><span class="text-[10px] font-normal text-slate-500">(Hệ số 10)</span></th>
+                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-blue-50/50">Điểm Chặng 1<br/><span class="text-[10px] font-normal text-slate-500">(GVHD & Doanh nghiệp)</span></th>
+                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-purple-50/50">Điểm Chặng 2<br/><span class="text-[10px] font-normal text-slate-500">(Hội đồng bảo vệ)</span></th>
+                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-orange-50/50">Tổng điểm HP<br/><span class="text-[10px] font-normal text-slate-500">(Hệ số 10)</span></th>
                         <th class="px-6 py-4 text-center">Kết quả</th>
                     </tr>
                 </thead>
                 <!-- Table Body -->
                 <tbody class="divide-y divide-slate-200 text-slate-800">
                     <tr *ngIf="students.length === 0">
-                        <td colspan="9" class="py-8 text-center text-gray-500">
+                        <td colspan="8" class="py-8 text-center text-gray-500">
                             Chưa có sinh viên nào được phân công.
                         </td>
                     </tr>
@@ -81,16 +80,12 @@
                         
                         <!-- Scores -->
                         <td class="px-6 py-3 border-r border-slate-200 text-center font-medium">
-                            <span *ngIf="student.companyScore !== null">{{ student.companyScore | number:'1.1-1' }}</span>
-                            <span *ngIf="student.companyScore === null" class="text-slate-300">-</span>
+                            <span *ngIf="student.stage1Score !== null">{{ student.stage1Score | number:'1.1-1' }}</span>
+                            <span *ngIf="student.stage1Score === null" class="text-slate-300">-</span>
                         </td>
                         <td class="px-6 py-3 border-r border-slate-200 text-center font-medium">
-                            <span *ngIf="student.teacherScore !== null">{{ student.teacherScore | number:'1.1-1' }}</span>
-                            <span *ngIf="student.teacherScore === null" class="text-slate-300">-</span>
-                        </td>
-                        <td class="px-6 py-3 border-r border-slate-200 text-center font-medium">
-                            <span *ngIf="student.councilScore !== null">{{ student.councilScore | number:'1.1-1' }}</span>
-                            <span *ngIf="student.councilScore === null" class="text-slate-300">-</span>
+                            <span *ngIf="student.stage2Score !== null">{{ student.stage2Score | number:'1.1-1' }}</span>
+                            <span *ngIf="student.stage2Score === null" class="text-slate-300">-</span>
                         </td>
                         
                         <!-- Final Score -->

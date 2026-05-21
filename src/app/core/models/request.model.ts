@@ -19,6 +19,7 @@ export interface StudentItem {
   student_code: string;
   full_name: string;
   class_name: string;
+  email?: string;
 }
 
 export interface ImportStudentRequest {
@@ -38,24 +39,27 @@ export interface AssignRequest {
 }
 
 export interface CompanyInfoRequest {
-  companyName: string;
-  taxCode: string;
+  company_name: string;
+  tax_code: string;
   address: string;
-  mentorName: string;
-  mentorPhone: string;
-  mentorEmail: string;
-  position: string;
+  supervisor_name: string;
+  supervisor_phone: string;
+  supervisor_email: string;
+  expected_domain: string;
+  internship_type: string;
 }
 
 export interface InternshipPlanTask {
   week: number;
-  taskDescription: string;
-  expectedResult: string;
+  task: string;
+  expected_result: string;
+  evidence_form: string;
+  clo_mapped: string;
 }
 
 export interface InternshipPlanRequest {
-  studentCampaignId: number;
-  tasks: InternshipPlanTask[];
+  student_campaign_id: number;
+  plans: InternshipPlanTask[];
 }
 
 export interface WeeklyLogRequest {
@@ -63,6 +67,7 @@ export interface WeeklyLogRequest {
   content: string;
   results: string;
   student_campaign_id: number;
+  completion_percentage?: number;
 }
 
 export interface ReportItem {

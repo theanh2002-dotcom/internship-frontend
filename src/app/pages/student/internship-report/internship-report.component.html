@@ -1,0 +1,91 @@
+<div class="max-w-6xl mx-auto space-y-6 pb-12">
+  <div *ngIf="isLoading" class="p-12 text-center text-gray-500">
+    <span class="material-symbols-outlined animate-spin text-4xl mb-4">autorenew</span>
+    <p>Đang tải dữ liệu...</p>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+    <!-- Header & Stepper -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+      
+
+      <!-- Stepper Navigation -->
+      <div class="px-4 py-3 flex flex-wrap gap-2 md:gap-3 items-center justify-between bg-white overflow-x-auto">
+        
+        <!-- Step 1 -->
+        <button (click)="setStep('TTTN-01')" [disabled]="!isUnlocked('TTTN-01')"
+          [ngClass]="currentStep === 'TTTN-01' ? 'bg-[#00429D] text-white border-[#00429D] shadow-md ring-2 ring-blue-100' : (isUnlocked('TTTN-01') ? 'bg-white text-slate-700 border-slate-300 hover:border-[#00429D]' : 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed')"
+          class="flex-1 min-w-[120px] flex flex-col items-center justify-center p-2 rounded-lg border transition-all text-center relative">
+          <div *ngIf="currentStep === 'TTTN-01'" class="absolute -top-2 bg-amber-400 text-[#002d70] text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">ĐANG MỞ</div>
+          <span class="material-symbols-outlined mb-1 text-[20px]">domain</span>
+          <span class="text-xs font-bold whitespace-nowrap">TTTN-01</span>
+          <span class="text-[10px] mt-0.5 opacity-90 whitespace-nowrap">Kê khai ĐVHD</span>
+          <span class="text-[9px] mt-1 font-semibold px-2 py-0.5 rounded-full" 
+                [ngClass]="getTttn01Status() === 'Đã duyệt' ? 'bg-green-100 text-green-700' : (getTttn01Status().includes('từ chối') ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600')">
+            {{ getTttn01Status() }}
+          </span>
+        </button>
+
+        <!-- Divider -->
+        <div class="hidden md:block w-4 h-px bg-slate-300"></div>
+
+        <!-- Step 2 -->
+        <button (click)="setStep('TTTN-02')" [disabled]="!isUnlocked('TTTN-02')"
+          [ngClass]="currentStep === 'TTTN-02' ? 'bg-[#00429D] text-white border-[#00429D] shadow-md ring-2 ring-blue-100' : (isUnlocked('TTTN-02') ? 'bg-white text-slate-700 border-slate-300 hover:border-[#00429D]' : 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed')"
+          class="flex-1 min-w-[120px] flex flex-col items-center justify-center p-2 rounded-lg border transition-all text-center relative">
+          <div *ngIf="currentStep === 'TTTN-02'" class="absolute -top-2 bg-amber-400 text-[#002d70] text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">ĐANG MỞ</div>
+          <span class="material-symbols-outlined mb-1 text-[20px]">assignment</span>
+          <span class="text-xs font-bold whitespace-nowrap">TTTN-02</span>
+          <span class="text-[10px] mt-0.5 opacity-90 whitespace-nowrap">Kế hoạch TT</span>
+          <span *ngIf="isUnlocked('TTTN-02')" class="text-[9px] mt-1 font-semibold px-2 py-0.5 rounded-full" 
+                [ngClass]="getTttn02Status() === 'Đã duyệt' ? 'bg-green-100 text-green-700' : (getTttn02Status().includes('từ chối') ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600')">
+            {{ getTttn02Status() }}
+          </span>
+        </button>
+
+        <!-- Divider -->
+        <div class="hidden md:block w-4 h-px bg-slate-300"></div>
+
+        <!-- Step 3 -->
+        <button (click)="setStep('TTTN-03')" [disabled]="!isUnlocked('TTTN-03')"
+          [ngClass]="currentStep === 'TTTN-03' ? 'bg-[#00429D] text-white border-[#00429D] shadow-md ring-2 ring-blue-100' : (isUnlocked('TTTN-03') ? 'bg-white text-slate-700 border-slate-300 hover:border-[#00429D]' : 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed')"
+          class="flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-lg border transition-all text-center relative">
+          <div *ngIf="currentStep === 'TTTN-03'" class="absolute -top-2 bg-amber-400 text-[#002d70] text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">ĐANG MỞ</div>
+          <span class="material-symbols-outlined mb-1 text-[20px]">history_edu</span>
+          <span class="text-xs font-bold whitespace-nowrap">TTTN-03</span>
+          <span class="text-[10px] mt-0.5 opacity-90 whitespace-nowrap">Nhật ký TT</span>
+        </button>
+
+        <!-- Divider -->
+        <div class="hidden md:block w-4 h-px bg-slate-300"></div>
+
+        <!-- Step 4 -->
+        <button (click)="setStep('TTTN-06')" [disabled]="!isUnlocked('TTTN-06')"
+          [ngClass]="currentStep === 'TTTN-06' ? 'bg-[#00429D] text-white border-[#00429D] shadow-md ring-2 ring-blue-100' : (isUnlocked('TTTN-06') ? 'bg-white text-slate-700 border-slate-300 hover:border-[#00429D]' : 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed')"
+          class="flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-lg border transition-all text-center relative">
+          <div *ngIf="currentStep === 'TTTN-06'" class="absolute -top-2 bg-amber-400 text-[#002d70] text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">ĐANG MỞ</div>
+          <span class="material-symbols-outlined mb-1 text-[20px]">analytics</span>
+          <span class="text-xs font-bold whitespace-nowrap">TTTN-06</span>
+          <span class="text-[10px] mt-0.5 opacity-90 whitespace-nowrap">Báo cáo TK</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Content Area (ngSwitch) -->
+    <div [ngSwitch]="currentStep" class="min-h-[500px]">
+      <div *ngSwitchCase="'TTTN-01'">
+        <app-company-declaration></app-company-declaration>
+      </div>
+      <div *ngSwitchCase="'TTTN-02'">
+        <app-internship-plan></app-internship-plan>
+      </div>
+      <div *ngSwitchCase="'TTTN-03'">
+        <app-weekly-log></app-weekly-log>
+      </div>
+      <div *ngSwitchCase="'TTTN-06'">
+        <app-final-report></app-final-report>
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -42,6 +42,7 @@ export class StudentAssignmentComponent implements OnInit {
   formStudentCode = '';
   formFullName = '';
   formClassName = '';
+  formEmail = '';
 
   // Assign Form
   teachers: UserResponse[] = [];
@@ -157,6 +158,7 @@ export class StudentAssignmentComponent implements OnInit {
     this.formStudentCode = '';
     this.formFullName = '';
     this.formClassName = '';
+    this.formEmail = '';
     this.isManualModalOpen = true;
   }
 
@@ -165,15 +167,16 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   saveManualStudent(): void {
-    if (!this.formStudentCode || !this.formFullName) {
-      this.showError('Mã sinh viên và Họ tên không được để trống.');
+    if (!this.formEmail) {
+      this.showError('Email sinh viên không được để trống.');
       return;
     }
 
     const item: StudentItem = {
       student_code: this.formStudentCode,
       full_name: this.formFullName,
-      class_name: this.formClassName
+      class_name: this.formClassName,
+      email: this.formEmail
     };
 
     const req: ImportStudentRequest = {
@@ -190,10 +193,26 @@ export class StudentAssignmentComponent implements OnInit {
         this.loadStudents();
       },
       error: (err) => {
-        this.showError(err.message || 'Lỗi khi thêm sinh viên');
+        this.showError(err.error?.message || err.message || 'Lỗi khi thêm sinh viên');
         this.isLoading = false;
       }
     });
+  }
+
+  deleteStudent(id: number): void {
+    if (confirm('Bạn có chắc chắn muốn xóa sinh viên này khỏi đợt thực tập?')) {
+      this.isLoading = true;
+      this.studentCampaignService.deleteStudentCampaign(id).subscribe({
+        next: () => {
+          this.showSuccess('Đã xóa sinh viên khỏi đợt thực tập.');
+          this.loadStudents();
+        },
+        error: (err) => {
+          this.showError(err.error?.message || err.message || 'Lỗi khi xóa sinh viên');
+          this.isLoading = false;
+        }
+      });
+    }
   }
 
   // --- EXCEL IMPORT ---
@@ -225,13 +244,14 @@ export class StudentAssignmentComponent implements OnInit {
             students.push({
               student_code: String(row['Mã SV']).trim(),
               full_name: String(row['Họ tên']).trim(),
-              class_name: String(row['Lớp'] || '').trim()
+              class_name: String(row['Lớp'] || '').trim(),
+              email: row['Email'] ? String(row['Email']).trim() : ''
             });
           }
         }
 
         if (students.length === 0) {
-          this.showError('Không tìm thấy dữ liệu hợp lệ trong file Excel. File cần có cột "Mã SV" và "Họ tên".');
+          this.showError('Không tìm thấy dữ liệu hợp lệ trong file Excel. File cần có cột "Mã SV", "Họ tên" và "Email".');
           return;
         }
 
@@ -264,8 +284,8 @@ export class StudentAssignmentComponent implements OnInit {
 
   downloadTemplate(): void {
     const data = [
-      { 'Mã SV': '000000', 'Họ tên': 'Nguyễn Văn A', 'Lớp': '64PM1' },
-      { 'Mã SV': '000001', 'Họ tên': 'Trần Thị B', 'Lớp': '64PM2' }
+      { 'Mã SV': '000000', 'Họ tên': 'Nguyễn Văn A', 'Lớp': '64PM1', 'Email': '000000@huce.edu.vn' },
+      { 'Mã SV': '000001', 'Họ tên': 'Trần Thị B', 'Lớp': '64PM2', 'Email': '000001@huce.edu.vn' }
     ];
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();

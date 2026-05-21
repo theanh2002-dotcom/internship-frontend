@@ -3,27 +3,26 @@
     <p>Đang tải dữ liệu nhật ký...</p>
 </div>
 
-<div *ngIf="!isLoading" class="max-w-5xl mx-auto flex flex-col gap-10">
-    <div class="flex flex-col gap-4">
+<!-- Status Gate: Chặn truy cập nếu chưa hoàn thành TTTN-02 -->
+<div *ngIf="!isLoading && !canAccess" class="flex flex-col items-center justify-center py-16 px-4 bg-white border border-slate-200 rounded-lg shadow-sm">
+  <span class="material-symbols-outlined text-[64px] text-amber-400 mb-4">lock</span>
+  <p class="text-slate-700 font-bold text-lg">Chưa thể truy cập TTTN-03</p>
+  <p class="text-slate-500 text-sm mt-2 text-center max-w-md">Bạn cần hoàn thành Kế hoạch Thực tập (TTTN-02) và được GVHD cùng Đơn vị hướng dẫn phê duyệt trước khi ghi nhật ký.</p>
+  <a routerLink="/student/internship-plan" class="mt-6 px-6 py-2.5 bg-[#00429D] text-white rounded-lg text-sm font-medium hover:bg-blue-800 transition-colors shadow-sm flex items-center gap-2">
+    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+    Đi đến TTTN-02
+  </a>
+</div>
+
+<div *ngIf="!isLoading && canAccess" class="max-w-5xl mx-auto flex flex-col gap-10">
+    <!-- Simple Title -->
+    <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-bold text-slate-900">Sổ Nhật Ký &amp; Tiến Độ Thực Tập</h2>
-            <p class="text-sm text-slate-600 mt-1">Biểu mẫu TTTN-03: Ghi nhận công việc hàng tuần và xác nhận từ Đơn vị hướng dẫn.</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-6 flex items-center justify-between shadow-sm">
-            <div class="flex items-center gap-6">
-                <img alt="Student avatar" class="w-16 h-16 rounded-full border border-slate-300 object-cover" [src]="studentInfo.avatar"/>
-                <div>
-                    <h3 class="text-base font-semibold text-slate-900">{{ studentInfo.name }}</h3>
-                    <p class="text-sm text-slate-600 mt-1">MSSV: {{ studentInfo.mssv }}</p>
-                    <p class="text-sm text-[#002d70] mt-1">{{ studentInfo.department }}</p>
-                </div>
-            </div>
-            <div class="h-12 w-px bg-slate-200"></div>
-            <div>
-                <p class="text-sm text-slate-500">Đơn vị hướng dẫn</p>
-                <p class="text-base font-semibold text-slate-900 mt-1">{{ companyInfo.name }}</p>
-                <p class="text-sm text-slate-600">Người HD: {{ companyInfo.supervisor }}</p>
-            </div>
+            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[#00429D]">menu_book</span>
+                Sổ Nhật Ký &amp; Tiến Độ Thực Tập (TTTN-03)
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">Ghi nhận công việc hàng tuần và xác nhận từ Đơn vị hướng dẫn.</p>
         </div>
     </div>
 
@@ -92,9 +91,9 @@
                                         <span class="text-sm text-slate-600">Tiến độ hoàn thành:</span>
                                         <div class="flex items-center gap-2">
                                             <div class="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
-                                                <div class="h-full bg-green-700 rounded-full" [style.width.%]="log.progress"></div>
+                                                <div class="h-full bg-green-700 rounded-full" [style.width.%]="log.completionPercentage"></div>
                                             </div>
-                                            <span class="text-sm font-semibold text-green-700">{{ log.progress }}%</span>
+                                            <span class="text-sm font-semibold text-green-700">{{ log.completionPercentage }}%</span>
                                         </div>
                                     </div>
                                 </div>
@@ -145,6 +144,15 @@
                                           [(ngModel)]="activeLogResults"
                                           placeholder="Mô tả kết quả cụ thể, sản phẩm tạo ra..." rows="5"></textarea>
                             </div>
+                        </div>
+                        <div class="flex flex-col gap-2 mb-6">
+                            <label class="text-sm text-slate-900 font-semibold">
+                                Mức độ hoàn thành (%)
+                                <span class="text-red-600">*</span>
+                            </label>
+                            <input type="number" min="0" max="100" class="w-full md:w-1/3 rounded-lg border-slate-300 focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] text-sm p-3" 
+                                      [(ngModel)]="activeCompletion"
+                                      placeholder="Ví dụ: 80">
                         </div>
                         <!-- Evidence Upload -->
                         <div class="flex flex-col gap-2">

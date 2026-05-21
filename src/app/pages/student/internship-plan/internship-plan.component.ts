@@ -8,7 +8,6 @@ interface WeekPlan {
   tasks: string;
   expectedResults: string;
   evidences: string;
-  clos: number[];
 }
 
 @Component({
@@ -23,24 +22,23 @@ export class InternshipPlanComponent implements OnInit {
   errorMessage = '';
 
   campaign: StudentCampaignResponse | null = null;
-  isLocked = false; // Bị khóa nếu đã nộp hoặc đã duyệt
+  isLocked = false;
+  canAccess = false;
 
   status = {
     label: 'Chưa có kế hoạch',
     message: 'Bạn chưa nộp kế hoạch thực tập'
   };
 
-  availableClos = [1, 2, 3, 4, 5, 6, 7];
-
   weeks: WeekPlan[] = [
-    { weekNumber: 1, tasks: '', expectedResults: '', evidences: '', clos: [] },
-    { weekNumber: 2, tasks: '', expectedResults: '', evidences: '', clos: [] },
-    { weekNumber: 3, tasks: '', expectedResults: '', evidences: '', clos: [] },
-    { weekNumber: 4, tasks: '', expectedResults: '', evidences: '', clos: [] },
-    { weekNumber: 5, tasks: '', expectedResults: '', evidences: '', clos: [] },
-    { weekNumber: 6, tasks: '', expectedResults: '', evidences: '', clos: [] },
-    { weekNumber: 7, tasks: '', expectedResults: '', evidences: '', clos: [] },
-    { weekNumber: 8, tasks: '', expectedResults: '', evidences: '', clos: [] }
+    { weekNumber: 1, tasks: '', expectedResults: '', evidences: '' },
+    { weekNumber: 2, tasks: '', expectedResults: '', evidences: '' },
+    { weekNumber: 3, tasks: '', expectedResults: '', evidences: '' },
+    { weekNumber: 4, tasks: '', expectedResults: '', evidences: '' },
+    { weekNumber: 5, tasks: '', expectedResults: '', evidences: '' },
+    { weekNumber: 6, tasks: '', expectedResults: '', evidences: '' },
+    { weekNumber: 7, tasks: '', expectedResults: '', evidences: '' },
+    { weekNumber: 8, tasks: '', expectedResults: '', evidences: '' }
   ];
 
   constructor(private studentCampaignService: StudentCampaignService) {}
@@ -70,22 +68,44 @@ export class InternshipPlanComponent implements OnInit {
   updateStatus() {
     if (!this.campaign) return;
     
-    if (this.campaign.status === 'PLAN_APPROVED' || this.campaign.status === 'EVALUATED') {
+    const advancedStatuses = ['IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
+    if (advancedStatuses.includes(this.campaign.status)) {
       this.status.label = 'Đã duyệt';
       this.status.message = 'Kế hoạch đã được GVHD và ĐVHD phê duyệt';
       this.isLocked = true;
+      this.canAccess = true;
     } else if (this.campaign.status === 'PLAN_SUBMITTED') {
       this.status.label = 'Chờ duyệt';
-      this.status.message = 'Đang chờ GVHD/ĐVHD duyệt';
+      this.status.message = 'Đang chờ GVHD và ĐVHD duyệt';
       this.isLocked = true;
-    } else if (this.campaign.status === 'COMPANY_APPROVED' || this.campaign.status === 'COMPANY_DECLARED') {
+      this.canAccess = true;
+    } else if (this.campaign.status === 'PLAN_APPROVED') {
+      let detailMsg = 'Đã được duyệt 1 phía, chờ phía còn lại';
+      if (this.campaign.internship_plans && this.campaign.internship_plans.length > 0) {
+        const firstPlan: any = this.campaign.internship_plans[0];
+        const gvhdApproved = firstPlan.gvhd_status === 'APPROVED';
+        const companyApproved = firstPlan.company_status === 'APPROVED';
+        
+        if (gvhdApproved && !companyApproved) {
+          detailMsg = 'Đã được GVHD duyệt, Đang chờ ĐVHD duyệt';
+        } else if (!gvhdApproved && companyApproved) {
+          detailMsg = 'Đã được ĐVHD duyệt, Đang chờ GVHD duyệt';
+        }
+      }
+      this.status.label = 'Chờ duyệt';
+      this.status.message = detailMsg;
+      this.isLocked = true;
+      this.canAccess = true;
+    } else if (this.campaign.status === 'COMPANY_APPROVED') {
       this.status.label = 'Chưa nộp';
       this.status.message = 'Vui lòng nộp kế hoạch thực tập';
       this.isLocked = false;
+      this.canAccess = true;
     } else {
       this.status.label = 'Chưa bắt đầu';
-      this.status.message = 'Cần hoàn thành kê khai TTTN-01 trước';
-      this.isLocked = true; // Block editing if they haven't declared company
+      this.status.message = 'Cần hoàn thành và được duyệt TTTN-01 trước';
+      this.isLocked = true;
+      this.canAccess = false;
     }
   }
 
@@ -94,28 +114,12 @@ export class InternshipPlanComponent implements OnInit {
       this.campaign.internship_plans.forEach((plan: any) => {
         const weekObj = this.weeks.find(w => w.weekNumber === plan.week);
         if (weekObj) {
-          weekObj.tasks = plan.task;
-          if (plan.clo_mapped) {
-            weekObj.clos = plan.clo_mapped.split(',').map((c: string) => parseInt(c, 10)).filter((n: number) => !isNaN(n));
-          }
+          weekObj.tasks = plan.task || '';
+          weekObj.expectedResults = plan.expected_result || '';
+          weekObj.evidences = plan.evidence_form || '';
         }
       });
     }
-  }
-
-  toggleClo(week: WeekPlan, clo: number) {
-    if (this.isLocked) return;
-    
-    const index = week.clos.indexOf(clo);
-    if (index > -1) {
-      week.clos.splice(index, 1);
-    } else {
-      week.clos.push(clo);
-    }
-  }
-
-  hasClo(week: WeekPlan, clo: number): boolean {
-    return week.clos.includes(clo);
   }
 
   onSubmit() {
@@ -129,22 +133,13 @@ export class InternshipPlanComponent implements OnInit {
     }
 
     const payload: InternshipPlanRequest = {
-      studentCampaignId: this.campaign.id,
-      tasks: this.weeks.map(w => ({
-        week: w.weekNumber,
-        taskDescription: w.tasks,
-        expectedResult: w.expectedResults || '' // Backend actually expects 'task', wait I need to check InternshipPlanRequest model
-      }))
-    };
-
-    // WAIT: I need to map it correctly to InternshipPlanRequest
-    // Let's modify the mapping to match the backend InternshipPlanRequest structure
-    const backendPayload: any = {
       student_campaign_id: this.campaign.id,
       plans: this.weeks.map(w => ({
         week: w.weekNumber,
         task: w.tasks,
-        clo_mapped: w.clos.join(',')
+        expected_result: w.expectedResults || '',
+        evidence_form: w.evidences || '',
+        clo_mapped: ''
       }))
     };
 
@@ -152,8 +147,8 @@ export class InternshipPlanComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.studentCampaignService.submitInternshipPlan(backendPayload).subscribe({
-      next: (res) => {
+    this.studentCampaignService.submitInternshipPlan(payload).subscribe({
+      next: () => {
         this.successMessage = 'Nộp kế hoạch thành công!';
         this.isSaving = false;
         this.isLocked = true;
@@ -167,4 +162,3 @@ export class InternshipPlanComponent implements OnInit {
     });
   }
 }
-

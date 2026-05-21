@@ -1,25 +1,15 @@
 <div class="max-w-7xl mx-auto space-y-6">
   <!-- Header Welcome -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h2 class="text-2xl font-bold text-slate-900">Xin chào, {{ adminName }}! 👋</h2>
-      <p class="text-slate-600 mt-1">Tổng quan Hệ thống Quản lý Thực tập toàn Trường</p>
-    </div>
-    <div class="text-right">
-      <div class="inline-flex items-center gap-2 bg-[#00429D] text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-800 transition-colors cursor-pointer" routerLink="/admin/campaigns">
-        <span class="material-symbols-outlined text-[20px]">add</span>
-        Tạo Đợt thực tập mới
-      </div>
-    </div>
-  </div>
+  <app-welcome-header
+    [title]="'Xin chào, ' + adminName + '! 👋'"
+    subtitle="Tổng quan Hệ thống Quản lý Thực tập toàn Trường"
+    actionText="Tạo Đợt thực tập mới"
+    actionLink="/admin/campaigns"
+    actionIcon="add">
+  </app-welcome-header>
 
   <!-- Loading -->
-  <div *ngIf="isLoading" class="flex items-center justify-center py-20">
-    <div class="flex flex-col items-center gap-3">
-      <span class="material-symbols-outlined animate-spin text-[40px] text-[#00429D]">progress_activity</span>
-      <p class="text-slate-500 text-sm font-medium">Đang tải dữ liệu...</p>
-    </div>
-  </div>
+  <app-dashboard-loading *ngIf="isLoading" message="Đang tải dữ liệu..."></app-dashboard-loading>
 
   <div *ngIf="!isLoading" class="grid grid-cols-1 xl:grid-cols-3 gap-6">
     <!-- Cột trái (Chính) -->
@@ -27,22 +17,26 @@
       
       <!-- Card Thống kê -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
-          <p class="text-slate-500 text-sm font-medium mb-2 text-center">Tổng Đợt TT</p>
-          <p class="text-3xl font-black text-[#00429D]">{{ totalCampaigns }}</p>
-        </div>
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
-          <p class="text-slate-500 text-sm font-medium mb-2 text-center">Đang hoạt động</p>
-          <p class="text-3xl font-black text-emerald-600">{{ activeCampaigns }}</p>
-        </div>
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
-          <p class="text-slate-500 text-sm font-medium mb-2 text-center">Ngừng hoạt động</p>
-          <p class="text-3xl font-black text-slate-400">{{ inactiveCampaigns }}</p>
-        </div>
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center">
-          <p class="text-slate-500 text-sm font-medium mb-2 text-center">Tổng Sinh viên</p>
-          <p class="text-3xl font-black text-amber-600">{{ totalStudents }}</p>
-        </div>
+        <app-metric-card
+          title="Tổng Đợt TT"
+          [value]="totalCampaigns"
+          valueClass="text-[#00429D]">
+        </app-metric-card>
+        <app-metric-card
+          title="Đang hoạt động"
+          [value]="activeCampaigns"
+          valueClass="text-emerald-600">
+        </app-metric-card>
+        <app-metric-card
+          title="Ngừng hoạt động"
+          [value]="inactiveCampaigns"
+          valueClass="text-slate-400">
+        </app-metric-card>
+        <app-metric-card
+          title="Tổng Sinh viên"
+          [value]="totalStudents"
+          valueClass="text-amber-600">
+        </app-metric-card>
       </div>
 
       <!-- Danh sách Đợt thực tập gần đây -->

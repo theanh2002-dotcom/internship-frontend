@@ -5,85 +5,125 @@
             <h2 class="text-2xl font-bold text-slate-900">Tổng hợp Khảo sát Phản hồi (TTTN-08)</h2>
             <p class="text-slate-600 mt-1">Báo cáo mức độ hài lòng từ Đơn vị Hướng dẫn và Sinh viên.</p>
         </div>
-        <button class="flex items-center gap-2 border border-slate-300 bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-medium shadow-sm">
-            <span class="material-symbols-outlined text-[20px]">download</span>
-            Xuất Báo cáo PDF
-        </button>
-    </div>
-
-    <!-- Overview Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Student Overview -->
-        <div class="bg-gradient-to-br from-blue-500 to-[#00429D] p-6 rounded-2xl shadow-md text-white flex justify-between items-center relative overflow-hidden">
-            <div class="relative z-10">
-                <p class="text-blue-100 font-medium mb-1">Đánh giá từ Sinh viên</p>
-                <div class="flex items-end gap-3">
-                    <h3 class="text-4xl font-black">{{ studentStats.averageRating }}<span class="text-xl font-normal text-blue-200">/5</span></h3>
-                </div>
-                <p class="text-sm text-blue-100 mt-3">Dựa trên <strong>{{ studentStats.totalResponses }}</strong> lượt phản hồi</p>
+        <div class="flex items-center gap-3">
+            <!-- Dropdown Đợt thực tập -->
+            <div class="flex items-center gap-2 bg-white px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm">
+                <span class="material-symbols-outlined text-slate-400 text-[18px]">event</span>
+                <select [(ngModel)]="selectedCampaignId" (change)="onCampaignChange()" class="bg-transparent text-[13px] font-medium text-slate-700 focus:outline-none pr-4 cursor-pointer">
+                    <option *ngFor="let camp of campaigns" [value]="camp.id">{{ camp.name }}</option>
+                </select>
             </div>
-            <div class="relative z-10 text-right">
-                <div class="w-20 h-20 rounded-full border-4 border-blue-300 flex items-center justify-center mb-2 mx-auto">
-                    <span class="text-xl font-bold">{{ studentStats.recommendCompany }}%</span>
-                </div>
-                <p class="text-xs text-blue-100">Sẵn sàng giới thiệu<br>ĐVHD cho khóa sau</p>
-            </div>
-            <!-- Background Decoration -->
-            <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-[120px] text-white opacity-10">school</span>
-        </div>
-
-        <!-- Company Overview -->
-        <div class="bg-gradient-to-br from-orange-500 to-orange-700 p-6 rounded-2xl shadow-md text-white flex justify-between items-center relative overflow-hidden">
-            <div class="relative z-10">
-                <p class="text-orange-100 font-medium mb-1">Đánh giá từ Đơn vị Hướng dẫn</p>
-                <div class="flex items-end gap-3">
-                    <h3 class="text-4xl font-black">{{ companyStats.averageRating }}<span class="text-xl font-normal text-orange-200">/5</span></h3>
-                </div>
-                <p class="text-sm text-orange-100 mt-3">Dựa trên <strong>{{ companyStats.totalResponses }}</strong> lượt phản hồi</p>
-            </div>
-            <div class="relative z-10 text-right">
-                <div class="w-20 h-20 rounded-full border-4 border-orange-300 flex items-center justify-center mb-2 mx-auto">
-                    <span class="text-xl font-bold">{{ companyStats.hireAgain }}%</span>
-                </div>
-                <p class="text-xs text-orange-100">Sẵn sàng tiếp nhận<br>SV trong tương lai</p>
-            </div>
-            <!-- Background Decoration -->
-            <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-[120px] text-white opacity-10">business</span>
+            
+            <button (click)="exportExcel()" [disabled]="isLoading" class="flex items-center gap-2 border border-emerald-300 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg hover:bg-emerald-100 transition-colors font-medium shadow-sm cursor-pointer">
+                <span class="material-symbols-outlined text-[20px] text-emerald-600">download</span>
+                Xuất Excel
+            </button>
+            <button (click)="printReport()" [disabled]="isLoading" class="flex items-center gap-2 border border-slate-300 bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-medium shadow-sm cursor-pointer">
+                <span class="material-symbols-outlined text-[20px] text-slate-500">print</span>
+                In / PDF
+            </button>
         </div>
     </div>
 
-    <!-- Detailed Charts (Mock using CSS Progress Bars) -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- Student Detailed Stats -->
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
-            <h3 class="font-semibold text-slate-900 border-b border-slate-100 pb-3">Chi tiết đánh giá của Sinh viên</h3>
-            
-            <div *ngFor="let item of studentQuestions" class="space-y-2">
-                <div class="flex justify-between items-end">
-                    <p class="text-sm font-medium text-slate-700">{{ item.text }}</p>
-                    <span class="text-sm font-bold text-[#00429D]">{{ item.rating }} / 5</span>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex items-center justify-center py-20 bg-white border border-slate-200 rounded-xl shadow-sm">
+      <div class="flex flex-col items-center gap-3">
+        <span class="material-symbols-outlined animate-spin text-[40px] text-[#00429D]">progress_activity</span>
+        <p class="text-slate-500 text-sm font-medium">Đang tải dữ liệu tổng hợp...</p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && (!campaigns || campaigns.length === 0 || !departmentCampaignId)" class="flex flex-col items-center justify-center py-16 px-4 bg-white border border-slate-200 rounded-lg shadow-sm text-center">
+      <span class="material-symbols-outlined text-[64px] text-slate-300 mb-4">event_busy</span>
+      <p class="text-slate-500 font-medium text-lg">Chưa có đợt thực tập nào</p>
+      <p class="text-slate-400 text-sm mt-1 font-normal">Vui lòng chờ Ban quản lý tạo đợt thực tập mới.</p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div *ngIf="!isLoading && campaigns.length > 0 && departmentCampaignId" class="space-y-6">
+        <!-- Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Student Overview -->
+            <div class="bg-gradient-to-br from-blue-500 to-[#00429D] p-6 rounded-2xl shadow-md text-white flex justify-between items-center relative overflow-hidden">
+                <div class="relative z-10">
+                    <p class="text-blue-100 font-medium mb-1">Đánh giá từ Sinh viên</p>
+                    <div class="flex items-end gap-3">
+                        <h3 class="text-4xl font-black">{{ studentStats.averageRating }}<span class="text-xl font-normal text-blue-200">/5</span></h3>
+                    </div>
+                    <p class="text-sm text-blue-100 mt-3">Dựa trên <strong>{{ studentStats.totalResponses }}</strong> lượt phản hồi</p>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-2.5">
-                    <div class="bg-[#00429D] h-2.5 rounded-full" [style.width]="item.width"></div>
+                <div class="relative z-10 text-right">
+                    <div class="w-20 h-20 rounded-full border-4 border-blue-300 flex items-center justify-center mb-2 mx-auto">
+                        <span class="text-xl font-bold">{{ studentStats.recommendCompany }}%</span>
+                    </div>
+                    <p class="text-xs text-blue-100">Sẵn sàng giới thiệu<br>ĐVHD cho khóa sau</p>
                 </div>
+                <!-- Background Decoration -->
+                <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-[120px] text-white opacity-10">school</span>
+            </div>
+
+            <!-- Company Overview -->
+            <div class="bg-gradient-to-br from-orange-500 to-orange-700 p-6 rounded-2xl shadow-md text-white flex justify-between items-center relative overflow-hidden">
+                <div class="relative z-10">
+                    <p class="text-orange-100 font-medium mb-1">Đánh giá từ Đơn vị Hướng dẫn</p>
+                    <div class="flex items-end gap-3">
+                        <h3 class="text-4xl font-black">{{ companyStats.averageRating }}<span class="text-xl font-normal text-orange-200">/5</span></h3>
+                    </div>
+                    <p class="text-sm text-orange-100 mt-3">Dựa trên <strong>{{ companyStats.totalResponses }}</strong> lượt phản hồi</p>
+                </div>
+                <div class="relative z-10 text-right">
+                    <div class="w-20 h-20 rounded-full border-4 border-orange-300 flex items-center justify-center mb-2 mx-auto">
+                        <span class="text-xl font-bold">{{ companyStats.hireAgain }}%</span>
+                    </div>
+                    <p class="text-xs text-orange-100">Đánh giá sinh viên<br>đạt mức Tốt trở lên</p>
+                </div>
+                <!-- Background Decoration -->
+                <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-[120px] text-white opacity-10">business</span>
             </div>
         </div>
 
-        <!-- Company Detailed Stats -->
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
-            <h3 class="font-semibold text-slate-900 border-b border-slate-100 pb-3">Chi tiết đánh giá của Đơn vị HD</h3>
+        <!-- Detailed Charts (Mock using CSS Progress Bars) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            <div *ngFor="let item of companyQuestions" class="space-y-2">
-                <div class="flex justify-between items-end">
-                    <p class="text-sm font-medium text-slate-700">{{ item.text }}</p>
-                    <span class="text-sm font-bold text-orange-600">{{ item.rating }} / 5</span>
+            <!-- Student Detailed Stats -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                <h3 class="font-semibold text-slate-900 border-b border-slate-100 pb-3">Chi tiết đánh giá của Sinh viên</h3>
+                
+                <div *ngIf="studentQuestions.length === 0" class="text-center py-8 text-slate-400 text-sm">
+                  Chưa có dữ liệu phản hồi khảo sát từ sinh viên.
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-2.5">
-                    <div class="bg-orange-500 h-2.5 rounded-full" [style.width]="item.width"></div>
+                
+                <div *ngFor="let item of studentQuestions" class="space-y-2">
+                    <div class="flex justify-between items-end">
+                        <p class="text-sm font-medium text-slate-700">{{ item.text }}</p>
+                        <span class="text-sm font-bold text-[#00429D]">{{ item.rating }} / 5</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5">
+                        <div class="bg-[#00429D] h-2.5 rounded-full" [style.width]="item.width"></div>
+                    </div>
                 </div>
             </div>
-        </div>
 
+            <!-- Company Detailed Stats -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                <h3 class="font-semibold text-slate-900 border-b border-slate-100 pb-3">Chi tiết đánh giá của Đơn vị HD</h3>
+                
+                <div *ngIf="companyQuestions.length === 0" class="text-center py-8 text-slate-400 text-sm">
+                  Chưa có dữ liệu phản hồi khảo sát từ doanh nghiệp.
+                </div>
+                
+                <div *ngFor="let item of companyQuestions" class="space-y-2">
+                    <div class="flex justify-between items-end">
+                        <p class="text-sm font-medium text-slate-700">{{ item.text }}</p>
+                        <span class="text-sm font-bold text-orange-600">{{ item.rating }} / 5</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5">
+                        <div class="bg-orange-500 h-2.5 rounded-full" [style.width]="item.width"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 </div>

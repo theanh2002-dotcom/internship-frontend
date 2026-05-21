@@ -30,6 +30,7 @@ export class FinalReportComponent implements OnInit {
   uploadingFile: UploadingFile | null = null;
 
   isAgreed: boolean = false;
+  canAccess = false; // Status Gate: chỉ mở khi STAGE1_EVALUATED trở lên
 
   constructor(
     private studentCampaignService: StudentCampaignService,
@@ -49,7 +50,14 @@ export class FinalReportComponent implements OnInit {
         const campaigns = Array.isArray(res) ? res : [];
         if (campaigns.length > 0) {
           this.studentCampaign = campaigns[0];
-          this.loadFinalReports();
+          // Status Gate check
+          const allowedStatuses = ['STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
+          this.canAccess = allowedStatuses.includes(this.studentCampaign!.status);
+          if (this.canAccess) {
+            this.loadFinalReports();
+          } else {
+            this.isLoading = false;
+          }
         } else {
           this.isLoading = false;
         }

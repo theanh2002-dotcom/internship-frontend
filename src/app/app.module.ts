@@ -43,6 +43,16 @@ import { RegisterComponent } from './pages/auth/register/register.component';
 import { DepartmentManagementComponent } from './pages/admin/department-management/department-management.component';
 import { UserManagementComponent } from './pages/admin/user-management/user-management.component';
 import { SystemSettingsComponent } from './pages/admin/system-settings/system-settings.component';
+import { NotificationManagementComponent } from './pages/admin/notification-management/notification-management.component';
+import { CommitteesComponent } from './pages/ldkbm/committees/committees.component';
+import { LdkbmScoreSummaryComponent } from './pages/ldkbm/score-summary/score-summary.component';
+import { SetupPasswordComponent } from './pages/auth/setup-password/setup-password.component';
+import { ReactiveFormsModule } from '@angular/forms';
+import { StatusBadgeComponent } from './shared/components/status-badge/status-badge.component';
+import { InternshipReportComponent } from './pages/student/internship-report/internship-report.component';
+import { WelcomeHeaderComponent } from './shared/components/welcome-header/welcome-header.component';
+import { MetricCardComponent } from './shared/components/metric-card/metric-card.component';
+import { DashboardLoadingComponent } from './shared/components/dashboard-loading/dashboard-loading.component';
 
 @NgModule({
   declarations: [
@@ -82,13 +92,23 @@ import { SystemSettingsComponent } from './pages/admin/system-settings/system-se
     RegisterComponent,
     DepartmentManagementComponent,
     UserManagementComponent,
-    SystemSettingsComponent
+    SystemSettingsComponent,
+    NotificationManagementComponent,
+    CommitteesComponent,
+    LdkbmScoreSummaryComponent,
+    SetupPasswordComponent,
+    StatusBadgeComponent,
+    InternshipReportComponent,
+    WelcomeHeaderComponent,
+    MetricCardComponent,
+    DashboardLoadingComponent
   ],
   imports: [
     BrowserModule,
     CommonModule,
     AppRoutingModule,
     FormsModule,
+    ReactiveFormsModule,
     HttpClientModule
   ],
   providers: [

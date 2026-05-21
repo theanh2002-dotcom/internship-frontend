@@ -116,13 +116,19 @@ export interface CompanyInfoResponse {
   supervisor_email: string;
   supervisor_phone: string;
   expected_domain: string;
+  internship_type: string;
   company_status: string;
 }
 
 export interface InternshipPlanResponse {
-  week_number: number;
-  task_description: string;
+  id: number;
+  week: number;
+  task: string;
   expected_result: string;
+  evidence_form: string;
+  clo_mapped: string;
+  gvhd_status: string;
+  company_status: string;
 }
 
 export interface StudentCampaignResponse {

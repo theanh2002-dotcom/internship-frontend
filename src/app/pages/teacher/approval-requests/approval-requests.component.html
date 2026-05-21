@@ -118,11 +118,13 @@
             </div>
             <div *ngIf="selectedRequest?.internship_plans?.length" class="space-y-3">
               <div *ngFor="let plan of selectedRequest!.internship_plans" class="text-sm text-gray-900 p-3 bg-gray-50 rounded border border-gray-200">
-                <p class="font-medium text-blue-700">Tuần {{ plan.week_number }}</p>
-                <p class="mt-1"><strong>Nội dung công việc:</strong></p>
-                <p class="whitespace-pre-wrap text-gray-700 mt-1">{{ plan.task_description }}</p>
-                <p class="mt-2"><strong>Kết quả dự kiến:</strong></p>
-                <p class="whitespace-pre-wrap text-gray-700 mt-1">{{ plan.expected_result }}</p>
+                <p class="font-medium text-blue-700">Tuần {{ plan.week }}</p>
+                <p class="mt-1"><strong>Mục tiêu / Công việc dự kiến:</strong></p>
+                <p class="whitespace-pre-wrap text-gray-700 mt-1">{{ plan.task }}</p>
+                <p class="mt-2" *ngIf="plan.expected_result"><strong>Kết quả mong đợi:</strong></p>
+                <p class="whitespace-pre-wrap text-gray-700 mt-1" *ngIf="plan.expected_result">{{ plan.expected_result }}</p>
+                <p class="mt-2" *ngIf="plan.evidence_form"><strong>Hình thức minh chứng:</strong></p>
+                <p class="whitespace-pre-wrap text-gray-700 mt-1" *ngIf="plan.evidence_form">{{ plan.evidence_form }}</p>
               </div>
             </div>
           </div>

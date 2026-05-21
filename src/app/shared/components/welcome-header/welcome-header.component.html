@@ -1,0 +1,24 @@
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+  <div>
+    <h2 class="text-2xl font-bold text-slate-900">{{ title }}</h2>
+    <p class="text-slate-600 mt-1" *ngIf="subtitle">{{ subtitle }}</p>
+  </div>
+  
+  <div class="flex items-center gap-3 shrink-0">
+    <ng-content></ng-content>
+
+    <!-- Info Tag (e.g. Current Week status) -->
+    <div *ngIf="infoTagText" class="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg text-[#00429D] font-medium border border-blue-100">
+      <span class="material-symbols-outlined text-[20px]" *ngIf="infoTagIcon">{{ infoTagIcon }}</span>
+      {{ infoTagText }}
+    </div>
+
+    <!-- Action Button -->
+    <div *ngIf="actionText && actionLink" 
+         [routerLink]="actionLink" 
+         class="inline-flex items-center gap-2 bg-[#00429D] text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-800 transition-colors cursor-pointer">
+      <span class="material-symbols-outlined text-[20px]" *ngIf="actionIcon">{{ actionIcon }}</span>
+      {{ actionText }}
+    </div>
+  </div>
+</div>

@@ -22,7 +22,7 @@ interface WeeklyLog {
   supervisorComment?: string;
   supervisorName?: string;
   supervisorDate?: string;
-  progress?: number;
+  completionPercentage?: number;
 }
 
 @Component({
@@ -55,6 +55,8 @@ export class WeeklyLogComponent implements OnInit {
   activeWeekNumber = 1;
   activeLogTasks: string = '';
   activeLogResults: string = '';
+  activeCompletion: number = 0;
+  canAccess = false; // Status Gate: chỉ mở khi PLAN_APPROVED trở lên
 
   // Options for weeks
   availableWeeks = [1,2,3,4,5,6,7,8];
@@ -82,7 +84,15 @@ export class WeeklyLogComponent implements OnInit {
             this.companyInfo.supervisor = this.campaign!.company_info.supervisor_name;
           }
 
-          this.loadLogs();
+          // Status Gate check: TTTN-03 chỉ mở khi TTTN-02 đã được CẢ 2 bên duyệt (IN_PROGRESS)
+          const allowedStatuses = ['IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
+          this.canAccess = allowedStatuses.includes(this.campaign!.status);
+
+          if (this.canAccess) {
+            this.loadLogs();
+          } else {
+            this.isLoading = false;
+          }
         } else {
           this.isLoading = false;
         }
@@ -115,6 +125,7 @@ export class WeeklyLogComponent implements OnInit {
               status: status,
               tasks: item.content ? item.content.split('\n') : [],
               results: item.results || '',
+              completionPercentage: item.completion_percentage || 0,
               supervisorComment: item.supervisor_comment || '',
               supervisorName: this.companyInfo.supervisor,
               supervisorDate: item.updated_at
@@ -124,7 +135,8 @@ export class WeeklyLogComponent implements OnInit {
                weekNumber: weekNo,
                status: 'locked',
                tasks: [],
-               results: ''
+               results: '',
+               completionPercentage: 0
              };
           }
         });
@@ -136,6 +148,7 @@ export class WeeklyLogComponent implements OnInit {
            this.activeWeekNumber = firstUnconfirmed.weekNumber;
            this.activeLogTasks = firstUnconfirmed.tasks.join('\n');
            this.activeLogResults = firstUnconfirmed.results;
+           this.activeCompletion = firstUnconfirmed.completionPercentage || 0;
         }
 
         // Sort ascending or descending? The UI design usually shows latest first or chronological. Let's do ascending for a chronological timeline.
@@ -157,9 +170,11 @@ export class WeeklyLogComponent implements OnInit {
     if (existingLog) {
       this.activeLogTasks = existingLog.tasks.join('\n');
       this.activeLogResults = existingLog.results;
+      this.activeCompletion = existingLog.completionPercentage || 0;
     } else {
       this.activeLogTasks = '';
       this.activeLogResults = '';
+      this.activeCompletion = 0;
     }
   }
 
@@ -178,7 +193,8 @@ export class WeeklyLogComponent implements OnInit {
       student_campaign_id: this.campaign.id,
       week_number: Number(this.activeWeekNumber),
       content: this.activeLogTasks,
-      results: this.activeLogResults
+      results: this.activeLogResults,
+      completion_percentage: this.activeCompletion
     };
 
     this.weeklyLogService.createOrUpdate(payload).subscribe({
