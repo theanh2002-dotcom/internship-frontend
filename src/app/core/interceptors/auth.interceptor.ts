@@ -18,14 +18,17 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = this.authService.getToken();
+    const headers: { [key: string]: string } = {
+      'ngrok-skip-browser-warning': 'true'
+    };
 
     if (token) {
-      request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    request = request.clone({
+      setHeaders: headers
+    });
 
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
