@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { UserService, UserRequest } from '../../../core/services/user.service';
 import { DepartmentService } from '../../../core/services/department.service';
@@ -11,9 +12,7 @@ import { UserResponse, PaginationRequest, DepartmentResponse } from '../../../co
 export class UserManagementComponent implements OnInit {
   isModalOpen = false;
   isLoading = false;
-  errorMessage = '';
-
-  currentPage = 1;
+    currentPage = 1;
   pageSize = 10;
   totalItems = 0;
 
@@ -41,14 +40,21 @@ export class UserManagementComponent implements OnInit {
     { value: 'COMPANY_SUPERVISOR', label: 'Cán bộ hướng dẫn (Doanh nghiệp)' }
   ];
 
-  constructor(
-    private userService: UserService,
-    private departmentService: DepartmentService
-  ) {}
+  searchQuery = '';
+  selectedRole = '';
+  selectedFacultyId: number | null = null;
+
+  constructor(private toastService: ToastService, private userService: UserService,
+    private departmentService: DepartmentService) {}
 
   ngOnInit(): void {
     this.loadUsers();
     this.loadFaculties();
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadUsers();
   }
 
   loadUsers(): void {
@@ -56,9 +62,14 @@ export class UserManagementComponent implements OnInit {
     const request: PaginationRequest = {
       page: this.currentPage,
       limit: this.pageSize,
+      searchText: this.searchQuery ? this.searchQuery.trim() : undefined
     };
 
-    this.userService.getUsers(request).subscribe({
+    this.userService.getUsers(
+      request,
+      this.selectedRole || undefined,
+      this.selectedFacultyId || undefined
+    ).subscribe({
       next: (pagination) => {
         this.users = pagination.data || [];
         this.totalItems = pagination.total || 0;
@@ -66,7 +77,7 @@ export class UserManagementComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.errorMessage = err?.message || 'Không thể tải danh sách tài khoản';
+        this.toastService.error(err?.message || 'Không thể tải danh sách tài khoản');
         this.isLoading = false;
       }
     });
@@ -126,13 +137,11 @@ export class UserManagementComponent implements OnInit {
     }
 
     this.formPassword = ''; // Không hiển thị password cũ
-    this.errorMessage = '';
     this.isModalOpen = true;
   }
 
   closeModal(): void {
     this.isModalOpen = false;
-    this.errorMessage = '';
   }
 
   resetForm(): void {
@@ -143,24 +152,23 @@ export class UserManagementComponent implements OnInit {
     this.formFacultyId = null;
     this.formSubDepartmentId = null;
     this.subDepartments = [];
-    this.errorMessage = '';
   }
 
   saveUser(): void {
     if (!this.formEmail.trim()) {
-      this.errorMessage = 'Vui lòng nhập Email';
+      this.toastService.error('Vui lòng nhập Email');
       return;
     }
     if (!this.isEditMode && !this.formPassword.trim()) {
-      this.errorMessage = 'Vui lòng nhập Mật khẩu cho tài khoản mới';
+      this.toastService.error('Vui lòng nhập Mật khẩu cho tài khoản mới');
       return;
     }
     if (!this.formFullName.trim()) {
-      this.errorMessage = 'Vui lòng nhập Họ và tên';
+      this.toastService.error('Vui lòng nhập Họ và tên');
       return;
     }
     if (!this.formRole) {
-      this.errorMessage = 'Vui lòng chọn Quyền (Role)';
+      this.toastService.error('Vui lòng chọn Quyền (Role)');
       return;
     }
 
@@ -183,7 +191,7 @@ export class UserManagementComponent implements OnInit {
           this.loadUsers();
         },
         error: (err) => {
-          this.errorMessage = err?.message || 'Cập nhật thất bại';
+          this.toastService.error(err?.message || 'Cập nhật thất bại');
           this.isLoading = false;
         }
       });
@@ -194,7 +202,7 @@ export class UserManagementComponent implements OnInit {
           this.loadUsers();
         },
         error: (err) => {
-          this.errorMessage = err?.message || 'Tạo mới thất bại';
+          this.toastService.error(err?.message || 'Tạo mới thất bại');
           this.isLoading = false;
         }
       });
@@ -207,7 +215,7 @@ export class UserManagementComponent implements OnInit {
         this.loadUsers();
       },
       error: (err) => {
-        this.errorMessage = err?.message || 'Đổi trạng thái thất bại';
+        this.toastService.error(err?.message || 'Đổi trạng thái thất bại');
       }
     });
   }

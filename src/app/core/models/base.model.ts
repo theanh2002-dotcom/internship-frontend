@@ -61,6 +61,16 @@ export interface CampaignResponse {
   description: string | null;
   start_date: string;   // "yyyy-MM-dd HH:mm:ss"
   end_date: string;
+  tttn01_start_date?: string;
+  tttn01_deadline?: string;
+  tttn02_start_date?: string;
+  tttn02_deadline?: string;
+  tttn03_start_date?: string;
+  tttn03_deadline?: string;
+  midterm_start_date?: string;
+  midterm_deadline?: string;
+  tttn06_start_date?: string;
+  tttn06_deadline?: string;
   status: string;        // "ACTIVE" | "INACTIVE"
   student_count: number;
   department_count: number;

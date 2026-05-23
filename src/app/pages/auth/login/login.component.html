@@ -53,10 +53,7 @@
       <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="space-y-6">
         
         <!-- Error Message -->
-        <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3.5 rounded-xl text-sm flex items-start gap-3 animate-fade-in shadow-sm">
-          <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
-          <p class="mt-0.5 font-bold">{{ errorMessage }}</p>
-        </div>
+        
 
         <div class="space-y-1.5">
           <label class="block text-sm font-bold text-slate-700">Email</label>

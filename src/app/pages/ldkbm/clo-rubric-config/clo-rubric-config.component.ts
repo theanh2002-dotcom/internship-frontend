@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { DepartmentCampaignService, CloConfigRequest, CloItem, RubricItem } from '../../../core/services/department-campaign.service';
 import { CampaignService } from '../../../core/services/campaign.service';
@@ -12,10 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class CloRubricConfigComponent implements OnInit {
   isLoading = false;
   isSaving = false;
-  errorMessage = '';
-  successMessage = '';
-
-  campaigns: CampaignResponse[] = [];
+      campaigns: CampaignResponse[] = [];
   selectedCampaignId: number | null = null;
   departmentId: number | null = null;
   departmentCampaignId: number | null = null;
@@ -25,11 +23,9 @@ export class CloRubricConfigComponent implements OnInit {
   clos: CloItem[] = [];
   selectedCloIndex: number = 0;
 
-  constructor(
-    private deptCampaignService: DepartmentCampaignService,
+  constructor(private toastService: ToastService, private deptCampaignService: DepartmentCampaignService,
     private campaignService: CampaignService,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService) {}
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
@@ -55,28 +51,26 @@ export class CloRubricConfigComponent implements OnInit {
     if (!this.selectedCampaignId) return;
     
     if (!this.departmentId) {
-      this.errorMessage = 'Tài khoản của bạn chưa được gắn với Khoa/Bộ môn nào. Vui lòng liên hệ Admin.';
+      this.toastService.error('Tài khoản của bạn chưa được gắn với Khoa/Bộ môn nào. Vui lòng liên hệ Admin.');
       return;
     }
     
     this.isLoading = true;
-    this.errorMessage = '';
-    
     // Tìm hoặc tạo DepartmentCampaign
     this.deptCampaignService.findOrCreate(this.selectedCampaignId, this.departmentId).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.departmentCampaignId = res.id;
         if (res.stage1_weight !== undefined) this.stage1Weight = res.stage1_weight;
         if (res.stage2_weight !== undefined) this.stage2Weight = res.stage2_weight;
         if (this.departmentCampaignId) {
           this.loadCloConfigs();
         } else {
-          this.errorMessage = 'Không thể xác định luồng Đợt thực tập của Khoa.';
+          this.toastService.error('Không thể xác định luồng Đợt thực tập của Khoa.');
           this.isLoading = false;
         }
       },
-      error: (err) => {
-        this.errorMessage = 'Lỗi hệ thống: ' + (err.message || '');
+      error: (err: any) => {
+        this.toastService.error('Lỗi hệ thống: ' + (err.message || ''));
         this.isLoading = false;
       }
     });
@@ -104,7 +98,7 @@ export class CloRubricConfigComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.errorMessage = 'Lỗi tải cấu hình CLO: ' + (err.message || '');
+        this.toastService.error('Lỗi tải cấu hình CLO: ' + (err.message || ''));
         this.isLoading = false;
       }
     });
@@ -245,14 +239,10 @@ export class CloRubricConfigComponent implements OnInit {
   }
 
   showError(msg: string): void {
-    this.errorMessage = msg;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => this.errorMessage = '', 5000);
+    this.toastService.error(msg);
   }
 
   showSuccess(msg: string): void {
-    this.successMessage = msg;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => this.successMessage = '', 3000);
+    this.toastService.success(msg);
   }
 }

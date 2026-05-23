@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -19,10 +20,7 @@ export class RegisterComponent implements OnInit {
 
   showPassword = false;
   isLoading = false;
-  errorMessage = '';
-  successMessage = '';
-
-  /**
+      /**
    * Danh sách role cho dropdown
    */
   roles: { value: RegisterRequest['role']; label: string }[] = [
@@ -39,11 +37,9 @@ export class RegisterComponent implements OnInit {
   faculties: any[] = [];
   subDepartments: any[] = [];
 
-  constructor(
-    private authService: AuthService, 
+  constructor(private toastService: ToastService, private authService: AuthService, 
     private router: Router,
-    private departmentService: DepartmentService
-  ) {}
+    private departmentService: DepartmentService) {}
 
   ngOnInit(): void {
     this.departmentService.getDepartments({ page: 1, limit: 1000 }).subscribe({
@@ -68,24 +64,21 @@ export class RegisterComponent implements OnInit {
   onSubmit() {
     // Validate
     if (!this.fullName || !this.email || !this.password || !this.confirmPassword) {
-      this.errorMessage = 'Vui lòng điền đầy đủ các trường bắt buộc';
+      this.toastService.error('Vui lòng điền đầy đủ các trường bắt buộc');
       return;
     }
 
     if (this.password !== this.confirmPassword) {
-      this.errorMessage = 'Mật khẩu xác nhận không khớp';
+      this.toastService.error('Mật khẩu xác nhận không khớp');
       return;
     }
 
     if (this.password.length < 6) {
-      this.errorMessage = 'Mật khẩu phải có ít nhất 6 ký tự';
+      this.toastService.error('Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
 
     this.isLoading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
     const finalDepartmentId = this.subDepartmentId ? this.subDepartmentId : this.facultyId;
 
     const request: RegisterRequest = {
@@ -105,7 +98,7 @@ export class RegisterComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err?.message || err?.error?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+        this.toastService.error(err?.message || err?.error?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
       }
     });
   }

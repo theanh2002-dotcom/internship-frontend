@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { DepartmentService, DepartmentRequest } from '../../../core/services/department.service';
 import { DepartmentResponse, PaginationRequest } from '../../../core/models/base.model';
@@ -9,10 +10,7 @@ import { DepartmentResponse, PaginationRequest } from '../../../core/models/base
 })
 export class DepartmentManagementComponent implements OnInit {
   isLoading = false;
-  errorMessage = '';
-  successMessage = '';
-
-  // --- Khoa (left panel) ---
+      // --- Khoa (left panel) ---
   faculties: DepartmentResponse[] = [];
   totalFaculties = 0;
   currentPage = 1;
@@ -31,7 +29,7 @@ export class DepartmentManagementComponent implements OnInit {
   formCode = '';
   formName = '';
 
-  constructor(private departmentService: DepartmentService) {}
+  constructor(private toastService: ToastService, private departmentService: DepartmentService) {}
 
   ngOnInit(): void {
     this.loadFaculties();
@@ -56,7 +54,7 @@ export class DepartmentManagementComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.errorMessage = err?.message || 'Không thể tải danh sách khoa';
+        this.toastService.error(err?.message || 'Không thể tải danh sách khoa');
         this.isLoading = false;
       }
     });
@@ -116,19 +114,16 @@ export class DepartmentManagementComponent implements OnInit {
     this.editingId = dept.id;
     this.formCode = dept.code || '';
     this.formName = dept.name || '';
-    this.errorMessage = '';
     this.isModalOpen = true;
   }
 
   closeModal(): void {
     this.isModalOpen = false;
-    this.errorMessage = '';
   }
 
   resetForm(): void {
     this.formCode = '';
     this.formName = '';
-    this.errorMessage = '';
   }
 
   getModalTitle(): string {
@@ -140,11 +135,11 @@ export class DepartmentManagementComponent implements OnInit {
 
   saveDepartment(): void {
     if (!this.formCode.trim()) {
-      this.errorMessage = 'Vui lòng nhập mã';
+      this.toastService.error('Vui lòng nhập mã');
       return;
     }
     if (!this.formName.trim()) {
-      this.errorMessage = 'Vui lòng nhập tên';
+      this.toastService.error('Vui lòng nhập tên');
       return;
     }
 
@@ -164,7 +159,7 @@ export class DepartmentManagementComponent implements OnInit {
           this.refreshAfterSave();
         },
         error: (err) => {
-          this.errorMessage = err?.message || 'Cập nhật thất bại';
+          this.toastService.error(err?.message || 'Cập nhật thất bại');
           this.isLoading = false;
         }
       });
@@ -176,7 +171,7 @@ export class DepartmentManagementComponent implements OnInit {
           this.refreshAfterSave();
         },
         error: (err) => {
-          this.errorMessage = err?.message || 'Tạo mới thất bại';
+          this.toastService.error(err?.message || 'Tạo mới thất bại');
           this.isLoading = false;
         }
       });
@@ -221,12 +216,10 @@ export class DepartmentManagementComponent implements OnInit {
   }
 
   showError(msg: string): void {
-    this.errorMessage = msg;
-    setTimeout(() => this.errorMessage = '', 5000);
+    this.toastService.error(msg);
   }
 
   showSuccess(msg: string): void {
-    this.successMessage = msg;
-    setTimeout(() => this.successMessage = '', 3000);
+    this.toastService.success(msg);
   }
 }

@@ -1,0 +1,41 @@
+<div class="fixed top-6 right-6 z-[99999] flex flex-col gap-3 max-w-sm w-full pointer-events-none font-sans">
+  <div *ngFor="let toast of toasts$ | async; trackBy: trackById"
+       class="pointer-events-auto flex items-start gap-3 p-4 bg-white/95 backdrop-blur-md rounded-xl border border-slate-200/50 shadow-xl shadow-slate-200/35 transition-all duration-300 transform translate-x-0 slide-in"
+       [ngClass]="{
+         'border-l-4 border-l-emerald-500': toast.type === 'success',
+         'border-l-4 border-l-rose-500': toast.type === 'error',
+         'border-l-4 border-l-amber-500': toast.type === 'warning',
+         'border-l-4 border-l-sky-500': toast.type === 'info'
+       }">
+    
+    <!-- Icon -->
+    <div class="flex-shrink-0 mt-0.5" [ngClass]="{
+      'text-emerald-500': toast.type === 'success',
+      'text-rose-500': toast.type === 'error',
+      'text-amber-500': toast.type === 'warning',
+      'text-sky-500': toast.type === 'info'
+    }">
+      <span class="material-symbols-outlined text-[22px]">
+        {{ toast.type === 'success' ? 'check_circle' : toast.type === 'error' ? 'cancel' : toast.type === 'warning' ? 'warning' : 'info' }}
+      </span>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-grow min-w-0">
+      <h4 class="text-sm font-bold tracking-wide uppercase text-[10px]" [ngClass]="{
+        'text-emerald-600': toast.type === 'success',
+        'text-rose-600': toast.type === 'error',
+        'text-amber-600': toast.type === 'warning',
+        'text-sky-600': toast.type === 'info'
+      }">
+        {{ toast.type === 'success' ? 'Thành công' : toast.type === 'error' ? 'Thất bại' : toast.type === 'warning' ? 'Cảnh báo' : 'Thông báo' }}
+      </h4>
+      <p class="text-[13px] font-medium text-slate-700 mt-0.5 leading-relaxed">{{ toast.message }}</p>
+    </div>
+
+    <!-- Close button -->
+    <button (click)="remove(toast.id)" class="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-lg hover:bg-slate-100 flex items-center justify-center">
+      <span class="material-symbols-outlined text-[16px]">close</span>
+    </button>
+  </div>
+</div>

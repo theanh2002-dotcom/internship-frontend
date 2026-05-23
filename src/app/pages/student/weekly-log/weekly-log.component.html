@@ -38,67 +38,86 @@
                 </div>
                 <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                     <!-- Week Header -->
-                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                        <div>
-                            <h4 class="text-base font-semibold text-slate-900">Tuần {{ log.weekNumber }}</h4>
-                            <p class="text-sm text-slate-600 mt-0.5">{{ log.startDate }} - {{ log.endDate }}</p>
-                        </div>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F5E9] text-[#2E7D32] text-sm border border-[#C8E6C9]">
-                            <span class="material-symbols-outlined text-[16px]">verified</span>
-                            Đã xác nhận
-                        </span>
-                    </div>
-                    <!-- Student Content (Read-only view) -->
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="flex flex-col gap-2">
-                            <h5 class="text-sm text-slate-500 uppercase tracking-wider">Nội dung công việc</h5>
-                            <div class="bg-[#faf8ff] p-4 rounded-lg border border-slate-200 text-sm text-slate-900">
-                                <ul class="list-disc list-inside space-y-1">
-                                    <li *ngFor="let task of log.tasks">{{ task }}</li>
-                                </ul>
+                    <div (click)="toggleWeekCollapse(log.weekNumber)"
+                         class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center cursor-pointer select-none hover:bg-slate-100 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-slate-500 transition-transform duration-200"
+                                  [ngClass]="{'rotate-180': !log.isCollapsed}">
+                                expand_more
+                            </span>
+                            <div>
+                                <h4 class="text-base font-semibold text-slate-900 flex items-center gap-2">
+                                    Tuần {{ log.weekNumber }}
+                                </h4>
+                                <p class="text-xs text-slate-500 mt-0.5" *ngIf="log.startDate">{{ log.startDate }} - {{ log.endDate }}</p>
                             </div>
                         </div>
-                        <div class="flex flex-col gap-2">
-                            <h5 class="text-sm text-slate-500 uppercase tracking-wider">Kết quả đạt được</h5>
-                            <div class="bg-[#faf8ff] p-4 rounded-lg border border-slate-200 text-sm text-slate-900">
-                                {{ log.results }}
+                        <div class="flex items-center gap-3">
+                            <!-- Show brief completion percentage if collapsed -->
+                            <div class="hidden sm:flex items-center gap-2 mr-2" *ngIf="log.isCollapsed && log.completionPercentage">
+                                <span class="text-xs text-slate-500">Hoàn thành:</span>
+                                <span class="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">{{ log.completionPercentage }}%</span>
                             </div>
-                        </div>
-                        <div class="col-span-full flex flex-col gap-2 mt-2">
-                            <h5 class="text-sm text-slate-500 uppercase tracking-wider">Minh chứng</h5>
-                            <div class="flex gap-4">
-                                <ng-container *ngFor="let ev of log.evidences">
-                                    <a *ngIf="ev.type === 'link'" class="flex items-center gap-2 px-3 py-2 rounded border border-slate-300 text-[#002d70] hover:bg-blue-100 transition-colors text-sm" [href]="ev.url">
-                                        <span class="material-symbols-outlined text-[18px]">link</span>
-                                        {{ ev.name }}
-                                    </a>
-                                    <div *ngIf="ev.type === 'image'" class="flex items-center gap-2 px-3 py-2 rounded border border-slate-300 text-slate-900 text-sm">
-                                        <span class="material-symbols-outlined text-[18px]">image</span>
-                                        {{ ev.name }}
-                                    </div>
-                                </ng-container>
-                            </div>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F5E9] text-[#2E7D32] text-xs font-semibold border border-[#C8E6C9]">
+                                <span class="material-symbols-outlined text-[14px]">verified</span>
+                                Đã xác nhận
+                            </span>
                         </div>
                     </div>
-                    <!-- Supervisor Block -->
-                    <div class="bg-[#F8F9FA] p-6 border-t border-slate-200">
-                        <div class="flex items-start gap-4">
-                            <span class="material-symbols-outlined text-green-700 mt-1" style="font-variation-settings: 'FILL' 1;">assignment_turned_in</span>
-                            <div class="flex-1">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h5 class="text-base font-semibold text-slate-900">Xác nhận của Đơn vị hướng dẫn</h5>
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-sm text-slate-600">Tiến độ hoàn thành:</span>
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
-                                                <div class="h-full bg-green-700 rounded-full" [style.width.%]="log.completionPercentage"></div>
+                    
+                    <div *ngIf="!log.isCollapsed">
+                        <!-- Student Content (Read-only view) -->
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex flex-col gap-2">
+                                <h5 class="text-sm text-slate-500 uppercase tracking-wider">Nội dung công việc</h5>
+                                <div class="bg-[#faf8ff] p-4 rounded-lg border border-slate-200 text-sm text-slate-900">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li *ngFor="let task of log.tasks">{{ task }}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <h5 class="text-sm text-slate-500 uppercase tracking-wider">Kết quả đạt được</h5>
+                                <div class="bg-[#faf8ff] p-4 rounded-lg border border-slate-200 text-sm text-slate-900">
+                                    {{ log.results }}
+                                </div>
+                            </div>
+                            <div class="col-span-full flex flex-col gap-2 mt-2" *ngIf="log.evidences && log.evidences.length > 0">
+                                <h5 class="text-sm text-slate-500 uppercase tracking-wider">Minh chứng</h5>
+                                <div class="flex gap-4">
+                                    <ng-container *ngFor="let ev of log.evidences">
+                                        <a *ngIf="ev.type === 'link'" class="flex items-center gap-2 px-3 py-2 rounded border border-slate-300 text-[#002d70] hover:bg-blue-100 transition-colors text-sm" [href]="ev.url">
+                                            <span class="material-symbols-outlined text-[18px]">link</span>
+                                            {{ ev.name }}
+                                        </a>
+                                        <div *ngIf="ev.type === 'image'" class="flex items-center gap-2 px-3 py-2 rounded border border-slate-300 text-slate-900 text-sm">
+                                            <span class="material-symbols-outlined text-[18px]">image</span>
+                                            {{ ev.name }}
+                                        </div>
+                                    </ng-container>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Supervisor Block -->
+                        <div class="bg-[#F8F9FA] p-6 border-t border-slate-200">
+                            <div class="flex items-start gap-4">
+                                <span class="material-symbols-outlined text-green-700 mt-1" style="font-variation-settings: 'FILL' 1;">assignment_turned_in</span>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h5 class="text-base font-semibold text-slate-900">Xác nhận của Đơn vị hướng dẫn</h5>
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-sm text-slate-600">Tiến độ hoàn thành:</span>
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                                    <div class="h-full bg-green-700 rounded-full" [style.width.%]="log.completionPercentage"></div>
+                                                </div>
+                                                <span class="text-sm font-semibold text-green-700">{{ log.completionPercentage }}%</span>
                                             </div>
-                                            <span class="text-sm font-semibold text-green-700">{{ log.completionPercentage }}%</span>
                                         </div>
                                     </div>
+                                    <p class="text-sm text-slate-900 mb-2 italic" *ngIf="log.supervisorComment">{{ log.supervisorComment }}</p>
+                                    <p class="text-sm text-slate-500">— {{ log.supervisorName }} · {{ log.supervisorDate }}</p>
                                 </div>
-                                <p class="text-sm text-slate-900 mb-2 italic">{{ log.supervisorComment }}</p>
-                                <p class="text-sm text-slate-500">— {{ log.supervisorName }} · {{ log.supervisorDate }}</p>
                             </div>
                         </div>
                     </div>
@@ -164,12 +183,8 @@
                             </div>
                         </div>
                         <!-- Messages -->
-                        <div *ngIf="successMessage" class="px-6 py-3 bg-green-50 text-green-700 border-t border-green-100 text-sm font-medium">
-                            {{ successMessage }}
-                        </div>
-                        <div *ngIf="errorMessage" class="px-6 py-3 bg-red-50 text-red-700 border-t border-red-100 text-sm font-medium">
-                            {{ errorMessage }}
-                        </div>
+                        
+                        
 
                         <!-- Actions -->
                         <div class="flex justify-end gap-4 pt-4 border-t border-slate-200">

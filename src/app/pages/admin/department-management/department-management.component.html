@@ -11,21 +11,9 @@
 </section>
 
 <!-- Alerts -->
-<div *ngIf="successMessage && !isModalOpen" class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
-  <span class="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
-  <p class="font-medium flex-1">{{ successMessage }}</p>
-  <button (click)="successMessage = ''" class="text-emerald-400 hover:text-emerald-600 transition-colors">
-    <span class="material-symbols-outlined text-[18px]">close</span>
-  </button>
-</div>
 
-<div *ngIf="errorMessage && !isModalOpen" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
-  <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
-  <p class="font-medium flex-1">{{ errorMessage }}</p>
-  <button (click)="errorMessage = ''" class="text-red-400 hover:text-red-600 transition-colors">
-    <span class="material-symbols-outlined text-[18px]">close</span>
-  </button>
-</div>
+
+
 
 <!-- Loading State -->
 <div *ngIf="isLoading && faculties.length === 0" class="flex items-center justify-center py-20">
@@ -189,10 +177,7 @@
            (close)="closeModal()"
            (save)="saveDepartment()">
   <div class="space-y-4">
-    <div *ngIf="errorMessage && isModalOpen" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
-      <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
-      <p class="font-medium flex-1">{{ errorMessage }}</p>
-    </div>
+    
 
     <!-- Info badge -->
     <div *ngIf="modalType === 'sub' && selectedFaculty" class="bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded text-[13px] flex items-center gap-2">

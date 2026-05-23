@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { CampaignService } from '../../../core/services/campaign.service';
@@ -19,10 +20,7 @@ import * as XLSX from 'xlsx';
 })
 export class StudentAssignmentComponent implements OnInit {
   isLoading = false;
-  errorMessage = '';
-  successMessage = '';
-
-  campaigns: CampaignResponse[] = [];
+      campaigns: CampaignResponse[] = [];
   selectedCampaignId: number | null = null;
   departmentId: number | null = null;
 
@@ -50,12 +48,10 @@ export class StudentAssignmentComponent implements OnInit {
 
   @ViewChild('fileInput') fileInput!: ElementRef;
 
-  constructor(
-    private studentCampaignService: StudentCampaignService,
+  constructor(private toastService: ToastService, private studentCampaignService: StudentCampaignService,
     private campaignService: CampaignService,
     private userService: UserService,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService) {}
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
@@ -73,7 +69,7 @@ export class StudentAssignmentComponent implements OnInit {
         if (this.campaigns.length > 0) {
           this.selectedCampaignId = this.campaigns[0].id;
           if (!this.departmentId) {
-            this.errorMessage = 'Tài khoản của bạn chưa được gắn với Khoa/Bộ môn nào. Vui lòng liên hệ Admin.';
+            this.toastService.error('Tài khoản của bạn chưa được gắn với Khoa/Bộ môn nào. Vui lòng liên hệ Admin.');
           } else {
             this.loadStudents();
           }
@@ -97,7 +93,7 @@ export class StudentAssignmentComponent implements OnInit {
     if (this.departmentId) {
       this.loadStudents();
     } else {
-      this.errorMessage = 'Tài khoản của bạn chưa được gắn với Khoa/Bộ môn nào. Vui lòng liên hệ Admin.';
+      this.toastService.error('Tài khoản của bạn chưa được gắn với Khoa/Bộ môn nào. Vui lòng liên hệ Admin.');
     }
   }
 
@@ -115,7 +111,7 @@ export class StudentAssignmentComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.errorMessage = err.message || 'Lỗi tải danh sách sinh viên';
+        this.toastService.error(err.message || 'Lỗi tải danh sách sinh viên');
         this.isLoading = false;
       }
     });
@@ -339,12 +335,10 @@ export class StudentAssignmentComponent implements OnInit {
   // --- MESSAGING ---
 
   showError(msg: string): void {
-    this.errorMessage = msg;
-    setTimeout(() => this.errorMessage = '', 5000);
+    this.toastService.error(msg);
   }
 
   showSuccess(msg: string): void {
-    this.successMessage = msg;
-    setTimeout(() => this.successMessage = '', 3000);
+    this.toastService.success(msg);
   }
 }

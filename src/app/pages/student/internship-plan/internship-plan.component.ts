@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { InternshipPlanRequest } from '../../../core/models/request.model';
@@ -18,10 +19,7 @@ interface WeekPlan {
 export class InternshipPlanComponent implements OnInit {
   isLoading = true;
   isSaving = false;
-  successMessage = '';
-  errorMessage = '';
-
-  campaign: StudentCampaignResponse | null = null;
+      campaign: StudentCampaignResponse | null = null;
   isLocked = false;
   canAccess = false;
 
@@ -41,7 +39,7 @@ export class InternshipPlanComponent implements OnInit {
     { weekNumber: 8, tasks: '', expectedResults: '', evidences: '' }
   ];
 
-  constructor(private studentCampaignService: StudentCampaignService) {}
+  constructor(private toastService: ToastService, private studentCampaignService: StudentCampaignService) {}
 
   ngOnInit(): void {
     this.loadCampaign();
@@ -59,7 +57,7 @@ export class InternshipPlanComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Lỗi tải dữ liệu';
+        this.toastService.error('Lỗi tải dữ liệu');
         this.isLoading = false;
       }
     });
@@ -128,7 +126,7 @@ export class InternshipPlanComponent implements OnInit {
     // Validate
     const hasEmptyTask = this.weeks.some(w => !w.tasks || w.tasks.trim() === '');
     if (hasEmptyTask) {
-      this.errorMessage = 'Vui lòng nhập đầy đủ nội dung công việc cho cả 8 tuần.';
+      this.toastService.error('Vui lòng nhập đầy đủ nội dung công việc cho cả 8 tuần.');
       return;
     }
 
@@ -144,19 +142,16 @@ export class InternshipPlanComponent implements OnInit {
     };
 
     this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
     this.studentCampaignService.submitInternshipPlan(payload).subscribe({
       next: () => {
-        this.successMessage = 'Nộp kế hoạch thành công!';
+        this.toastService.success('Nộp kế hoạch thành công!');
         this.isSaving = false;
         this.isLocked = true;
         this.campaign!.status = 'PLAN_SUBMITTED';
         this.updateStatus();
       },
-      error: (err) => {
-        this.errorMessage = err.error?.message || 'Có lỗi xảy ra khi nộp kế hoạch.';
+      error: (err: any) => {
+        this.toastService.error(err.error?.message || 'Có lỗi xảy ra khi nộp kế hoạch.');
         this.isSaving = false;
       }
     });

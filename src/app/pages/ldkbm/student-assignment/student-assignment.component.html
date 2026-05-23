@@ -35,21 +35,9 @@
 </section>
 
 <!-- Alerts -->
-<div *ngIf="successMessage && !isManualModalOpen && !isAssignModalOpen" class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
-  <span class="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
-  <p class="font-medium flex-1">{{ successMessage }}</p>
-  <button (click)="successMessage = ''" class="text-emerald-400 hover:text-emerald-600 transition-colors">
-    <span class="material-symbols-outlined text-[18px]">close</span>
-  </button>
-</div>
 
-<div *ngIf="errorMessage && !isManualModalOpen && !isAssignModalOpen" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
-  <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
-  <p class="font-medium flex-1">{{ errorMessage }}</p>
-  <button (click)="errorMessage = ''" class="text-red-400 hover:text-red-600 transition-colors">
-    <span class="material-symbols-outlined text-[18px]">close</span>
-  </button>
-</div>
+
+
 
 <!-- Data Canvas -->
 <section class="flex flex-col bg-white border border-slate-200 rounded-lg shadow-sm">
@@ -134,10 +122,7 @@
 <!-- Modal Thêm Thủ công -->
 <app-modal [isOpen]="isManualModalOpen" title="Thêm Sinh viên" saveText="Thêm" (close)="closeManualModal()" (save)="saveManualStudent()">
   <div class="space-y-4">
-    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
-      <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
-      <p class="font-medium flex-1">{{ errorMessage }}</p>
-    </div>
+    
     <div class="flex flex-col gap-1.5">
       <label class="font-label-md text-[13px] text-slate-600">Email sinh viên <span class="text-red-500">*</span></label>
       <input [(ngModel)]="formEmail" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: nguyenvana@gmail.com" type="email"/>

@@ -9,7 +9,7 @@ export interface ScoreItem {
 
 export interface EvaluationRequest {
   student_campaign_id: number;
-  evaluator_type: 'GVHD' | 'COMPANY' | 'COUNCIL';
+  evaluator_type: 'GVHD' | 'COMPANY' | 'COUNCIL' | 'COMPANY_SUPERVISOR' | 'COMMITTEE_MEMBER';
   evaluator_id: number;
   stage: 'STAGE_1' | 'STAGE_2';
   general_comment?: string;

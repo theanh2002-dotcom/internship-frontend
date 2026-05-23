@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { WeeklyLogService } from '../../../core/services/weekly-log.service';
@@ -23,6 +24,7 @@ interface WeeklyLog {
   supervisorName?: string;
   supervisorDate?: string;
   completionPercentage?: number;
+  isCollapsed?: boolean;
 }
 
 @Component({
@@ -33,10 +35,7 @@ interface WeeklyLog {
 export class WeeklyLogComponent implements OnInit {
   isLoading = true;
   isSaving = false;
-  successMessage = '';
-  errorMessage = '';
-
-  campaign: StudentCampaignResponse | null = null;
+      campaign: StudentCampaignResponse | null = null;
   logs: WeeklyLog[] = [];
 
   studentInfo = {
@@ -61,10 +60,8 @@ export class WeeklyLogComponent implements OnInit {
   // Options for weeks
   availableWeeks = [1,2,3,4,5,6,7,8];
 
-  constructor(
-    private studentCampaignService: StudentCampaignService,
-    private weeklyLogService: WeeklyLogService
-  ) {}
+  constructor(private toastService: ToastService, private studentCampaignService: StudentCampaignService,
+    private weeklyLogService: WeeklyLogService) {}
 
   ngOnInit(): void {
     this.loadCampaign();
@@ -98,7 +95,7 @@ export class WeeklyLogComponent implements OnInit {
         }
       },
       error: () => {
-        this.errorMessage = 'Lỗi tải thông tin sinh viên.';
+        this.toastService.error('Lỗi tải thông tin sinh viên.');
         this.isLoading = false;
       }
     });
@@ -128,7 +125,8 @@ export class WeeklyLogComponent implements OnInit {
               completionPercentage: item.completion_percentage || 0,
               supervisorComment: item.supervisor_comment || '',
               supervisorName: this.companyInfo.supervisor,
-              supervisorDate: item.updated_at
+              supervisorDate: item.updated_at,
+              isCollapsed: status === 'confirmed'
             };
           } else {
              return {
@@ -136,7 +134,8 @@ export class WeeklyLogComponent implements OnInit {
                status: 'locked',
                tasks: [],
                results: '',
-               completionPercentage: 0
+               completionPercentage: 0,
+               isCollapsed: true
              };
           }
         });
@@ -158,7 +157,7 @@ export class WeeklyLogComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Lỗi tải nhật ký.';
+        this.toastService.error('Lỗi tải nhật ký.');
         this.isLoading = false;
       }
     });
@@ -181,14 +180,11 @@ export class WeeklyLogComponent implements OnInit {
   submitLog() {
     if (!this.campaign) return;
     if (!this.activeLogTasks.trim()) {
-      this.errorMessage = 'Vui lòng nhập nội dung công việc!';
+      this.toastService.error('Vui lòng nhập nội dung công việc!');
       return;
     }
 
     this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
     const payload: WeeklyLogRequest = {
       student_campaign_id: this.campaign.id,
       week_number: Number(this.activeWeekNumber),
@@ -199,16 +195,23 @@ export class WeeklyLogComponent implements OnInit {
 
     this.weeklyLogService.createOrUpdate(payload).subscribe({
       next: () => {
-        this.successMessage = 'Lưu nhật ký thành công!';
+        this.toastService.success('Lưu nhật ký thành công!');
         this.isSaving = false;
         // Reload logs
         this.isLoading = true;
         this.loadLogs();
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Có lỗi xảy ra khi lưu nhật ký.';
+        this.toastService.error(err.error?.message || 'Có lỗi xảy ra khi lưu nhật ký.');
         this.isSaving = false;
       }
     });
+  }
+
+  toggleWeekCollapse(weekNumber: number) {
+    const log = this.logs.find(l => l.weekNumber === weekNumber);
+    if (log) {
+      log.isCollapsed = !log.isCollapsed;
+    }
   }
 }

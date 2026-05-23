@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { FileService } from '../../../core/services/file.service';
@@ -22,22 +23,17 @@ interface UploadingFile {
 export class FinalReportComponent implements OnInit {
   isLoading = false;
   isSaving = false;
-  successMessage = '';
-  errorMessage = '';
-
-  studentCampaign: StudentCampaignResponse | null = null;
+      studentCampaign: StudentCampaignResponse | null = null;
   attachedFiles: FinalReportResponse[] = [];
   uploadingFile: UploadingFile | null = null;
 
   isAgreed: boolean = false;
   canAccess = false; // Status Gate: chỉ mở khi STAGE1_EVALUATED trở lên
 
-  constructor(
-    private studentCampaignService: StudentCampaignService,
+  constructor(private toastService: ToastService, private studentCampaignService: StudentCampaignService,
     private fileService: FileService,
     private finalReportService: FinalReportService,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService) {}
 
   ngOnInit(): void {
     this.loadMyCampaign();
@@ -207,12 +203,10 @@ export class FinalReportComponent implements OnInit {
   }
 
   showError(msg: string): void {
-    this.errorMessage = msg;
-    setTimeout(() => this.errorMessage = '', 5000);
+    this.toastService.error(msg);
   }
 
   showSuccess(msg: string): void {
-    this.successMessage = msg;
-    setTimeout(() => this.successMessage = '', 3000);
+    this.toastService.success(msg);
   }
 }

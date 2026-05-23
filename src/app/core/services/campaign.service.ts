@@ -16,6 +16,16 @@ export interface CampaignRequest {
   description?: string;
   start_date: string;  // ISO: "yyyy-MM-ddTHH:mm:ss"
   end_date: string;
+  tttn01_start_date?: string;
+  tttn01_deadline?: string;
+  tttn02_start_date?: string;
+  tttn02_deadline?: string;
+  tttn03_start_date?: string;
+  tttn03_deadline?: string;
+  midterm_start_date?: string;
+  midterm_deadline?: string;
+  tttn06_start_date?: string;
+  tttn06_deadline?: string;
 }
 
 @Injectable({
@@ -27,7 +37,7 @@ export class CampaignService {
   /**
    * GET /base/campaigns?page=1&limit=20
    */
-  getCampaigns(pageRequest: PaginationRequest): Observable<BasePagination<CampaignResponse>> {
+  getCampaigns(pageRequest: PaginationRequest, status?: string, academicYear?: string): Observable<BasePagination<CampaignResponse>> {
     let params = new HttpParams()
       .set('page', pageRequest.page.toString())
       .set('limit', pageRequest.limit.toString());
@@ -37,6 +47,12 @@ export class CampaignService {
     }
     if (pageRequest.orderBy) {
       params = params.set('orderBy', pageRequest.orderBy);
+    }
+    if (status) {
+      params = params.set('status', status);
+    }
+    if (academicYear) {
+      params = params.set('academicYear', academicYear);
     }
 
     return this.apiService.get<BasePagination<CampaignResponse>>('/base/campaigns', params);

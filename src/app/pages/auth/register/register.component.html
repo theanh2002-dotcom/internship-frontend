@@ -53,16 +53,10 @@
       <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="space-y-4">
 
         <!-- Error Message -->
-        <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-3 animate-fade-in shadow-sm">
-          <span class="material-symbols-outlined text-[20px] text-red-500">error</span>
-          <p class="mt-0.5 font-bold">{{ errorMessage }}</p>
-        </div>
+        
 
         <!-- Success Message -->
-        <div *ngIf="successMessage" class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm flex items-start gap-3 animate-fade-in shadow-sm">
-          <span class="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
-          <p class="mt-0.5 font-bold">{{ successMessage }}</p>
-        </div>
+        
 
         <!-- Họ tên -->
         <div class="space-y-1.5">

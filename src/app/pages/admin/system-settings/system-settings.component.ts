@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { SystemSettingService, SystemSettingBulkRequest } from '../../../core/services/system-setting.service';
 import { SystemSettingResponse } from '../../../core/models/base.model';
@@ -10,10 +11,7 @@ import { SystemSettingResponse } from '../../../core/models/base.model';
 export class SystemSettingsComponent implements OnInit {
   isLoading = false;
   isSaving = false;
-  successMessage = '';
-  errorMessage = '';
-
-  // Khai báo các field cài đặt
+      // Khai báo các field cài đặt
   settings = {
     current_academic_year: '',
     current_semester: '',
@@ -21,7 +19,7 @@ export class SystemSettingsComponent implements OnInit {
     enable_email_notification: 'false'
   };
 
-  constructor(private settingService: SystemSettingService) {}
+  constructor(private toastService: ToastService, private settingService: SystemSettingService) {}
 
   get enableEmailNotification(): boolean {
     return this.settings.enable_email_notification === 'true';
@@ -48,7 +46,7 @@ export class SystemSettingsComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.errorMessage = 'Không thể tải cấu hình hệ thống: ' + (err.message || '');
+        this.toastService.error('Không thể tải cấu hình hệ thống: ' + (err.message || ''));
         this.isLoading = false;
       }
     });
@@ -56,9 +54,6 @@ export class SystemSettingsComponent implements OnInit {
 
   saveSettings(): void {
     this.isSaving = true;
-    this.successMessage = '';
-    this.errorMessage = '';
-
     const request: SystemSettingBulkRequest = {
       settings: {
         current_academic_year: this.settings.current_academic_year,
@@ -71,12 +66,11 @@ export class SystemSettingsComponent implements OnInit {
     this.settingService.updateBulk(request).subscribe({
       next: () => {
         this.isSaving = false;
-        this.successMessage = 'Lưu cấu hình hệ thống thành công.';
-        setTimeout(() => this.successMessage = '', 3000);
+        this.toastService.success('Lưu cấu hình hệ thống thành công.');
       },
       error: (err) => {
         this.isSaving = false;
-        this.errorMessage = 'Lỗi khi lưu cấu hình: ' + (err.message || '');
+        this.toastService.error('Lỗi khi lưu cấu hình: ' + (err.message || ''));
       }
     });
   }

@@ -18,6 +18,26 @@ export class ManageInternsComponent implements OnInit {
   // Input comment for Weekly Log
   logComment: string = '';
 
+  searchTerm: string = '';
+  selectedDeclarationStatus: string = '';
+  selectedPlanStatus: string = '';
+  selectedLogStatus: string = '';
+
+  currentPage = 1;
+  pageSize = 10;
+  totalItems = 0;
+  filteredInterns: any[] = [];
+  paginatedInterns: any[] = [];
+
+  columns = [
+    { key: 'student', label: 'Sinh viên' },
+    { key: 'currentWeek', label: 'Tuần hiện tại', align: 'center', width: '130px' },
+    { key: 'declarationStatus', label: 'Tiếp nhận (TTTN-01)', align: 'center', width: '170px' },
+    { key: 'planStatus', label: 'Kế hoạch (TTTN-02)', align: 'center', width: '170px' },
+    { key: 'logStatus', label: 'Nhật ký (TTTN-03)', align: 'center', width: '170px' },
+    { key: 'actions', label: 'Hành động', align: 'center', width: '200px' }
+  ];
+
   constructor(
     private studentCampaignService: StudentCampaignService,
     private weeklyLogService: WeeklyLogService
@@ -56,6 +76,7 @@ export class ManageInternsComponent implements OnInit {
           this.loadWeeklyLogs(mapped);
           return mapped;
         });
+        this.filterInterns();
       }
     });
   }
@@ -82,8 +103,69 @@ export class ManageInternsComponent implements OnInit {
             intern.logStatus = 'Chờ xác nhận (Tuần ' + latestLog.week_number + ')';
           }
         }
+        this.filterInterns();
+      },
+      error: () => {
+        intern.currentWeek = 'Không rõ';
+        intern.logStatus = 'Lỗi tải';
+        this.filterInterns();
       }
     });
+  }
+
+  filterInterns() {
+    let result = [...this.interns];
+
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase().trim();
+      result = result.filter(i => 
+        (i.studentName && i.studentName.toLowerCase().includes(term)) ||
+        (i.studentId && i.studentId.toLowerCase().includes(term)) ||
+        (i.university && i.university.toLowerCase().includes(term))
+      );
+    }
+
+    if (this.selectedDeclarationStatus) {
+      result = result.filter(i => i.declarationStatus === this.selectedDeclarationStatus);
+    }
+
+    if (this.selectedPlanStatus) {
+      result = result.filter(i => i.planStatus === this.selectedPlanStatus);
+    }
+
+    if (this.selectedLogStatus) {
+      if (this.selectedLogStatus === 'Chờ xác nhận') {
+        result = result.filter(i => i.logStatus && i.logStatus.includes('Chờ xác nhận'));
+      } else {
+        result = result.filter(i => i.logStatus === this.selectedLogStatus);
+      }
+    }
+
+    this.filteredInterns = result;
+    this.totalItems = result.length;
+
+    const totalPages = Math.ceil(this.totalItems / this.pageSize) || 1;
+    if (this.currentPage > totalPages) {
+      this.currentPage = totalPages;
+    }
+
+    this.paginate();
+  }
+
+  paginate() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedInterns = this.filteredInterns.slice(startIndex, endIndex);
+  }
+
+  onFilterChange() {
+    this.currentPage = 1;
+    this.filterInterns();
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.paginate();
   }
 
   openAction(intern: any, type: 'PLAN' | 'LOG' | 'DECLARATION') {
@@ -106,6 +188,7 @@ export class ManageInternsComponent implements OnInit {
       this.studentCampaignService.approvePlanByCompany(this.selectedIntern.id).subscribe({
         next: () => {
           this.selectedIntern.planStatus = 'Đã duyệt';
+          this.filterInterns();
           this.closeModal();
         },
         error: (err) => {
@@ -120,6 +203,7 @@ export class ManageInternsComponent implements OnInit {
           next: () => {
             this.selectedIntern.logStatus = 'Đã xác nhận';
             latestLog.supervisor_status = 'APPROVED';
+            this.filterInterns();
             this.closeModal();
           },
           error: (err) => {
@@ -131,6 +215,7 @@ export class ManageInternsComponent implements OnInit {
       this.studentCampaignService.approveCompanyInfo(this.selectedIntern.id).subscribe({
         next: () => {
           this.selectedIntern.declarationStatus = 'Đã tiếp nhận';
+          this.filterInterns();
           this.closeModal();
         },
         error: (err) => {

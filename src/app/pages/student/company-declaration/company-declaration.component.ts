@@ -1,3 +1,4 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { CompanyInfoRequest } from '../../../core/models/request.model';
@@ -11,10 +12,7 @@ import { StudentCampaignResponse } from '../../../core/models/base.model';
 export class CompanyDeclarationComponent implements OnInit {
   isLoading = true;
   isSaving = false;
-  successMessage = '';
-  errorMessage = '';
-
-  campaigns: StudentCampaignResponse[] = [];
+      campaigns: StudentCampaignResponse[] = [];
   selectedCampaign: StudentCampaignResponse | null = null;
 
   formData: CompanyInfoRequest = {
@@ -28,7 +26,7 @@ export class CompanyDeclarationComponent implements OnInit {
     internship_type: 'BUSINESS' // Default
   };
 
-  constructor(private studentCampaignService: StudentCampaignService) {}
+  constructor(private toastService: ToastService, private studentCampaignService: StudentCampaignService) {}
 
   ngOnInit(): void {
     this.loadMyCampaigns();
@@ -47,7 +45,7 @@ export class CompanyDeclarationComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.errorMessage = 'Không thể tải thông tin đợt thực tập.';
+        this.toastService.error('Không thể tải thông tin đợt thực tập.');
         this.isLoading = false;
       }
     });
@@ -73,25 +71,22 @@ export class CompanyDeclarationComponent implements OnInit {
 
     // Validate simple
     if (!this.formData.company_name || !this.formData.supervisor_name) {
-      this.errorMessage = 'Vui lòng điền đầy đủ các thông tin bắt buộc (*).';
+      this.toastService.error('Vui lòng điền đầy đủ các thông tin bắt buộc (*).');
       return;
     }
 
     this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
     this.studentCampaignService.submitCompanyInfo(this.selectedCampaign.id, this.formData).subscribe({
-      next: (res) => {
-        this.successMessage = 'Nộp thông tin ĐVHD thành công!';
+      next: (res: any) => {
+        this.toastService.success('Nộp thông tin ĐVHD thành công!');
         this.isSaving = false;
         // Cập nhật lại status
         if (this.selectedCampaign) {
           this.selectedCampaign.status = 'COMPANY_DECLARED';
         }
       },
-      error: (err) => {
-        this.errorMessage = err.error?.message || 'Có lỗi xảy ra khi nộp thông tin.';
+      error: (err: any) => {
+        this.toastService.error(err.error?.message || 'Có lỗi xảy ra khi nộp thông tin.');
         this.isSaving = false;
       }
     });

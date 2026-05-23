@@ -17,7 +17,7 @@
 </nav>
 <!-- Footer Links -->
 <div class="mt-auto px-3 border-t border-slate-200 dark:border-slate-800 pt-4 space-y-1 font-['Public_Sans'] text-sm antialiased">
-<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out" routerLink="/admin/settings">
+<a *ngIf="isAdmin" class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out" routerLink="/admin/settings">
 <span class="material-symbols-outlined text-[20px]">settings</span>
 <span>Cài đặt hệ thống</span>
 </a>

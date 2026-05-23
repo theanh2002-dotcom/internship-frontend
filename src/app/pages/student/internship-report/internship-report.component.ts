@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-internship-report',
@@ -14,7 +15,10 @@ export class InternshipReportComponent implements OnInit {
   currentStep: string = 'TTTN-01';
   maxUnlockedStep: string = 'TTTN-01';
 
-  constructor(private campaignService: StudentCampaignService) {}
+  constructor(
+    private campaignService: StudentCampaignService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     this.loadCampaign();
@@ -28,6 +32,15 @@ export class InternshipReportComponent implements OnInit {
         if (campaigns.length > 0) {
           this.campaign = campaigns[0];
           this.determineUnlock(this.campaign.status);
+          
+          this.route.queryParams.subscribe(params => {
+            if (params['step']) {
+              const step = params['step'];
+              if (this.isUnlocked(step)) {
+                this.currentStep = step;
+              }
+            }
+          });
         }
         this.isLoading = false;
       },

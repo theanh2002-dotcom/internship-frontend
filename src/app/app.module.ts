@@ -53,9 +53,14 @@ import { InternshipReportComponent } from './pages/student/internship-report/int
 import { WelcomeHeaderComponent } from './shared/components/welcome-header/welcome-header.component';
 import { MetricCardComponent } from './shared/components/metric-card/metric-card.component';
 import { DashboardLoadingComponent } from './shared/components/dashboard-loading/dashboard-loading.component';
+import { ToastComponent } from './shared/components/toast/toast.component';
+import { TableComponent } from './shared/components/table/table.component';
+import { TableCellDirective } from './shared/components/table/table-cell.directive';
 
 @NgModule({
   declarations: [
+    TableComponent,
+    TableCellDirective,
     AppComponent,
     HeaderComponent,
     SidebarComponent,
@@ -101,7 +106,8 @@ import { DashboardLoadingComponent } from './shared/components/dashboard-loading
     InternshipReportComponent,
     WelcomeHeaderComponent,
     MetricCardComponent,
-    DashboardLoadingComponent
+    DashboardLoadingComponent,
+    ToastComponent
   ],
   imports: [
     BrowserModule,

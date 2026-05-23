@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { EvaluationService } from '../../../core/services/evaluation.service';
 import { StudentCampaignResponse } from '../../../core/models/base.model';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface StudentScore {
   mssv: string;
@@ -24,7 +25,8 @@ export class ScoreSummaryComponent implements OnInit {
 
   constructor(
     private studentCampaignService: StudentCampaignService,
-    private evaluationService: EvaluationService
+    private evaluationService: EvaluationService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -107,7 +109,7 @@ export class ScoreSummaryComponent implements OnInit {
 
   exportExcel() {
     console.log('Exporting to Excel...');
-    // Export logic here
+    this.toastService.info('Tính năng xuất Excel đang được xử lý...');
   }
 }
 

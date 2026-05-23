@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { WeeklyLogService } from '../../../core/services/weekly-log.service';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { CampaignService } from '../../../core/services/campaign.service';
@@ -21,6 +22,9 @@ export class StudentDashboardComponent implements OnInit {
     tttn06: { status: 'NOT_STARTED', label: 'Báo cáo', icon: 'description' }
   };
 
+  // 5 mốc tiến độ thực tế (timeline động)
+  milestones: any[] = [];
+
   // Tiến trình thực tập (8 tuần)
   currentWeek = 1;
   totalWeeks = 8;
@@ -38,7 +42,8 @@ export class StudentDashboardComponent implements OnInit {
   constructor(
     private studentCampaignService: StudentCampaignService,
     private weeklyLogService: WeeklyLogService,
-    private campaignService: CampaignService
+    private campaignService: CampaignService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -72,9 +77,12 @@ export class StudentDashboardComponent implements OnInit {
             };
           }
 
-          // Fetch campaign details to calculate calendar-based time progress
+          // Fetch campaign details to calculate calendar-based time progress and timeline milestones
           this.campaignService.getById(campaign.campaign_id).subscribe({
             next: (camp) => {
+              // Calculate custom timeline milestones
+              this.calculateTimelineMilestones(camp, campaign);
+
               let start: Date;
               let end: Date;
               if (camp.start_date && camp.end_date) {
@@ -291,5 +299,136 @@ export class StudentDashboardComponent implements OnInit {
         type: 'info'
       });
     }
+  }
+
+  calculateTimelineMilestones(camp: any, studentCampaign: any) {
+    const parseDate = (dateStr?: string) => {
+      if (!dateStr) return null;
+      const norm = dateStr.includes(' ') ? dateStr.replace(' ', 'T') : dateStr;
+      return new Date(norm);
+    };
+
+    const formatDateRange = (start: Date | null, end: Date | null): string => {
+      if (!start || !end) return 'Chưa cấu hình';
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      return `${pad(start.getDate())}/${pad(start.getMonth() + 1)} - ${pad(end.getDate())}/${pad(end.getMonth() + 1)}`;
+    };
+
+    const now = new Date();
+    const status = studentCampaign.status;
+
+    // Định nghĩa 5 chặng timeline
+    const mConfigs = [
+      {
+        key: 'tttn01',
+        title: 'Kê khai Đơn vị thực tập',
+        code: 'TTTN-01',
+        description: 'Đăng ký thông tin công ty tiếp nhận thực tập và xin xác nhận của GVHD.',
+        startDate: parseDate(camp.tttn01_start_date),
+        deadline: parseDate(camp.tttn01_deadline),
+        isCompleted: ['COMPANY_APPROVED', 'PLAN_SUBMITTED', 'PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(status),
+        isPending: status === 'COMPANY_DECLARED',
+        icon: 'domain',
+        stepCode: 'TTTN-01'
+      },
+      {
+        key: 'tttn02',
+        title: 'Nộp Đề cương kế hoạch',
+        code: 'TTTN-02',
+        description: 'Lập đề cương chi tiết các tuần thực tập và gửi giảng viên hướng dẫn duyệt.',
+        startDate: parseDate(camp.tttn02_start_date),
+        deadline: parseDate(camp.tttn02_deadline),
+        isCompleted: ['PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(status),
+        isPending: status === 'PLAN_SUBMITTED',
+        icon: 'edit_document',
+        stepCode: 'TTTN-02'
+      },
+      {
+        key: 'tttn03',
+        title: 'Báo cáo Nhật ký tuần',
+        code: 'TTTN-03',
+        description: 'Cập nhật tiến độ công việc hàng tuần để giảng viên và người hướng dẫn theo dõi.',
+        startDate: parseDate(camp.tttn03_start_date),
+        deadline: parseDate(camp.tttn03_deadline),
+        isCompleted: ['STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(status),
+        isPending: status === 'IN_PROGRESS' || status === 'PLAN_APPROVED',
+        icon: 'menu_book',
+        stepCode: 'TTTN-03'
+      },
+      {
+        key: 'midterm',
+        title: 'Nhận xét & Đánh giá giữa kỳ',
+        code: 'Giữa kỳ',
+        description: 'Được giảng viên và doanh nghiệp đánh giá kết quả thực tập giai đoạn đầu.',
+        startDate: parseDate(camp.midterm_start_date),
+        deadline: parseDate(camp.midterm_deadline),
+        isCompleted: ['STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(status),
+        isPending: false,
+        icon: 'rate_review',
+        stepCode: 'TTTN-03'
+      },
+      {
+        key: 'tttn06',
+        title: 'Nộp Báo cáo cuối kỳ',
+        code: 'TTTN-06',
+        description: 'Nộp file báo cáo thực tập chính thức và bản tự nhận xét kết quả (TTTN-08b).',
+        startDate: parseDate(camp.tttn06_start_date),
+        deadline: parseDate(camp.tttn06_deadline),
+        isCompleted: ['REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(status),
+        isPending: status === 'REPORT_SUBMITTED',
+        icon: 'description',
+        stepCode: 'TTTN-06'
+      }
+    ];
+
+    this.milestones = mConfigs.map(m => {
+      let state: 'LOCKED' | 'UPCOMING' | 'IN_PROGRESS' | 'OVERDUE' | 'PENDING' | 'COMPLETED' = 'LOCKED';
+      let stateLabel = 'Chưa mở';
+      let warningMessage = '';
+
+      if (m.isCompleted) {
+        state = 'COMPLETED';
+        stateLabel = 'Đã hoàn thành';
+      } else if (m.isPending) {
+        state = 'PENDING';
+        stateLabel = 'Đang chờ duyệt';
+      } else {
+        const start = m.startDate;
+        const deadline = m.deadline;
+
+        if (start && now < start) {
+          state = 'UPCOMING';
+          stateLabel = 'Sắp diễn ra';
+        } else if (start && deadline && now >= start && now <= deadline) {
+          state = 'IN_PROGRESS';
+          stateLabel = 'Đang diễn ra';
+          
+          const diffMs = deadline.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+          if (diffDays <= 3 && diffDays >= 0) {
+            warningMessage = `Sắp hết hạn! Còn lại ${diffDays} ngày.`;
+          }
+        } else if (deadline && now > deadline) {
+          state = 'OVERDUE';
+          stateLabel = 'Đã quá hạn nộp';
+          warningMessage = 'Đã trễ hạn nộp!';
+        }
+      }
+
+      return {
+        ...m,
+        dateLabel: formatDateRange(m.startDate, m.deadline),
+        state,
+        stateLabel,
+        warningMessage
+      };
+    });
+  }
+
+  goToMilestone(milestone: any) {
+    if (milestone.state === 'LOCKED') {
+      return;
+    }
+    this.router.navigate(['/student/internship-report'], { queryParams: { step: milestone.stepCode } });
   }
 }

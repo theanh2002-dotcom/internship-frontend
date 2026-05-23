@@ -1,9 +1,11 @@
+import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { DepartmentCampaignService } from '../../../core/services/department-campaign.service';
 import { EvaluationService, EvaluationRequest } from '../../../core/services/evaluation.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { StudentCampaignResponse } from '../../../core/models/base.model';
+import { CampaignService } from '../../../core/services/campaign.service';
 
 interface RubricLevel {
   label: string;
@@ -36,15 +38,18 @@ export class CompanyRubricEvaluationComponent implements OnInit {
   
   criteria: RubricCriterion[] = [];
   existingEvaluation: any = null;
-  
-  successMessage = '';
-  errorMessage = '';
 
+  campaign: any = null;
+  isStage1Open = false;
+  midtermStartDateStr = '';
+  
   constructor(
+    private toastService: ToastService, 
     private studentCampaignService: StudentCampaignService,
     private departmentCampaignService: DepartmentCampaignService,
     private evaluationService: EvaluationService,
-    private authService: AuthService
+    private authService: AuthService,
+    private campaignService: CampaignService
   ) {}
 
   ngOnInit(): void {
@@ -65,7 +70,7 @@ export class CompanyRubricEvaluationComponent implements OnInit {
       },
       error: () => {
         this.isLoading = false;
-        this.errorMessage = 'Lỗi tải danh sách sinh viên.';
+        this.toastService.error('Lỗi tải danh sách sinh viên.');
       }
     });
   }
@@ -106,9 +111,28 @@ export class CompanyRubricEvaluationComponent implements OnInit {
     this.selectedStudent = student;
     this.criteria = [];
     this.existingEvaluation = null;
-    this.successMessage = '';
-    this.errorMessage = '';
+    this.campaign = null;
+    this.isStage1Open = false;
+    this.loadCampaignInfo(student.campaign_id);
     this.loadRubricConfig();
+  }
+
+  loadCampaignInfo(campaignId: number): void {
+    this.campaignService.getById(campaignId).subscribe({
+      next: (camp: any) => {
+        const campaign = camp.data || camp.payload || camp;
+        this.campaign = campaign;
+        const now = new Date();
+
+        // Stage 1 checks
+        const midtermStart = campaign.midterm_start_date ? new Date(campaign.midterm_start_date) : new Date(new Date(campaign.start_date).getTime() + 21 * 24 * 60 * 60 * 1000);
+        this.midtermStartDateStr = midtermStart.toLocaleDateString('vi-VN');
+        this.isStage1Open = now >= midtermStart;
+      },
+      error: () => {
+        this.toastService.error('Không thể tải thông tin đợt thực tập.');
+      }
+    });
   }
 
   loadRubricConfig(): void {
@@ -163,7 +187,7 @@ export class CompanyRubricEvaluationComponent implements OnInit {
             const crit = this.criteria.find(c => c.id === s.clo_code);
             if (crit) crit.selectedPoints = s.score_level;
           });
-          this.successMessage = 'Bạn đã chấm điểm sinh viên này rồi. Bạn có thể sửa điểm nếu cần.';
+          this.toastService.success('Bạn đã chấm điểm sinh viên này rồi. Bạn có thể sửa điểm nếu cần.');
         }
         this.isLoading = false;
       },
@@ -172,6 +196,7 @@ export class CompanyRubricEvaluationComponent implements OnInit {
   }
 
   selectLevel(criterion: RubricCriterion, points: number) {
+    if (!this.isStage1Open) return;
     criterion.selectedPoints = points;
   }
 
@@ -185,7 +210,12 @@ export class CompanyRubricEvaluationComponent implements OnInit {
 
   submitEvaluation() {
     if (!this.selectedStudent || !this.isFullyScored()) {
-      this.errorMessage = 'Vui lòng chấm điểm cho tất cả tiêu chí.';
+      this.toastService.error('Vui lòng chấm điểm cho tất cả tiêu chí.');
+      return;
+    }
+
+    if (!this.isStage1Open) {
+      this.toastService.error('Chưa đến thời gian đánh giá Chặng 1.');
       return;
     }
 
@@ -193,9 +223,6 @@ export class CompanyRubricEvaluationComponent implements OnInit {
     if (!currentUser) return;
 
     this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
     const payload: EvaluationRequest = {
       student_campaign_id: this.selectedStudent.id,
       evaluator_type: 'COMPANY_SUPERVISOR',
@@ -209,7 +236,7 @@ export class CompanyRubricEvaluationComponent implements OnInit {
 
     this.evaluationService.submitEvaluation(payload).subscribe({
       next: () => {
-        this.successMessage = 'Lưu bảng điểm thành công!';
+        this.toastService.success('Lưu bảng điểm thành công!');
         this.isSaving = false;
         // Auto-calculate final result so it shows up in Bảng tổng hợp
         this.evaluationService.calculateFinalResult(this.selectedStudent!.id).subscribe();
@@ -221,14 +248,14 @@ export class CompanyRubricEvaluationComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Có lỗi khi lưu bảng điểm.';
+        this.toastService.error(err.error?.message || 'Có lỗi khi lưu bảng điểm.');
         this.isSaving = false;
       }
     });
   }
 
   handleError(msg: string): void {
-    this.errorMessage = msg;
+    this.toastService.error(msg);
     this.isLoading = false;
   }
 }

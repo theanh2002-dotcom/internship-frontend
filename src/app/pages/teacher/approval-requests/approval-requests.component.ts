@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { StudentCampaignResponse } from '../../../core/models/base.model';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-approval-requests',
@@ -16,10 +17,10 @@ export class ApprovalRequestsComponent implements OnInit {
   requestType: 'COMPANY' | 'PLAN' | null = null;
   showModal = false;
   
-  errorMessage = '';
-  successMessage = '';
-
-  constructor(private studentCampaignService: StudentCampaignService) {}
+      constructor(
+    private studentCampaignService: StudentCampaignService,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit(): void {
     this.loadRequests();
@@ -46,8 +47,6 @@ export class ApprovalRequestsComponent implements OnInit {
     this.selectedRequest = req;
     this.requestType = req.status === 'COMPANY_DECLARED' ? 'COMPANY' : 'PLAN';
     this.showModal = true;
-    this.errorMessage = '';
-    this.successMessage = '';
   }
 
   closeModal() {
@@ -60,15 +59,14 @@ export class ApprovalRequestsComponent implements OnInit {
     if (!this.selectedRequest || !this.requestType) return;
     
     this.isProcessing = true;
-    this.errorMessage = '';
-    
     const requestObservable = this.requestType === 'COMPANY' 
       ? this.studentCampaignService.approveCompanyInfo(this.selectedRequest.id)
       : this.studentCampaignService.approveInternshipPlan(this.selectedRequest.id);
 
     requestObservable.subscribe({
       next: () => {
-        this.successMessage = 'Đã phê duyệt thành công!';
+        this.toastService.success('Đã phê duyệt thành công!');
+        this.toastService.success('Đã phê duyệt thành công!');
         this.isProcessing = false;
         
         // Loại bỏ khỏi danh sách chờ
@@ -77,7 +75,9 @@ export class ApprovalRequestsComponent implements OnInit {
         setTimeout(() => this.closeModal(), 1500);
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Có lỗi xảy ra khi phê duyệt.';
+        const msg = err.error?.message || 'Có lỗi xảy ra khi phê duyệt.';
+        this.toastService.error(msg);
+        this.toastService.error(msg);
         this.isProcessing = false;
       }
     });
@@ -85,6 +85,8 @@ export class ApprovalRequestsComponent implements OnInit {
 
   reject() {
     // Backend chưa hỗ trợ reject, tạm thời chỉ báo lỗi UI
-    this.errorMessage = 'Tính năng từ chối đang được phát triển.';
+    const msg = 'Tính năng từ chối đang được phát triển.';
+    this.toastService.warning(msg);
+    this.toastService.error(msg);
   }
 }

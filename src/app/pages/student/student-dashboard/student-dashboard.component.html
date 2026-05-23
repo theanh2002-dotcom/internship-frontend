@@ -13,42 +13,104 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Cột trái (Chính) -->
     <div class="lg:col-span-2 space-y-6">
-      <!-- Card Tiến trình (Workflow) -->
+      
+      <!-- Banner Cảnh báo Hạn chót -->
+      <ng-container *ngFor="let m of milestones">
+        <div *ngIf="m.warningMessage && (m.state === 'OVERDUE' || m.state === 'IN_PROGRESS')" 
+             class="p-4 rounded-xl border flex items-center justify-between shadow-sm animate-pulse"
+             [ngClass]="m.state === 'OVERDUE' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-amber-50 border-amber-200 text-amber-800'">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-2xl" [ngClass]="m.state === 'OVERDUE' ? 'text-red-600' : 'text-amber-600'">
+              {{ m.state === 'OVERDUE' ? 'error' : 'warning' }}
+            </span>
+            <div>
+              <p class="font-bold text-sm">{{ m.title }}</p>
+              <p class="text-xs opacity-95">{{ m.warningMessage }} Hạn chót nộp: <span class="font-semibold">{{ m.dateLabel }}</span></p>
+            </div>
+          </div>
+          <button (click)="goToMilestone(m)" 
+                  class="px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all whitespace-nowrap"
+                  [ngClass]="m.state === 'OVERDUE' ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-amber-600 text-white hover:bg-amber-700'">
+            Nộp ngay
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Lộ trình thực tập tốt nghiệp -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <span class="material-symbols-outlined text-[#00429D]">flag</span>
-          Trạng thái Biểu mẫu
+        <h3 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#00429D]">route</span>
+          Lộ trình thực tập tốt nghiệp & Hạn nộp
         </h3>
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <!-- TTTN-01 -->
-          <div class="border rounded-lg p-4 flex flex-col items-center justify-center text-center transition-colors"
-               [ngClass]="getStatusClass(workflowStatus.tttn01.status)">
-            <span class="material-symbols-outlined text-3xl mb-2">{{ workflowStatus.tttn01.icon }}</span>
-            <span class="font-bold text-sm">TTTN-01</span>
-            <span class="text-xs mt-1 font-medium">{{ workflowStatus.tttn01.label }}</span>
-          </div>
-          <!-- TTTN-02 -->
-          <div class="border rounded-lg p-4 flex flex-col items-center justify-center text-center transition-colors"
-               [ngClass]="getStatusClass(workflowStatus.tttn02.status)">
-            <span class="material-symbols-outlined text-3xl mb-2">{{ workflowStatus.tttn02.icon }}</span>
-            <span class="font-bold text-sm">TTTN-02</span>
-            <span class="text-xs mt-1 font-medium">{{ workflowStatus.tttn02.label }}</span>
-          </div>
-          <!-- TTTN-03 -->
-          <div class="border rounded-lg p-4 flex flex-col items-center justify-center text-center transition-colors relative"
-               [ngClass]="getStatusClass(workflowStatus.tttn03.status)">
-            <div class="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full animate-pulse" *ngIf="workflowStatus.tttn03.status === 'PENDING'"></div>
-            <span class="material-symbols-outlined text-3xl mb-2">{{ workflowStatus.tttn03.icon }}</span>
-            <span class="font-bold text-sm">TTTN-03</span>
-            <span class="text-xs mt-1 font-medium">{{ workflowStatus.tttn03.label }}</span>
-          </div>
-          <!-- TTTN-06 -->
-          <div class="border rounded-lg p-4 flex flex-col items-center justify-center text-center transition-colors opacity-60"
-               [ngClass]="getStatusClass(workflowStatus.tttn06.status)">
-            <span class="material-symbols-outlined text-3xl mb-2">{{ workflowStatus.tttn06.icon }}</span>
-            <span class="font-bold text-sm">TTTN-06</span>
-            <span class="text-xs mt-1 font-medium">{{ workflowStatus.tttn06.label }}</span>
+
+        <div class="milestone-stepper">
+          <div *ngFor="let m of milestones" class="milestone-item" [ngClass]="m.state">
+            <div class="milestone-indicator">
+              <span class="material-symbols-outlined text-white text-[12px]" *ngIf="m.state === 'COMPLETED'">check</span>
+            </div>
+            
+            <div class="milestone-card border rounded-xl p-4 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                 [ngClass]="{
+                   'border-green-200 bg-green-50/20': m.state === 'COMPLETED',
+                   'border-blue-200 bg-blue-50/10': m.state === 'IN_PROGRESS',
+                   'border-amber-200 bg-amber-50/20': m.state === 'PENDING',
+                   'border-red-200 bg-red-50/20': m.state === 'OVERDUE',
+                   'border-slate-100 bg-slate-50/30': m.state === 'UPCOMING',
+                   'border-slate-100 locked-card bg-slate-50/50 opacity-60': m.state === 'LOCKED'
+                 }">
+              <div class="flex-1 space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        [ngClass]="{
+                          'bg-green-100 text-green-700': m.state === 'COMPLETED',
+                          'bg-blue-100 text-blue-700': m.state === 'IN_PROGRESS',
+                          'bg-amber-100 text-amber-700': m.state === 'PENDING',
+                          'bg-red-100 text-red-700': m.state === 'OVERDUE',
+                          'bg-slate-100 text-slate-600': m.state === 'UPCOMING',
+                          'bg-slate-200 text-slate-400': m.state === 'LOCKED'
+                        }">
+                    {{ m.code }}
+                  </span>
+                  <h4 class="font-bold text-slate-900 text-sm md:text-base">{{ m.title }}</h4>
+                </div>
+                <p class="text-xs md:text-sm text-slate-500">{{ m.description }}</p>
+                <div class="flex items-center gap-4 text-xs font-semibold mt-2">
+                  <span class="text-slate-600 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">calendar_month</span>
+                    Thời hạn: {{ m.dateLabel }}
+                  </span>
+                  <span *ngIf="m.stateLabel" 
+                        [ngClass]="{
+                          'text-green-600': m.state === 'COMPLETED',
+                          'text-blue-600': m.state === 'IN_PROGRESS',
+                          'text-amber-600': m.state === 'PENDING',
+                          'text-red-600': m.state === 'OVERDUE',
+                          'text-slate-500': m.state === 'UPCOMING' || m.state === 'LOCKED'
+                        }">
+                    • {{ m.stateLabel }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end">
+                <button *ngIf="m.state !== 'LOCKED'" (click)="goToMilestone(m)"
+                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 whitespace-nowrap"
+                        [ngClass]="{
+                          'bg-green-600 text-white hover:bg-green-700 shadow-sm': m.state === 'COMPLETED',
+                          'bg-blue-600 text-white hover:bg-blue-700 shadow-sm': m.state === 'IN_PROGRESS',
+                          'bg-amber-500 text-white hover:bg-amber-600 shadow-sm': m.state === 'PENDING',
+                          'bg-red-600 text-white hover:bg-red-700 shadow-sm': m.state === 'OVERDUE',
+                          'bg-slate-200 text-slate-700 hover:bg-slate-300': m.state === 'UPCOMING'
+                        }">
+                  {{ m.state === 'COMPLETED' ? 'Xem lại' : (m.state === 'PENDING' ? 'Kiểm tra' : 'Thực hiện') }}
+                  <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </button>
+                <span *ngIf="m.state === 'LOCKED'" class="text-xs text-slate-400 font-medium flex items-center gap-1 whitespace-nowrap">
+                  <span class="material-symbols-outlined text-sm">lock</span>
+                  Chưa mở
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -58,7 +120,7 @@
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
             <span class="material-symbols-outlined text-[#00429D]">timeline</span>
-            Tiến độ thời gian
+            Tổng thời gian đợt thực tập
           </h3>
           <span class="text-sm font-bold text-[#00429D]">{{ progressPercent | number:'1.0-0' }}%</span>
         </div>
@@ -69,7 +131,7 @@
         <div class="flex justify-between text-xs text-slate-500 font-medium">
           <span>Bắt đầu</span>
           <span>Tuần {{ currentWeek }}</span>
-          <span>Kết thúc (Tuần 8)</span>
+          <span>Kết thúc</span>
         </div>
       </div>
     </div>
