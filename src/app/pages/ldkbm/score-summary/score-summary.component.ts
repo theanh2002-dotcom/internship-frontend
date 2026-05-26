@@ -27,6 +27,12 @@ export class LdkbmScoreSummaryComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
 
+  // Pagination & Advanced Filters
+  selectedStatusFilter: string = '';
+  currentPage: number = 1;
+  pageSize: number = 10;
+  totalItems: number = 0;
+
   constructor(
     private finalResultService: FinalResultService,
     private departmentService: DepartmentService,
@@ -106,7 +112,7 @@ export class LdkbmScoreSummaryComponent implements OnInit {
     this.finalResultService.getFinalResultsByCampaign(this.departmentCampaignId).subscribe({
       next: (res) => {
         this.results = res || [];
-        this.filteredResults = this.results;
+        this.onFilterChange();
         this.loading = false;
       },
       error: (err) => {
@@ -116,13 +122,49 @@ export class LdkbmScoreSummaryComponent implements OnInit {
     });
   }
 
+  onFilterChange(): void {
+    const term = this.searchTerm.toLowerCase().trim();
+    
+    this.filteredResults = this.results.filter(r => {
+      // 1. Search term query
+      const matchesSearch = !term || 
+        r.full_name.toLowerCase().includes(term) ||
+        r.student_code.toLowerCase().includes(term) ||
+        r.class_name.toLowerCase().includes(term);
+        
+      if (!matchesSearch) return false;
+
+      // 2. Status filter mapping
+      if (this.selectedStatusFilter === 'approved') {
+        return r.is_approved;
+      } else if (this.selectedStatusFilter === 'pending_approval') {
+        return !r.is_approved && r.final_hp_score !== null && r.final_hp_score !== undefined;
+      } else if (this.selectedStatusFilter === 'pending_score') {
+        return r.final_hp_score === null || r.final_hp_score === undefined;
+      } else if (this.selectedStatusFilter === 'passed') {
+        return r.final_hp_score !== null && r.final_hp_score !== undefined && r.final_hp_score >= 4.0;
+      } else if (this.selectedStatusFilter === 'failed') {
+        return r.final_hp_score !== null && r.final_hp_score !== undefined && r.final_hp_score < 4.0;
+      }
+      
+      return true;
+    });
+
+    this.totalItems = this.filteredResults.length;
+    this.currentPage = 1; // Reset page to 1
+  }
+
   onSearchChange(): void {
-    const term = this.searchTerm.toLowerCase();
-    this.filteredResults = this.results.filter(r =>
-      r.full_name.toLowerCase().includes(term) ||
-      r.student_code.toLowerCase().includes(term) ||
-      r.class_name.toLowerCase().includes(term)
-    );
+    this.onFilterChange();
+  }
+
+  get paginatedResults(): FinalResultResponse[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    return this.filteredResults.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
   }
 
   calculateScore(studentCampaignId: number): void {
@@ -221,7 +263,7 @@ export class LdkbmScoreSummaryComponent implements OnInit {
       'Điểm Chặng 2': r.stage_2_score !== null && r.stage_2_score !== undefined ? r.stage_2_score : '-',
       'Điểm Tổng Kết': r.final_hp_score !== null && r.final_hp_score !== undefined ? r.final_hp_score : '-',
       'Xếp Loại': r.grade_level || 'Chưa xếp loại',
-      'Trạng Thế': r.is_approved ? 'Đã duyệt' : (r.final_hp_score !== null ? 'Chờ duyệt' : 'Chưa tính điểm')
+      'Trạng Thái': r.is_approved ? 'Đã duyệt' : (r.final_hp_score !== null ? 'Chờ duyệt' : 'Chưa tính điểm')
     }));
 
     const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataToExport);

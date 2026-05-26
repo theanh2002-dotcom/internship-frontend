@@ -38,6 +38,11 @@ export class CommitteesComponent implements OnInit {
   isStudentModalOpen: boolean = false;
   selectedCommittee: CommitteeResponse | null = null;
 
+  // View Assigned Students Modal
+  isViewStudentsModalOpen: boolean = false;
+  selectedCommitteeForView: CommitteeResponse | null = null;
+  studentsInCommittee: StudentCampaignResponse[] = [];
+
   // Create/Edit Form variables
   isEditing: boolean = false;
   editingCommitteeId: number | null = null;
@@ -377,6 +382,14 @@ export class CommitteesComponent implements OnInit {
     return this.tempAssignedStudentIds.has(studentId);
   }
 
+  getSelectedStudents(): StudentCampaignResponse[] {
+    return this.allStudents.filter(s => this.tempAssignedStudentIds.has(s.id));
+  }
+
+  removeSelectedStudent(studentId: number): void {
+    this.tempAssignedStudentIds.delete(studentId);
+  }
+
   getStudentAssignedCommitteeName(student: StudentCampaignResponse): string | null {
     if (!student.committee_id) return null;
     if (this.selectedCommittee && student.committee_id === this.selectedCommittee.id) return null;
@@ -403,6 +416,18 @@ export class CommitteesComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  openViewStudentsModal(committee: CommitteeResponse): void {
+    this.selectedCommitteeForView = committee;
+    this.studentsInCommittee = this.allStudents.filter(s => s.committee_id === committee.id);
+    this.isViewStudentsModalOpen = true;
+  }
+
+  closeViewStudentsModal(): void {
+    this.isViewStudentsModalOpen = false;
+    this.selectedCommitteeForView = null;
+    this.studentsInCommittee = [];
   }
 
   // --- MEMBER ROLE FORMATTER ---

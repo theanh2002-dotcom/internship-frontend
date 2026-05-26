@@ -33,6 +33,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ManageInternsComponent } from './pages/company/manage-interns/manage-interns.component';
 import { ApprovalRequestsComponent } from './pages/teacher/approval-requests/approval-requests.component';
 import { StudentDashboardComponent } from './pages/student/student-dashboard/student-dashboard.component';
+import { StudentGradeReportComponent } from './pages/student/student-dashboard/student-grade-report.component';
 import { TeacherDashboardComponent } from './pages/teacher/teacher-dashboard/teacher-dashboard.component';
 import { ManageStudentsComponent } from './pages/teacher/manage-students/manage-students.component';
 import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-dashboard.component';
@@ -88,6 +89,7 @@ import { TableCellDirective } from './shared/components/table/table-cell.directi
     ManageInternsComponent,
     ApprovalRequestsComponent,
     StudentDashboardComponent,
+    StudentGradeReportComponent,
     TeacherDashboardComponent,
     ManageStudentsComponent,
     AdminDashboardComponent,

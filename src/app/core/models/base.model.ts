@@ -75,6 +75,7 @@ export interface CampaignResponse {
   student_count: number;
   department_count: number;
   created_at: string;
+  department_ids?: number[];
 }
 
 /**
@@ -154,6 +155,8 @@ export interface StudentCampaignResponse {
   committee_id?: number;
   company_info?: CompanyInfoResponse;
   internship_plans?: InternshipPlanResponse[];
+  campaign_group_config_id?: number;
+  group_config?: any;
   created_at?: string;
 }
 

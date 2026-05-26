@@ -26,6 +26,7 @@ export interface CampaignRequest {
   midterm_deadline?: string;
   tttn06_start_date?: string;
   tttn06_deadline?: string;
+  department_ids?: number[];
 }
 
 @Injectable({
@@ -85,4 +86,44 @@ export class CampaignService {
   toggleStatus(id: number): Observable<any> {
     return this.apiService.patch<any>(`/base/campaigns/${id}/toggle`);
   }
+
+  getGroupsByCampaign(campaignId: number): Observable<CampaignGroupConfigResponse[]> {
+    return this.apiService.get<CampaignGroupConfigResponse[]>(`/base/campaigns/${campaignId}/groups`);
+  }
+
+  createGroup(campaignId: number, request: CampaignGroupConfigRequest): Observable<CampaignGroupConfigResponse> {
+    return this.apiService.post<CampaignGroupConfigResponse>(`/base/campaigns/${campaignId}/groups`, request);
+  }
+
+  updateGroup(campaignId: number, id: number, request: CampaignGroupConfigRequest): Observable<CampaignGroupConfigResponse> {
+    return this.apiService.put<CampaignGroupConfigResponse>(`/base/campaigns/${campaignId}/groups/${id}`, request);
+  }
+
+  deleteGroup(campaignId: number, id: number): Observable<any> {
+    return this.apiService.delete<any>(`/base/campaigns/${campaignId}/groups/${id}`);
+  }
+}
+
+export interface CampaignGroupConfigRequest {
+  code: string;
+  name: string;
+  student_filter_regex: string;
+  start_date?: string;
+  end_date?: string;
+  tttn01_start_date?: string;
+  tttn01_deadline?: string;
+  tttn02_start_date?: string;
+  tttn02_deadline?: string;
+  tttn03_start_date?: string;
+  tttn03_deadline?: string;
+  midterm_start_date?: string;
+  midterm_deadline?: string;
+  tttn06_start_date?: string;
+  tttn06_deadline?: string;
+  grade_deadline?: string;
+}
+
+export interface CampaignGroupConfigResponse extends CampaignGroupConfigRequest {
+  id: number;
+  campaign_id: number;
 }

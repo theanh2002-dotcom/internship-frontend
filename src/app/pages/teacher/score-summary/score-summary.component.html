@@ -6,10 +6,6 @@
             <p class="text-slate-600 mt-1">Danh sách tổng hợp điểm các hội đồng và kết quả cuối cùng của Sinh viên.</p>
         </div>
         <div class="flex gap-3">
-            <button class="flex items-center gap-2 border border-slate-300 bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-medium shadow-sm">
-                <span class="material-symbols-outlined text-[20px]">filter_list</span>
-                Bộ lọc
-            </button>
             <button (click)="exportExcel()" class="flex items-center gap-2 bg-[#00429D] text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors font-medium shadow-sm">
                 <span class="material-symbols-outlined text-[20px]">download</span>
                 Xuất Excel
@@ -37,11 +33,55 @@
         </div>
     </div>
 
+    <!-- Filters Header -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50">
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <!-- Search Query -->
+            <div class="relative w-full md:w-64">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                <input [(ngModel)]="searchQuery" 
+                       (input)="onFilterChange()" 
+                       class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] transition-shadow" 
+                       placeholder="Tìm kiếm MSSV, tên, lớp..." 
+                       type="text"/>
+            </div>
+
+            <!-- Campaign Selector -->
+            <div class="w-full md:w-64">
+                <select [(ngModel)]="selectedCampaignId" 
+                        (change)="onFilterChange()" 
+                        class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
+                    <option value="">— Tất cả đợt thực tập —</option>
+                    <option *ngFor="let camp of campaigns" [value]="camp.id">
+                        {{ camp.name }} (HK{{ camp.semester }} - NH {{ camp.academic_year }})
+                    </option>
+                </select>
+            </div>
+
+            <!-- Status Selector -->
+            <div class="w-full md:w-48">
+                <select [(ngModel)]="selectedStatus" 
+                        (change)="onFilterChange()" 
+                        class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
+                    <option value="">— Tất cả kết quả —</option>
+                    <option value="Đạt">Đạt</option>
+                    <option value="Không đạt">Không đạt</option>
+                    <option value="Chưa có kết quả">Chưa có kết quả</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto justify-end">
+            <span class="material-symbols-outlined text-[18px] text-slate-400">groups</span>
+            Tổng cộng: <span class="font-bold text-[#00429D]">{{ totalItems }}</span> sinh viên
+        </div>
+    </div>
+
     <!-- Data Grid (Excel-like Table) -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div *ngIf="isLoading" class="p-12 text-center text-gray-500">
-            <span class="material-symbols-outlined animate-spin text-4xl mb-4">autorenew</span>
-            <p>Đang tổng hợp điểm từ hệ thống...</p>
+            <span class="material-symbols-outlined animate-spin text-4xl mb-4 text-[#00429D]">autorenew</span>
+            <p class="font-medium text-slate-600">Đang tổng hợp điểm từ hệ thống...</p>
         </div>
 
         <div *ngIf="!isLoading" class="overflow-x-auto relative">
@@ -64,13 +104,13 @@
                 </thead>
                 <!-- Table Body -->
                 <tbody class="divide-y divide-slate-200 text-slate-800">
-                    <tr *ngIf="students.length === 0">
-                        <td colspan="8" class="py-8 text-center text-gray-500">
-                            Chưa có sinh viên nào được phân công.
+                    <tr *ngIf="paginatedStudents.length === 0">
+                        <td colspan="8" class="py-8 text-center text-slate-500 font-medium">
+                            Không tìm thấy sinh viên nào khớp bộ lọc.
                         </td>
                     </tr>
-                    <tr *ngFor="let student of students; let i = index" class="hover:bg-slate-50 transition-colors group">
-                        <td class="px-6 py-3 border-r border-slate-200 text-center text-slate-500">{{ i + 1 }}</td>
+                    <tr *ngFor="let student of paginatedStudents; let i = index" class="hover:bg-slate-50 transition-colors group">
+                        <td class="px-6 py-3 border-r border-slate-200 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
                         <td class="px-6 py-3 border-r border-slate-200 font-medium">{{ student.mssv }}</td>
                         <!-- Sticky Column: Name -->
                         <td class="px-6 py-3 border-r border-slate-200 sticky left-0 bg-white group-hover:bg-slate-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] z-10 transition-colors font-semibold text-[#00429D]">
@@ -106,9 +146,13 @@
                 </tbody>
             </table>
         </div>
-        <!-- Pagination Placeholder -->
-        <div *ngIf="!isLoading" class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
-            <span class="text-sm text-slate-600">Tổng cộng <span class="font-medium">{{ students.length }}</span> kết quả</span>
+        <!-- Pagination Controls -->
+        <div *ngIf="!isLoading && paginatedStudents.length > 0" class="border-t border-slate-200 bg-slate-50">
+            <app-pagination [currentPage]="currentPage" 
+                            [totalItems]="totalItems" 
+                            [pageSize]="pageSize" 
+                            (pageChange)="onPageChange($event)">
+            </app-pagination>
         </div>
     </div>
 </div>

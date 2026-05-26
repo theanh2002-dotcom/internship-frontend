@@ -112,9 +112,12 @@
         }">
     {{ getStatusLabel(campaign.status) }}
   </span>
-</td>
 <td class="py-3 px-4">
 <div class="flex items-center justify-center gap-1">
+<button class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Lộ trình nhóm đối tượng (C-A, C, K-A, K)"
+        (click)="openGroupConfigModal(campaign)">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
 <button class="p-1.5 text-slate-400 hover:text-[#00429D] hover:bg-blue-50 rounded transition-colors" title="Chỉnh sửa"
         (click)="openEditModal(campaign)">
 <span class="material-symbols-outlined text-[18px]">edit</span>
@@ -149,14 +152,16 @@
     <!-- Error trong modal -->
     
 
-    <!-- Row 1: Mã đợt + Năm học -->
+    <!-- Row 1: Tên đợt thực tập -->
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Tên đợt thực tập <span class="text-red-500">*</span></label>
+      <input [(ngModel)]="formName" 
+             class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
+             placeholder="VD: Thực tập Tốt nghiệp Khoa CNTT K64" type="text"/>
+    </div>
+
+    <!-- Row 2: Năm học + Học kỳ -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="flex flex-col gap-1.5">
-        <label class="font-label-md text-[13px] text-slate-600">Mã đợt <span class="text-red-500">*</span></label>
-        <input [(ngModel)]="formCode" 
-               class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
-               placeholder="VD: TTTN.2024.1" type="text"/>
-      </div>
       <div class="flex flex-col gap-1.5">
         <label class="font-label-md text-[13px] text-slate-600">Năm học</label>
         <select [(ngModel)]="formAcademicYear" 
@@ -164,16 +169,6 @@
           <option value="">— Chọn năm học —</option>
           <option *ngFor="let year of academicYears" [value]="year">{{ year }}</option>
         </select>
-      </div>
-    </div>
-
-    <!-- Row 2: Tên + Học kỳ -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="flex flex-col gap-1.5 md:col-span-2">
-        <label class="font-label-md text-[13px] text-slate-600">Tên đợt thực tập <span class="text-red-500">*</span></label>
-        <input [(ngModel)]="formName" 
-               class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
-               placeholder="VD: Thực tập Tốt nghiệp Khoa CNTT K64" type="text"/>
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="font-label-md text-[13px] text-slate-600">Học kỳ</label>
@@ -198,6 +193,56 @@
         <input [(ngModel)]="formEndDate" 
                class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
                type="date"/>
+      </div>
+    </div>
+
+    <!-- Chọn các Khoa áp dụng -->
+    <div class="flex flex-col gap-1.5 pt-3 border-t border-slate-200">
+      <div class="flex items-center justify-between">
+        <label class="font-label-md text-[13px] text-slate-600 font-semibold flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px] text-[#00429D]">apartment</span>
+          Chọn các Khoa áp dụng <span class="text-red-500">*</span>
+        </label>
+        <div class="flex items-center gap-2 text-xs text-[#00429D] font-medium">
+          <button type="button" class="hover:underline focus:outline-none" (click)="selectAllDepartments()">Chọn tất cả</button>
+          <span class="text-slate-300">|</span>
+          <button type="button" class="hover:underline focus:outline-none" (click)="deselectAllDepartments()">Bỏ chọn tất cả</button>
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-1">Chọn ít nhất một Khoa sẽ tham gia đợt thực tập này.</p>
+      
+      <!-- Selected tags list -->
+      <div class="flex flex-wrap gap-1.5 mt-1 mb-1" *ngIf="selectedDepartmentIds.length > 0">
+        <span *ngFor="let deptId of selectedDepartmentIds" class="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold rounded-full shadow-sm">
+          {{ getDepartmentName(deptId) }}
+          <button type="button" class="w-4 h-4 rounded-full hover:bg-blue-100 hover:text-blue-900 inline-flex items-center justify-center focus:outline-none" (click)="toggleDepartmentSelection(deptId)">
+            <span class="material-symbols-outlined text-[12px] font-bold">close</span>
+          </button>
+        </span>
+      </div>
+
+      <!-- Quick Search Bar -->
+      <div class="relative mt-1">
+        <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[16px]">search</span>
+        <input type="text" [(ngModel)]="deptSearchQuery" placeholder="Tìm kiếm nhanh khoa theo tên hoặc mã..." class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] transition-shadow"/>
+      </div>
+      
+      <!-- Departments list -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-[140px] overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded">
+        <label *ngFor="let dept of getFilteredDepartments()" class="flex items-center gap-2 px-2 py-1.5 bg-white hover:bg-slate-100 rounded border border-slate-200 cursor-pointer transition-colors shadow-sm">
+          <input type="checkbox" 
+                 [checked]="isDepartmentSelected(dept.id)" 
+                 (change)="toggleDepartmentSelection(dept.id)"
+                 class="w-4 h-4 text-[#00429D] border-slate-300 rounded focus:ring-[#00429D]"/>
+          <span class="text-[13px] text-slate-700 font-medium">{{ dept.name }} ({{ dept.code }})</span>
+        </label>
+        <div *ngIf="getFilteredDepartments().length === 0" class="col-span-2 text-center text-xs text-slate-400 py-6">
+          Không tìm thấy khoa nào khớp với từ khóa
+        </div>
+      </div>
+      
+      <div *ngIf="selectedDepartmentIds.length === 0" class="text-xs text-amber-600 mt-1 flex items-center gap-1">
+        <span class="material-symbols-outlined text-[14px]">warning</span> Cần chọn ít nhất 1 khoa
       </div>
     </div>
 
@@ -295,4 +340,221 @@
                 placeholder="Nhập ghi chú / mô tả (nếu có)" rows="3"></textarea>
     </div>
   </div>
+</app-modal>
+
+<!-- Group Config Modal -->
+<app-modal [isOpen]="isGroupModalOpen" 
+           [title]="'Lộ trình nhóm đối tượng - ' + (selectedCampaign?.name || '')" 
+           [saveText]="selectedGroup ? (selectedGroup.id > 0 ? 'Cập nhật nhóm' : 'Tạo nhóm mới') : 'Lưu lại'"
+           cancelText="Đóng"
+           (close)="closeGroupModal()" 
+           (save)="saveGroup()">
+  
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <!-- Left Column: Groups List (40%) -->
+    <div class="md:col-span-2 border-r border-slate-200 pr-3">
+      <div class="flex flex-col gap-2 mb-3 pb-2 border-b border-slate-100">
+        <div class="flex items-center justify-between">
+          <h4 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Danh sách nhóm</h4>
+          <button type="button" 
+                  class="flex items-center gap-1 text-[11px] font-semibold text-[#00429D] hover:underline"
+                  (click)="addNewGroup()">
+            <span class="material-symbols-outlined text-[14px]">add_circle</span>
+            Thêm nhóm
+          </button>
+        </div>
+        
+        <button *ngIf="groups.length === 0" 
+                type="button" 
+                class="w-full flex items-center justify-center gap-1 py-1.5 px-3 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 rounded text-[11px] font-bold transition-all shadow-sm"
+                (click)="initializeDefaultGroups()">
+          <span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+          Khởi tạo nhanh 4 nhóm mẫu chuẩn
+        </button>
+      </div>
+      
+      <!-- List -->
+      <div class="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+        <div *ngFor="let g of groups" 
+             [class.border-blue-500]="selectedGroup && selectedGroup.id === g.id"
+             [class.bg-blue-50]="selectedGroup && selectedGroup.id === g.id"
+             class="p-2.5 bg-white border border-slate-200 rounded cursor-pointer hover:bg-slate-50 transition-colors shadow-sm relative group"
+             (click)="selectGroup(g)">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-[13px] text-[#00429D]">{{ g.code }}</span>
+            <button type="button" 
+                    class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-0.5 rounded transition-opacity" 
+                    title="Xóa nhóm"
+                    (click)="deleteGroupItem(g, $event)">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+          </div>
+          <div class="text-[12px] font-semibold text-slate-700 mt-1">{{ g.name }}</div>
+          <div class="text-[11px] text-slate-500 mt-0.5 font-mono truncate" [title]="g.student_filter_regex">
+            Lọc lớp: {{ g.student_filter_regex }}
+          </div>
+        </div>
+        
+        <div *ngIf="groups.length === 0" class="text-center text-xs text-slate-400 py-10 bg-slate-50 border border-dashed rounded">
+          Chưa có nhóm đối tượng nào. Hãy nhấn "Thêm nhóm" hoặc "Khởi tạo nhanh" để bắt đầu.
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Settings Form (60%) -->
+    <div class="md:col-span-3">
+      <div *ngIf="!selectedGroup" class="flex flex-col items-center justify-center h-full text-slate-400 py-16">
+        <span class="material-symbols-outlined text-[48px] mb-2 text-slate-300">tune</span>
+        <p class="text-sm font-medium">Chọn một nhóm bên trái</p>
+        <p class="text-xs mt-1">hoặc nhấn "Thêm nhóm" để thiết lập cấu hình lộ trình riêng.</p>
+      </div>
+
+      <div *ngIf="selectedGroup" class="space-y-3.5 max-h-[450px] overflow-y-auto pr-1">
+        <div class="flex items-center gap-1.5 pb-2 border-b border-slate-100 mb-2">
+          <span class="material-symbols-outlined text-indigo-600 text-[18px]">settings_input_component</span>
+          <span class="font-bold text-[14px] text-slate-800">
+            {{ selectedGroup.id > 0 ? 'Cập nhật cấu hình: ' + selectedGroup.code : 'Cấu hình nhóm mới' }}
+          </span>
+        </div>
+
+        <!-- Row 1: Code & Name -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-[12px] font-semibold text-slate-600">Mã nhóm <span class="text-red-500">*</span></label>
+            <input [(ngModel)]="groupCode" 
+                   class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-[13px] focus:outline-none focus:border-[#00429D]" 
+                   placeholder="VD: K-A" type="text"/>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[12px] font-semibold text-slate-600">Tên nhóm <span class="text-red-500">*</span></label>
+            <input [(ngModel)]="groupName" 
+                   class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-[13px] focus:outline-none focus:border-[#00429D]" 
+                   placeholder="VD: Đại học Đại trà" type="text"/>
+          </div>
+        </div>
+
+        <!-- Row 2: Regex -->
+        <div class="flex flex-col gap-1.5 bg-slate-50 p-2.5 rounded border border-slate-200">
+          <label class="text-[12px] font-bold text-slate-700 flex items-center gap-1">
+            Quy tắc nhận diện lớp (Regex) <span class="text-red-500">*</span>
+            <span class="material-symbols-outlined text-[14px] text-slate-400 cursor-help" 
+                  title="Biểu thức chính quy Regex so khớp với Tên lớp. Ví dụ: ^D.* (mọi lớp Đại học), ^C.* (mọi lớp Cao đẳng)">help</span>
+          </label>
+          
+          <!-- Quick Templates Picker -->
+          <div class="flex flex-wrap gap-1 mb-1">
+            <span class="text-[10px] text-slate-500 font-semibold w-full">Chọn nhanh mẫu chuẩn:</span>
+            <button type="button" 
+                    class="py-0.5 px-2 bg-white hover:bg-indigo-50 border border-slate-200 text-indigo-700 rounded text-[10px] font-medium transition-colors shadow-sm"
+                    (click)="applyRegexTemplate('DH_DT')">
+              Đại học Đại trà
+            </button>
+            <button type="button" 
+                    class="py-0.5 px-2 bg-white hover:bg-indigo-50 border border-slate-200 text-indigo-700 rounded text-[10px] font-medium transition-colors shadow-sm"
+                    (click)="applyRegexTemplate('DH_CLC')">
+              Đại học CLC
+            </button>
+            <button type="button" 
+                    class="py-0.5 px-2 bg-white hover:bg-indigo-50 border border-slate-200 text-indigo-700 rounded text-[10px] font-medium transition-colors shadow-sm"
+                    (click)="applyRegexTemplate('CD_DT')">
+              Cao đẳng Đại trà
+            </button>
+            <button type="button" 
+                    class="py-0.5 px-2 bg-white hover:bg-indigo-50 border border-slate-200 text-indigo-700 rounded text-[10px] font-medium transition-colors shadow-sm"
+                    (click)="applyRegexTemplate('CD_CLC')">
+              Cao đẳng CLC
+            </button>
+          </div>
+
+          <input [(ngModel)]="groupRegex" 
+                 class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-[13px] font-mono focus:outline-none focus:border-[#00429D]" 
+                 placeholder="VD: ^D(?!.*CLC).*" type="text"/>
+          <span class="text-[10px] text-slate-500 leading-normal">
+            Hệ thống sẽ đối chiếu quy tắc này với <strong>tên lớp</strong> khi import Excel để tự phân nhóm sinh viên.
+          </span>
+        </div>
+
+        <!-- Row 3: Start/End Date -->
+        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+          <div class="flex flex-col gap-1">
+            <label class="text-[12px] font-semibold text-slate-600">Ngày bắt đầu đợt</label>
+            <input [(ngModel)]="groupStartDate" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[12px] font-semibold text-slate-600">Ngày kết thúc đợt</label>
+            <input [(ngModel)]="groupEndDate" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+          </div>
+        </div>
+
+        <!-- Stepper Timeline Settings -->
+        <div class="pt-3 border-t border-slate-200">
+          <h5 class="text-[12px] font-bold text-slate-700 mb-2 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px] text-indigo-600">alarm</span>
+            Lộ trình nộp báo cáo riêng biệt cho nhóm
+          </h5>
+          
+          <div class="space-y-2.5">
+            <!-- Chặng 1: TTTN-01 -->
+            <div class="bg-slate-50 p-2 rounded border border-slate-100">
+              <div class="font-semibold text-[11px] text-slate-700 mb-1">Chặng 1: Kê khai Đơn vị thực tập (TTTN-01)</div>
+              <div class="grid grid-cols-2 gap-2">
+                <input [(ngModel)]="groupTttn01StartDate" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Ngày mở nhận"/>
+                <input [(ngModel)]="groupTttn01Deadline" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Hạn nộp"/>
+              </div>
+            </div>
+
+            <!-- Chặng 2: TTTN-02 -->
+            <div class="bg-slate-50 p-2 rounded border border-slate-100">
+              <div class="font-semibold text-[11px] text-slate-700 mb-1">Chặng 2: Nộp Đề cương kế hoạch (TTTN-02)</div>
+              <div class="grid grid-cols-2 gap-2">
+                <input [(ngModel)]="groupTttn02StartDate" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Ngày mở nhận"/>
+                <input [(ngModel)]="groupTttn02Deadline" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Hạn nộp"/>
+              </div>
+            </div>
+
+            <!-- Chặng 3: TTTN-03 -->
+            <div class="bg-slate-50 p-2 rounded border border-slate-100">
+              <div class="font-semibold text-[11px] text-slate-700 mb-1">Chặng 3: Nộp Nhật ký tuần (TTTN-03)</div>
+              <div class="grid grid-cols-2 gap-2">
+                <input [(ngModel)]="groupTttn03StartDate" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Ngày mở nhận"/>
+                <input [(ngModel)]="groupTttn03Deadline" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Hạn nộp"/>
+              </div>
+            </div>
+
+            <!-- Chặng 4: Đánh giá giữa kỳ -->
+            <div class="bg-slate-50 p-2 rounded border border-slate-100">
+              <div class="font-semibold text-[11px] text-slate-700 mb-1">Chặng 4: Đánh giá giữa kỳ</div>
+              <div class="grid grid-cols-2 gap-2">
+                <input [(ngModel)]="groupMidtermStartDate" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Ngày mở nhận"/>
+                <input [(ngModel)]="groupMidtermDeadline" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Hạn nộp"/>
+              </div>
+            </div>
+
+            <!-- Chặng 5: TTTN-06 & 08b -->
+            <div class="bg-slate-50 p-2 rounded border border-slate-100">
+              <div class="font-semibold text-[11px] text-slate-700 mb-1">Chặng 5: Báo cáo cuối kỳ (TTTN-06 & 08b)</div>
+              <div class="grid grid-cols-2 gap-2">
+                <input [(ngModel)]="groupTttn06StartDate" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Ngày mở nhận"/>
+                <input [(ngModel)]="groupTttn06Deadline" class="border border-slate-300 rounded px-2 py-1 text-[11px] focus:outline-none" type="date" title="Hạn nộp"/>
+              </div>
+            </div>
+
+            <!-- NEW! HẠN CHẤM ĐIỂM -->
+            <div class="bg-amber-50 p-2.5 rounded border border-amber-200">
+              <div class="font-bold text-[11px] text-amber-800 mb-1 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">edit_square</span>
+                Hạn chót nhập điểm của GVHD (TTTN-07)
+              </div>
+              <input [(ngModel)]="groupGradeDeadline" 
+                     class="w-full border border-amber-300 bg-white rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500" 
+                     type="date" title="Hạn chót GVHD chấm điểm"/>
+              <p class="text-[10px] text-amber-700 mt-1">Sau ngày này, hệ thống sẽ tự động khóa chức năng nhập điểm đối với sinh viên thuộc nhóm này.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </app-modal>

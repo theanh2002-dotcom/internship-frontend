@@ -197,13 +197,16 @@ export class RubricEvaluationComponent implements OnInit {
         this.campaign = campaign;
         const now = new Date();
 
+        const gConfig = this.selectedStudent?.group_config || null;
+        const activeSource = gConfig ? gConfig : campaign;
+
         // Stage 1 checks
-        const midtermStart = campaign.midterm_start_date ? new Date(campaign.midterm_start_date) : new Date(new Date(campaign.start_date).getTime() + 21 * 24 * 60 * 60 * 1000);
+        const midtermStart = activeSource.midterm_start_date ? new Date(activeSource.midterm_start_date) : new Date(new Date(activeSource.start_date).getTime() + 21 * 24 * 60 * 60 * 1000);
         this.midtermStartDateStr = midtermStart.toLocaleDateString('vi-VN');
         this.isStage1Open = now >= midtermStart;
 
         // Stage 2 checks
-        const tttn06Start = campaign.tttn06_start_date ? new Date(campaign.tttn06_start_date) : new Date(new Date(campaign.end_date).getTime() - 7 * 24 * 60 * 60 * 1000);
+        const tttn06Start = activeSource.tttn06_start_date ? new Date(activeSource.tttn06_start_date) : new Date(new Date(activeSource.end_date).getTime() - 7 * 24 * 60 * 60 * 1000);
         this.tttn06StartDateStr = tttn06Start.toLocaleDateString('vi-VN');
         this.isStage2Open = now >= tttn06Start;
       },

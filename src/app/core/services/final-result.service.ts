@@ -32,4 +32,8 @@ export class FinalResultService {
   getFinalResultsByCampaign(departmentCampaignId: number): Observable<FinalResultResponse[]> {
     return this.apiService.get<FinalResultResponse[]>(`/base/final-results?department_campaign_id=${departmentCampaignId}`);
   }
+
+  getMyFinalResult(): Observable<FinalResultResponse> {
+    return this.apiService.get<FinalResultResponse>('/base/final-results/my-result');
+  }
 }

@@ -190,27 +190,39 @@
         </div>
 
         <!-- Assigned Students Count -->
-        <div class="flex items-center justify-between text-sm text-gray-600 bg-gray-50/50 p-2.5 rounded-lg">
-          <span class="font-medium">Sinh viên phân công:</span>
-          <span class="font-bold text-indigo-600 text-base">{{ getStudentCountForCommittee(committee.id) }}</span>
+        <div class="flex items-center justify-between text-sm text-gray-650 bg-gray-50/50 p-2.5 rounded-lg">
+          <span class="font-medium text-slate-700">Sinh viên phân công:</span>
+          <span class="font-bold text-[#00429D] text-base">{{ getStudentCountForCommittee(committee.id) }}</span>
         </div>
       </div>
 
       <!-- Card Footer -->
-      <div class="p-3 bg-gray-50 border-t flex justify-end gap-2">
+      <div class="p-3 bg-gray-50 border-t flex justify-between items-center gap-2">
         <button 
-          (click)="openEditModal(committee)"
-          class="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
-          Sửa thành viên
-        </button>
-        <button 
-          (click)="openStudentModal(committee)" 
-          class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition flex items-center gap-1">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          *ngIf="getStudentCountForCommittee(committee.id) > 0"
+          (click)="openViewStudentsModal(committee)"
+          class="text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
           </svg>
-          Gán sinh viên
+          Danh sách SV
         </button>
+        <div class="flex items-center gap-1.5 ml-auto">
+          <button 
+            (click)="openEditModal(committee)"
+            class="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
+            Sửa thành viên
+          </button>
+          <button 
+            (click)="openStudentModal(committee)" 
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            Gán SV
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -329,12 +341,17 @@
 
   <!-- Assign Student Modal -->
   <div *ngIf="isStudentModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[5000] p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="bg-white rounded-xl shadow-xl w-full md:max-w-5xl lg:max-w-6xl overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Header -->
       <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
         <div>
-          <h2 class="text-lg font-bold text-gray-800">Gán Sinh Viên Vào Hội Đồng</h2>
-          <p class="text-xs text-gray-500 mt-0.5">Hội đồng: {{ selectedCommittee?.name }}</p>
+          <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#00429D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            Phân công Sinh Viên Vào Hội Đồng bảo vệ
+          </h2>
+          <p class="text-xs text-gray-500 mt-0.5">Đang cấu hình hội đồng: <strong class="text-[#00429D]">{{ selectedCommittee?.name }}</strong></p>
         </div>
         <button (click)="closeStudentModal()" class="text-gray-400 hover:text-gray-600 transition">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
@@ -343,59 +360,181 @@
         </button>
       </div>
       
-      <!-- Search & Filters -->
-      <div class="p-4 bg-gray-50/50 border-b flex items-center">
-        <div class="relative w-full">
-          <input 
-            type="text" 
-            [(ngModel)]="studentsSearchText" 
-            (input)="filterStudents()"
-            placeholder="Tìm kiếm theo Tên, MSSV hoặc Lớp..." 
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+      <!-- Main Content Split Layout -->
+      <div class="flex flex-col md:flex-row flex-grow overflow-hidden max-h-[65vh]">
+        
+        <!-- LEFT COLUMN: Available students list for selection -->
+        <div class="w-full md:w-3/5 flex flex-col border-r border-gray-200">
+          <!-- Search Bar specific to Left List -->
+          <div class="p-3 bg-gray-50/50 border-b flex items-center">
+            <div class="relative w-full">
+              <input 
+                type="text" 
+                [(ngModel)]="studentsSearchText" 
+                (input)="filterStudents()"
+                placeholder="Tìm kiếm nhanh sinh viên theo tên, mã sinh viên hoặc lớp..." 
+                class="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-xs bg-white">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="p-4 overflow-y-auto flex-grow min-h-[300px]">
+            <div *ngIf="filteredStudents.length === 0" class="text-center py-10 text-gray-500 italic text-xs">
+              Không tìm thấy sinh viên nào khớp với từ khóa tìm kiếm.
+            </div>
+            
+            <table *ngIf="filteredStudents.length > 0" class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 uppercase tracking-wider text-[10px] font-bold">
+                  <th class="p-2.5 border-b text-center w-12">Chọn</th>
+                  <th class="p-2.5 border-b">Họ và tên</th>
+                  <th class="p-2.5 border-b text-center">MSSV</th>
+                  <th class="p-2.5 border-b text-center">Lớp</th>
+                  <th class="p-2.5 border-b">Hội đồng hiện tại</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr *ngFor="let student of filteredStudents" class="hover:bg-gray-50/80 transition duration-150" [ngClass]="{'bg-blue-50/40': isStudentSelected(student.id)}">
+                  <td class="p-2.5 text-center">
+                    <input 
+                      type="checkbox" 
+                      [checked]="isStudentSelected(student.id)"
+                      (change)="toggleStudentSelection(student.id, $event)"
+                      class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer">
+                  </td>
+                  <td class="p-2.5 font-bold text-gray-850">{{ student.full_name }}</td>
+                  <td class="p-2.5 text-center text-gray-600">{{ student.student_code }}</td>
+                  <td class="p-2.5 text-center text-gray-600 font-medium">{{ student.class_name }}</td>
+                  <td class="p-2.5 text-gray-500 text-[11px]">
+                    <span *ngIf="!student.committee_id" class="text-gray-450 italic">Chưa gán</span>
+                    <span *ngIf="student.committee_id && student.committee_id === selectedCommittee?.id" class="text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                      Hội đồng này
+                    </span>
+                    <span *ngIf="getStudentAssignedCommitteeName(student)" class="text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+                      {{ getStudentAssignedCommitteeName(student) }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
+
+        <!-- RIGHT COLUMN: Currently selected students list -->
+        <div class="w-full md:w-2/5 flex flex-col bg-slate-50/50">
+          <div class="p-3 bg-blue-50/60 border-b flex justify-between items-center">
+            <span class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#00429D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Danh sách sinh viên đã chọn ({{ tempAssignedStudentIds.size }})
+            </span>
+            <button 
+              *ngIf="tempAssignedStudentIds.size > 0"
+              (click)="tempAssignedStudentIds.clear()"
+              class="text-[10px] text-red-600 hover:text-red-800 hover:underline font-semibold bg-white border border-red-200 px-2 py-0.5 rounded shadow-sm transition-all duration-150">
+              Xóa tất cả
+            </button>
+          </div>
+
+          <div class="p-4 overflow-y-auto flex-grow space-y-2 max-h-[60vh]">
+            <div *ngIf="tempAssignedStudentIds.size === 0" class="flex flex-col items-center justify-center h-full py-20 text-center text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              <p class="text-xs italic">Chưa chọn sinh viên nào.</p>
+              <p class="text-[10px] text-slate-400 mt-1 max-w-[220px]">Tích chọn sinh viên ở bảng bên trái để thêm nhanh vào danh sách bảo vệ.</p>
+            </div>
+
+            <div *ngFor="let s of getSelectedStudents()" class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all duration-200">
+              <div class="flex-grow min-w-0 pr-2">
+                <p class="text-xs font-bold text-slate-800 truncate">{{ s.full_name }}</p>
+                <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500">
+                  <span class="bg-slate-100 px-1.5 py-0.2 rounded font-medium">{{ s.student_code }}</span>
+                  <span class="bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded font-medium">{{ s.class_name }}</span>
+                </div>
+              </div>
+              <button 
+                (click)="removeSelectedStudent(s.id)"
+                class="w-6 h-6 rounded-full bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-800 flex items-center justify-center transition-colors focus:outline-none shrink-0" 
+                title="Bỏ chọn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 bg-gray-50 border-t flex justify-between items-center">
+        <span class="text-xs text-slate-600 font-semibold">
+          Đang chọn: <strong class="text-[#00429D] text-sm">{{ tempAssignedStudentIds.size }}</strong> sinh viên bảo vệ
+        </span>
+        <div class="flex gap-3">
+          <button (click)="closeStudentModal()" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100 font-semibold text-sm transition">
+            Hủy bỏ
+          </button>
+          <button (click)="saveStudentAssignments()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition shadow-sm">
+            Lưu và Gán hội đồng
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Students Modal -->
+  <div *ngIf="isViewStudentsModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[5000] p-4 animate-fadeIn">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Danh sách Sinh Viên trong Hội Đồng
+          </h2>
+          <p class="text-xs text-gray-500 mt-0.5">Hội đồng: <strong class="text-indigo-700">{{ selectedCommitteeForView?.name }}</strong></p>
+        </div>
+        <button (click)="closeViewStudentsModal()" class="text-gray-400 hover:text-gray-600 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       <!-- Content -->
       <div class="p-6 overflow-y-auto flex-grow">
-        <div *ngIf="filteredStudents.length === 0" class="text-center py-10 text-gray-500 italic">
-          Không tìm thấy sinh viên nào khớp với từ khóa tìm kiếm.
+        <div *ngIf="studentsInCommittee.length === 0" class="text-center py-10 text-gray-500 italic text-sm">
+          Chưa có sinh viên nào được gán vào hội đồng này.
         </div>
-        
-        <table *ngIf="filteredStudents.length > 0" class="w-full text-left border-collapse text-sm">
+
+        <table *ngIf="studentsInCommittee.length > 0" class="w-full text-left border-collapse text-xs">
           <thead>
             <tr class="bg-gray-100 text-gray-700 uppercase tracking-wider text-[11px] font-bold">
-              <th class="p-3 border-b text-center w-12">Chọn</th>
+              <th class="p-3 border-b text-center w-12">STT</th>
               <th class="p-3 border-b">Họ và tên</th>
               <th class="p-3 border-b text-center">MSSV</th>
               <th class="p-3 border-b text-center">Lớp</th>
-              <th class="p-3 border-b">Hội đồng hiện tại</th>
+              <th class="p-3 border-b">GV hướng dẫn</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            <tr *ngFor="let student of filteredStudents" class="hover:bg-gray-50 transition duration-150">
-              <td class="p-3 text-center">
-                <input 
-                  type="checkbox" 
-                  [checked]="isStudentSelected(student.id)"
-                  (change)="toggleStudentSelection(student.id, $event)"
-                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-              </td>
-              <td class="p-3 font-semibold text-gray-800">{{ student.full_name }}</td>
-              <td class="p-3 text-center text-gray-600">{{ student.student_code }}</td>
-              <td class="p-3 text-center text-gray-600">{{ student.class_name }}</td>
-              <td class="p-3 text-gray-500 text-xs">
-                <span *ngIf="!student.committee_id" class="text-gray-400 italic">Chưa gán</span>
-                <span *ngIf="student.committee_id && student.committee_id === selectedCommittee?.id" class="text-indigo-600 font-semibold">
-                  Hội đồng này
-                </span>
-                <span *ngIf="getStudentAssignedCommitteeName(student)" class="text-amber-600 font-medium">
-                  {{ getStudentAssignedCommitteeName(student) }}
-                </span>
+            <tr *ngFor="let student of studentsInCommittee; let i = index" class="hover:bg-gray-50 transition duration-150">
+              <td class="p-3 text-center text-gray-500 font-medium">{{ i + 1 }}</td>
+              <td class="p-3 font-bold text-gray-800 text-sm">{{ student.full_name }}</td>
+              <td class="p-3 text-center text-gray-600 font-medium">{{ student.student_code }}</td>
+              <td class="p-3 text-center text-gray-600 font-medium">{{ student.class_name }}</td>
+              <td class="p-3 text-gray-700 font-bold">
+                {{ student.gvhd_name ? student.gvhd_name : 'Chưa phân công' }}
               </td>
             </tr>
           </tbody>
@@ -404,17 +543,12 @@
 
       <!-- Footer -->
       <div class="px-6 py-4 bg-gray-50 border-t flex justify-between items-center">
-        <span class="text-xs text-gray-500 font-medium">
-          Đã chọn <strong class="text-indigo-600">{{ tempAssignedStudentIds.size }}</strong> sinh viên
+        <span class="text-xs text-slate-650 font-semibold">
+          Tổng cộng: <strong class="text-indigo-600 text-sm">{{ studentsInCommittee.length }}</strong> sinh viên
         </span>
-        <div class="flex gap-3">
-          <button (click)="closeStudentModal()" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100 font-semibold text-sm transition">
-            Đóng
-          </button>
-          <button (click)="saveStudentAssignments()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition">
-            Lưu danh sách
-          </button>
-        </div>
+        <button (click)="closeViewStudentsModal()" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 font-semibold text-sm transition shadow-sm">
+          Đóng
+        </button>
       </div>
     </div>
   </div>
