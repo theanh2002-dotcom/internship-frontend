@@ -24,11 +24,10 @@ export class RegisterComponent implements OnInit {
    * Danh sách role cho dropdown
    */
   roles: { value: RegisterRequest['role']; label: string }[] = [
-    { value: 'STUDENT', label: 'Sinh viên' },
+    { value: 'ADMIN', label: 'Quản trị viên' },
     { value: 'GVHD', label: 'Giảng viên Hướng dẫn' },
     { value: 'LDKBM', label: 'Lãnh đạo Khoa / Bộ môn' },
-    { value: 'COMPANY_SUPERVISOR', label: 'Người hướng dẫn Doanh nghiệp' },
-    { value: 'ADMIN', label: 'Quản trị viên' },
+    { value: 'COMPANY_SUPERVISOR', label: 'Người hướng dẫn Doanh nghiệp' }
   ];
 
   facultyId: number | null = null;
