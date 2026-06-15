@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { SurveyService } from '../../../core/services/survey.service';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
+import { CampaignService } from '../../../core/services/campaign.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -12,6 +13,9 @@ export class SurveyStudentComponent implements OnInit {
   isLoading = true;
   studentCampaignId: number | null = null;
   isSubmitted = false;
+  isUnassigned = false;
+  isLocked = false;
+  lockReason = '';
 
   generalSatisfaction = {
     sat_gvhd: null as number | null,
@@ -51,6 +55,7 @@ export class SurveyStudentComponent implements OnInit {
   constructor(
     private surveyService: SurveyService,
     private studentCampaignService: StudentCampaignService,
+    private campaignService: CampaignService,
     private router: Router
   ) {}
 
@@ -63,17 +68,53 @@ export class SurveyStudentComponent implements OnInit {
       next: (res) => {
         const campaigns = Array.isArray(res) ? res : (res.data || res.payload || []);
         if (campaigns.length > 0) {
-          this.studentCampaignId = campaigns[0].id;
+          const campaign = campaigns[0];
+          this.studentCampaignId = campaign.id;
           if (this.studentCampaignId) {
-            this.loadExistingSurvey();
+            // Check campaign timeline first
+            this.campaignService.getById(campaign.campaign_id).subscribe({
+              next: (camp) => {
+                const now = new Date();
+                const parseDate = (dStr: any) => {
+                  if (!dStr) return null;
+                  const formatted = dStr.replace(' ', 'T');
+                  return new Date(formatted);
+                };
+
+                const gConfig = campaign.group_config || null;
+                const activeSource = gConfig ? gConfig : camp;
+
+                const tttn06Start = parseDate(activeSource.tttn06_start_date);
+                const tttn06Deadline = parseDate(activeSource.tttn06_deadline);
+
+                if (tttn06Start && now < tttn06Start) {
+                  this.isLocked = true;
+                  this.lockReason = `Chưa đến thời gian thực hiện khảo sát phản hồi thực tập (TTTN-08b). Thời gian mở: ${activeSource.tttn06_start_date}`;
+                  this.isLoading = false;
+                } else if (tttn06Deadline && now > tttn06Deadline) {
+                  this.isLocked = true;
+                  this.lockReason = `Đã quá hạn thực hiện khảo sát phản hồi thực tập (TTTN-08b) cho đợt này (Hạn chót: ${activeSource.tttn06_deadline})`;
+                  this.isLoading = false;
+                } else {
+                  this.loadExistingSurvey();
+                }
+              },
+              error: () => {
+                // Fail-safe
+                this.loadExistingSurvey();
+              }
+            });
           } else {
+            this.isUnassigned = true;
             this.isLoading = false;
           }
         } else {
+          this.isUnassigned = true;
           this.isLoading = false;
         }
       },
       error: () => {
+        this.isUnassigned = true;
         this.isLoading = false;
       }
     });

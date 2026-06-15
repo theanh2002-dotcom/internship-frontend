@@ -1,7 +1,17 @@
 <div class="max-w-6xl mx-auto space-y-6">
   <app-dashboard-loading *ngIf="isLoading" message="Đang tải dữ liệu..." icon="autorenew"></app-dashboard-loading>
   
-  <ng-container *ngIf="!isLoading">
+  <div *ngIf="!isLoading && !hasCurrentCampaign" class="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center">
+    <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-blue-50 text-[#00429D] flex items-center justify-center">
+      <span class="material-symbols-outlined text-3xl">event_busy</span>
+    </div>
+    <h2 class="text-xl font-bold text-slate-900 mb-2">Chưa có đợt thực tập hiện tại</h2>
+    <p class="text-sm text-slate-500 max-w-xl mx-auto">
+      Tài khoản sinh viên đã được xác thực, nhưng bạn chưa nằm trong danh sách sinh viên của đợt thực tập đang mở hoặc đợt thực tập cũ đã kết thúc.
+    </p>
+  </div>
+
+  <ng-container *ngIf="!isLoading && hasCurrentCampaign">
   <!-- Header Welcome -->
   <app-welcome-header
     [title]="'Xin chào, ' + studentName + '! 👋'"

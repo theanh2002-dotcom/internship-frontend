@@ -1,5 +1,7 @@
 export interface LoginRequest {
   email: string;
+  code?: string;
+  account_type?: 'STUDENT' | 'STAFF';
   password: string;
 }
 

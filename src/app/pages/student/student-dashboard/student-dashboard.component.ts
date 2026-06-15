@@ -15,6 +15,7 @@ import { SurveyService } from '../../../core/services/survey.service';
 })
 export class StudentDashboardComponent implements OnInit {
   isLoading = true;
+  hasCurrentCampaign = true;
   studentName = '';
   studentId = '';
   
@@ -84,6 +85,7 @@ export class StudentDashboardComponent implements OnInit {
       next: (res) => {
         const campaigns = Array.isArray(res) ? res : (res.data || res.payload || []);
         if (campaigns.length > 0) {
+          this.hasCurrentCampaign = true;
           const campaign = campaigns[0];
           this.studentName = campaign.full_name;
           this.studentId = campaign.student_code;
@@ -218,10 +220,12 @@ export class StudentDashboardComponent implements OnInit {
             }
           });
         } else {
+          this.hasCurrentCampaign = false;
           this.isLoading = false;
         }
       },
       error: () => {
+        this.hasCurrentCampaign = false;
         this.isLoading = false;
       }
     });

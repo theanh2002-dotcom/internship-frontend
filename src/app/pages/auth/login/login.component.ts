@@ -11,19 +11,22 @@ import { AuthService } from '../../../core/services/auth.service';
 export class LoginComponent {
   email = '';
   password = '';
+  accountType: 'STUDENT' | 'STAFF' = 'STUDENT';
   showPassword = false;
   isLoading = false;
     constructor(private toastService: ToastService, private authService: AuthService, private router: Router) {}
 
   onSubmit() {
     if (!this.email || !this.password) {
-      this.toastService.error('Vui lòng nhập đầy đủ email và mật khẩu');
+      this.toastService.error('Vui lòng nhập đầy đủ email/MSSV và mật khẩu');
       return;
     }
 
     this.isLoading = true;
     this.authService.login({
-      email: this.email,
+      email: this.accountType === 'STAFF' ? this.email : '',
+      code: this.accountType === 'STUDENT' ? this.getStudentLoginCode() : undefined,
+      account_type: this.accountType,
       password: this.password,
     }).subscribe({
       next: () => {
@@ -38,5 +41,9 @@ export class LoginComponent {
         this.toastService.error(err?.message || err?.error?.message || 'Tài khoản hoặc mật khẩu không chính xác.');
       }
     });
+  }
+
+  private getStudentLoginCode(): string {
+    return this.email.trim().toUpperCase();
   }
 }
