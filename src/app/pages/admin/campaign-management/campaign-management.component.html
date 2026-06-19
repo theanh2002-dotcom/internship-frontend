@@ -196,55 +196,7 @@
       </div>
     </div>
 
-    <!-- Chọn các Khoa áp dụng -->
-    <div class="flex flex-col gap-1.5 pt-3 border-t border-slate-200">
-      <div class="flex items-center justify-between">
-        <label class="font-label-md text-[13px] text-slate-600 font-semibold flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px] text-[#00429D]">apartment</span>
-          Chọn các Khoa áp dụng <span class="text-red-500">*</span>
-        </label>
-        <div class="flex items-center gap-2 text-xs text-[#00429D] font-medium">
-          <button type="button" class="hover:underline focus:outline-none" (click)="selectAllDepartments()">Chọn tất cả</button>
-          <span class="text-slate-300">|</span>
-          <button type="button" class="hover:underline focus:outline-none" (click)="deselectAllDepartments()">Bỏ chọn tất cả</button>
-        </div>
-      </div>
-      <p class="text-[11px] text-slate-500 mb-1">Chọn ít nhất một Khoa sẽ tham gia đợt thực tập này.</p>
-      
-      <!-- Selected tags list -->
-      <div class="flex flex-wrap gap-1.5 mt-1 mb-1" *ngIf="selectedDepartmentIds.length > 0">
-        <span *ngFor="let deptId of selectedDepartmentIds" class="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold rounded-full shadow-sm">
-          {{ getDepartmentName(deptId) }}
-          <button type="button" class="w-4 h-4 rounded-full hover:bg-blue-100 hover:text-blue-900 inline-flex items-center justify-center focus:outline-none" (click)="toggleDepartmentSelection(deptId)">
-            <span class="material-symbols-outlined text-[12px] font-bold">close</span>
-          </button>
-        </span>
-      </div>
 
-      <!-- Quick Search Bar -->
-      <div class="relative mt-1">
-        <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[16px]">search</span>
-        <input type="text" [(ngModel)]="deptSearchQuery" placeholder="Tìm kiếm nhanh khoa theo tên hoặc mã..." class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] transition-shadow"/>
-      </div>
-      
-      <!-- Departments list -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-[140px] overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded">
-        <label *ngFor="let dept of getFilteredDepartments()" class="flex items-center gap-2 px-2 py-1.5 bg-white hover:bg-slate-100 rounded border border-slate-200 cursor-pointer transition-colors shadow-sm">
-          <input type="checkbox" 
-                 [checked]="isDepartmentSelected(dept.id)" 
-                 (change)="toggleDepartmentSelection(dept.id)"
-                 class="w-4 h-4 text-[#00429D] border-slate-300 rounded focus:ring-[#00429D]"/>
-          <span class="text-[13px] text-slate-700 font-medium">{{ dept.name }} ({{ dept.code }})</span>
-        </label>
-        <div *ngIf="getFilteredDepartments().length === 0" class="col-span-2 text-center text-xs text-slate-400 py-6">
-          Không tìm thấy khoa nào khớp với từ khóa
-        </div>
-      </div>
-      
-      <div *ngIf="selectedDepartmentIds.length === 0" class="text-xs text-amber-600 mt-1 flex items-center gap-1">
-        <span class="material-symbols-outlined text-[14px]">warning</span> Cần chọn ít nhất 1 khoa
-      </div>
-    </div>
 
     <!-- CẤU HÌNH TIMELINE CHI TIẾT -->
     <div class="border-t border-slate-200 pt-4 mt-2">

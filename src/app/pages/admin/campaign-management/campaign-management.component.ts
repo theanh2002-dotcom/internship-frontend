@@ -262,10 +262,7 @@ export class CampaignManagementComponent implements OnInit {
       this.toastService.error('Ngày kết thúc phải sau ngày bắt đầu');
       return;
     }
-    if (this.selectedDepartmentIds.length === 0) {
-      this.toastService.error('Vui lòng chọn ít nhất 1 Khoa áp dụng');
-      return;
-    }
+
 
     const request: CampaignRequest = {
       code: this.formCode.trim(),

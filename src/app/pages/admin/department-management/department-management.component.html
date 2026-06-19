@@ -148,6 +148,10 @@
               </td>
               <td class="py-3 px-5">
                 <div class="flex items-center justify-center gap-1">
+                  <button class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="Thêm Giảng viên"
+                          (click)="openAddTeacherModal(sub)">
+                    <span class="material-symbols-outlined text-[18px]">person_add</span>
+                  </button>
                   <button class="p-1.5 text-slate-400 hover:text-[#00429D] hover:bg-blue-50 rounded transition-colors" title="Chỉnh sửa"
                           (click)="openEditModal(sub, 'sub')">
                     <span class="material-symbols-outlined text-[18px]">edit</span>
@@ -197,6 +201,43 @@
       <input [(ngModel)]="formName"
              class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
              [placeholder]="modalType === 'faculty' ? 'VD: Khoa Công nghệ Thông tin' : 'VD: Bộ môn Công nghệ Phần mềm'" type="text"/>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Thêm Giảng viên -->
+<app-modal [isOpen]="isTeacherModalOpen"
+           title="Thêm Giảng viên"
+           saveText="Lưu"
+           (close)="closeTeacherModal()"
+           (save)="saveTeacher()">
+  <div class="space-y-4">
+    
+    <div *ngIf="teacherSubDept" class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 rounded text-[13px] flex items-center gap-2">
+      <span class="material-symbols-outlined text-[16px]">account_balance</span>
+      Bộ môn: <strong>{{ teacherSubDept.name }}</strong>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Email <span class="text-red-500">*</span></label>
+      <input [(ngModel)]="teacherEmail"
+             class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
+             placeholder="VD: gv.nguyenvana@huce.edu.vn" type="email"/>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Họ và tên <span class="text-red-500">*</span></label>
+      <input [(ngModel)]="teacherFullName"
+             class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
+             placeholder="VD: Nguyễn Văn A" type="text"/>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Mật khẩu</label>
+      <input [(ngModel)]="teacherPassword"
+             class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
+             placeholder="Nhập mật khẩu cho giảng viên" type="password"/>
+      <span class="text-[11px] text-slate-500 italic">Nếu để trống, mật khẩu mặc định sẽ là <strong>123456</strong>.</span>
     </div>
   </div>
 </app-modal>

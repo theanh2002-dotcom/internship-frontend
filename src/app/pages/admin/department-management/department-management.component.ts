@@ -2,6 +2,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { DepartmentService, DepartmentRequest } from '../../../core/services/department.service';
 import { DepartmentResponse, PaginationRequest } from '../../../core/models/base.model';
+import { UserService } from '../../../core/services/user.service';
 
 @Component({
   selector: 'app-department-management',
@@ -29,7 +30,11 @@ export class DepartmentManagementComponent implements OnInit {
   formCode = '';
   formName = '';
 
-  constructor(private toastService: ToastService, private departmentService: DepartmentService) {}
+  constructor(
+    private toastService: ToastService, 
+    private departmentService: DepartmentService,
+    private userService: UserService
+  ) {}
 
   ngOnInit(): void {
     this.loadFaculties();
@@ -206,6 +211,60 @@ export class DepartmentManagementComponent implements OnInit {
         }
       },
       error: (err) => this.showError(err?.message || 'Đổi trạng thái thất bại')
+    });
+  }
+
+  // ==================== TEACHER MODAL ====================
+
+  isTeacherModalOpen = false;
+  teacherEmail = '';
+  teacherFullName = '';
+  teacherPassword = '';
+  teacherSubDept: DepartmentResponse | null = null;
+
+  openAddTeacherModal(sub: DepartmentResponse): void {
+    this.teacherSubDept = sub;
+    this.teacherEmail = '';
+    this.teacherFullName = '';
+    this.teacherPassword = '';
+    this.isTeacherModalOpen = true;
+  }
+
+  closeTeacherModal(): void {
+    this.isTeacherModalOpen = false;
+    this.teacherSubDept = null;
+  }
+
+  saveTeacher(): void {
+    if (!this.teacherEmail.trim()) {
+      this.toastService.error('Vui lòng nhập Email');
+      return;
+    }
+    if (!this.teacherFullName.trim()) {
+      this.toastService.error('Vui lòng nhập Họ và tên');
+      return;
+    }
+    const finalPassword = this.teacherPassword.trim() || '123456';
+
+    const payload = {
+      email: this.teacherEmail.trim(),
+      password: finalPassword,
+      full_name: this.teacherFullName.trim(),
+      role: 'GVHD',
+      department_id: this.teacherSubDept!.id
+    };
+
+    this.isLoading = true;
+    this.userService.create(payload).subscribe({
+      next: () => {
+        this.toastService.success('Thêm giảng viên thành công');
+        this.closeTeacherModal();
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.toastService.error(err?.message || 'Thêm giảng viên thất bại');
+        this.isLoading = false;
+      }
     });
   }
 
