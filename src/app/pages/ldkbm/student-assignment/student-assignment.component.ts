@@ -163,8 +163,8 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   saveManualStudent(): void {
-    if (!this.formEmail) {
-      this.showError('Email sinh viên không được để trống.');
+    if (!this.formStudentCode || !this.formFullName) {
+      this.showError('Mã sinh viên và Họ tên không được để trống.');
       return;
     }
 
@@ -247,7 +247,7 @@ export class StudentAssignmentComponent implements OnInit {
         }
 
         if (students.length === 0) {
-          this.showError('Không tìm thấy dữ liệu hợp lệ trong file Excel. File cần có cột "Mã SV", "Họ tên" và "Email".');
+          this.showError('Không tìm thấy dữ liệu hợp lệ trong file Excel. File cần có cột "Mã SV", "Họ tên" và "Lớp".');
           return;
         }
 
@@ -280,8 +280,9 @@ export class StudentAssignmentComponent implements OnInit {
 
   downloadTemplate(): void {
     const data = [
-      { 'Mã SV': '000000', 'Họ tên': 'Nguyễn Văn A', 'Lớp': '64PM1', 'Email': '000000@huce.edu.vn' },
-      { 'Mã SV': '000001', 'Họ tên': 'Trần Thị B', 'Lớp': '64PM2', 'Email': '000001@huce.edu.vn' }
+      { 'Mã SV': '1501665', 'Họ tên': 'Lại Thế Anh', 'Lớp': '65PM4' },
+      { 'Mã SV': '0002267', 'Họ tên': 'Mai Văn Cường', 'Lớp': '67CNPM' },
+      { 'Mã SV': '85365', 'Họ tên': 'Vũ Huy Hoàng', 'Lớp': '65PM4' }
     ];
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();

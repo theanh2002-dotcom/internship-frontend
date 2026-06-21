@@ -151,21 +151,35 @@ export class CloRubricConfigComponent implements OnInit {
     return this.totalStageWeight === 100;
   }
 
-  applyPreset(clo: CloItem, presetType: 'scale-4' | 'scale-10'): void {
-    if (presetType === 'scale-4') {
-      clo.rubrics = [
-        { score_level: 1, description: 'Yếu - Chưa đạt chuẩn đầu ra hoặc cần nhiều hướng dẫn.' },
-        { score_level: 2, description: 'Trung bình - Đạt chuẩn đầu ra ở mức cơ bản, hoàn thành công việc được giao.' },
-        { score_level: 3, description: 'Khá - Áp dụng tốt chuẩn đầu ra, làm việc độc lập tương đối ổn định.' },
-        { score_level: 4, description: 'Tốt - Vận dụng sáng tạo và xuất sắc chuẩn đầu ra, chủ động giải quyết vấn đề.' }
-      ];
-    } else if (presetType === 'scale-10') {
-      clo.rubrics = [
-        { score_level: 2, description: 'Yếu - Kiến thức và kỹ năng còn nhiều hạn chế, chưa đáp ứng yêu cầu.' },
-        { score_level: 5, description: 'Trung bình - Đáp ứng mức tối thiểu yêu cầu của chuẩn đầu ra.' },
-        { score_level: 8, description: 'Khá/Tốt - Thực hiện tốt công việc, nắm vững chuyên môn.' },
-        { score_level: 10, description: 'Xuất sắc - Năng lực nổi trội, giải quyết công việc xuất sắc và chủ động.' }
-      ];
+  onStage1WeightChange(): void {
+    this.stage2Weight = 100 - (this.stage1Weight || 0);
+  }
+
+  onBetaWeightChange(clo: CloItem): void {
+    clo.company_beta = 100 - (clo.gvhd_beta || 0);
+  }
+
+  setStageWeights(stage1: number): void {
+    this.stage1Weight = stage1;
+    this.stage2Weight = 100 - stage1;
+  }
+
+  setBetaWeights(clo: CloItem, gvhd: number): void {
+    clo.gvhd_beta = gvhd;
+    clo.company_beta = 100 - gvhd;
+  }
+
+  applyPreset(clo: CloItem, presetType: string): void {
+    switch (presetType) {
+      case 'scale-5':
+        clo.rubrics = [
+          { score_level: 0, description: 'Mức 0 (<4): Kém (0.0đ) - Hoàn toàn không đạt yêu cầu chuẩn đầu ra.' },
+          { score_level: 1, description: 'Mức 1 (4 - 5.4): Yếu (4.5đ) - Chưa đạt chuẩn đầu ra hoặc cần nhiều hướng dẫn.' },
+          { score_level: 2, description: 'Mức 2 (5.5 - 6.9): Trung bình (6.0đ) - Đạt chuẩn đầu ra ở mức cơ bản, hoàn thành công việc được giao.' },
+          { score_level: 3, description: 'Mức 3 (7 - 8.4): Khá (7.5đ) - Áp dụng tốt chuẩn đầu ra, làm việc độc lập tương đối ổn định.' },
+          { score_level: 4, description: 'Mức 4 (>=8.5): Tốt/Xuất sắc (9.0đ) - Vận dụng sáng tạo và xuất sắc chuẩn đầu ra, chủ động giải quyết vấn đề.' }
+        ];
+        break;
     }
   }
 

@@ -58,19 +58,73 @@
       </div>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="flex flex-col gap-1">
-        <label class="text-[12px] font-semibold text-slate-650">Chặng 1: GVHD & Doanh nghiệp chấm (%) <span class="text-rose-500">*</span></label>
-        <div class="relative">
-          <input [(ngModel)]="stage1Weight" type="number" min="0" max="100" class="w-full border border-slate-350 rounded-lg px-3 py-2 text-[13px] focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] focus:outline-none" placeholder="VD: 30"/>
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
+    <div class="flex flex-col gap-4 mt-2">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-700 mb-2">
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-sm bg-[#00429D]"></div>
+            Chặng 1: GVHD & ĐVHD chấm
+          </div>
+          <div class="flex items-center gap-1.5 text-slate-500">
+            Chặng 2: Tổ đánh giá
+            <div class="w-3 h-3 rounded-sm bg-slate-300"></div>
+          </div>
         </div>
-      </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-[12px] font-semibold text-slate-650">Chặng 2: Điểm Báo cáo / Hội đồng bảo vệ (%) <span class="text-rose-500">*</span></label>
-        <div class="relative">
-          <input [(ngModel)]="stage2Weight" type="number" min="0" max="100" class="w-full border border-slate-350 rounded-lg px-3 py-2 text-[13px] focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] focus:outline-none" placeholder="VD: 70"/>
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
+
+      <!-- Container cho Split Bar và Tick marks -->
+      <div class="relative w-full pb-5">
+        <!-- Split Bar UI cho Chặng 1 / Chặng 2 -->
+        <div class="relative w-full h-11 bg-slate-100 rounded-xl shadow-inner border border-slate-200 overflow-hidden group z-10">
+          <!-- Phần Fill bên trái (Chặng 1) -->
+          <div class="absolute top-0 left-0 h-full bg-[#00429D]/90 flex items-center justify-center text-white font-bold text-sm transition-all duration-75"
+               [style.width.%]="stage1Weight">
+            <span *ngIf="stage1Weight > 10">{{ stage1Weight }}%</span>
+          </div>
+          
+          <!-- Phần Text bên phải (Chặng 2) -->
+          <div class="absolute top-0 right-0 h-full flex items-center justify-center text-slate-600 font-bold text-sm transition-all duration-75"
+               [style.width.%]="stage2Weight">
+            <span *ngIf="stage2Weight > 10">{{ stage2Weight }}%</span>
+          </div>
+
+          <!-- Handle Divider -->
+          <div class="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_5px_rgba(0,0,0,0.3)] z-10 transition-all duration-75 pointer-events-none"
+               [style.left.%]="stage1Weight">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-7 bg-white border border-slate-300 rounded shadow flex items-center justify-center text-slate-400 group-hover:border-[#00429D] group-hover:text-[#00429D] transition-colors">
+              <span class="material-symbols-outlined text-[14px]">drag_indicator</span>
+            </div>
+          </div>
+
+          <!-- Hidden input range cover entire bar -->
+          <input type="range" min="0" max="100" step="1"
+                 [(ngModel)]="stage1Weight" 
+                 (input)="onStage1WeightChange()"
+                 class="absolute top-0 left-0 w-full h-full opacity-0 cursor-ew-resize z-20 m-0 p-0" />
+        </div>
+
+        <!-- Clickable Tick Marks (Mốc trên thanh) -->
+        <div class="absolute top-11 left-0 w-full h-4 z-0 mt-0.5 px-0 pointer-events-none">
+           <div class="relative w-full h-full">
+               <button (click)="setStageWeights(30)" class="absolute left-[30%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                   <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                   <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">30</span>
+               </button>
+               <button (click)="setStageWeights(40)" class="absolute left-[40%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                   <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                   <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">40</span>
+               </button>
+               <button (click)="setStageWeights(50)" class="absolute left-[50%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                   <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                   <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">50</span>
+               </button>
+               <button (click)="setStageWeights(60)" class="absolute left-[60%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                   <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                   <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">60</span>
+               </button>
+               <button (click)="setStageWeights(70)" class="absolute left-[70%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                   <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                   <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">70</span>
+               </button>
+           </div>
         </div>
       </div>
     </div>
@@ -150,59 +204,101 @@
           </span>
         </div>
 
-        <!-- Các trường chung CLO -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="flex flex-col gap-1 md:col-span-1">
-            <label class="text-[11px] font-bold text-slate-600">Mã chuẩn đầu ra (CLO) <span class="text-rose-500">*</span></label>
+        <!-- Thông tin cơ bản & Trọng số -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-4">
+          <!-- Mã CLO -->
+          <div class="flex flex-col gap-1.5 lg:col-span-3">
+            <label class="text-[11px] font-bold text-slate-650">Mã CLO <span class="text-rose-500">*</span></label>
             <input [(ngModel)]="activeClo.clo_code" 
-                   class="w-full border border-slate-350 rounded-lg px-3 py-2 text-[13px] font-semibold text-slate-800 focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] focus:outline-none" 
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-[13px] font-semibold text-slate-800 focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] focus:outline-none shadow-sm transition-shadow" 
                    placeholder="VD: CLO1"/>
           </div>
           
-          <div class="flex flex-col gap-1 md:col-span-1">
-            <label class="text-[11px] font-bold text-slate-600">Tỷ trọng Alpha (%) <span class="text-rose-500">*</span></label>
-            <div class="relative">
+          <!-- Alpha -->
+          <div class="flex flex-col gap-1.5 lg:col-span-3">
+            <label class="text-[11px] font-bold text-slate-650">Tỷ trọng Alpha <span class="text-rose-500">*</span></label>
+            <div class="relative shadow-sm rounded-lg">
               <input [(ngModel)]="activeClo.alpha_weight" 
                      type="number" 
-                     class="w-full border border-slate-350 rounded-lg pl-3 pr-8 py-2 text-[13px] font-bold text-slate-800 focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] focus:outline-none" 
+                     class="w-full border border-slate-300 rounded-lg pl-3 pr-8 py-2 text-[13px] font-bold text-slate-800 focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] focus:outline-none transition-shadow" 
                      placeholder="VD: 30"/>
-              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[12px]">%</span>
             </div>
           </div>
 
-          <div class="flex flex-col gap-1 md:col-span-1">
-            <label class="text-[11px] font-bold text-slate-650">Trọng số đánh giá (Beta)</label>
-            <span class="px-2.5 py-2.5 rounded border text-[11px] text-center font-bold inline-block leading-none" 
-                  [ngClass]="(activeClo.gvhd_beta || 0) + (activeClo.company_beta || 0) === 100 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'">
-              Tổng Beta: {{ (activeClo.gvhd_beta || 0) + (activeClo.company_beta || 0) }}% / 100%
-            </span>
+          <!-- Beta -->
+          <div class="flex flex-col gap-1.5 lg:col-span-6">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold text-slate-650">Trọng số đánh giá (Beta) <span class="text-rose-500">*</span></label>
+              <div class="text-[9px] font-semibold flex items-center gap-1.5 uppercase tracking-wide">
+                <span class="text-[#00429D]">GVHD</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-slate-600">ĐVHD</span>
+              </div>
+            </div>
+            
+            <div class="relative w-full pb-4 mt-0.5">
+              <!-- Split Bar UI cho GVHD / ĐVHD -->
+              <div class="relative w-full h-9 bg-slate-100 rounded-lg shadow-inner border border-slate-200 overflow-hidden group z-10">
+                <!-- Phần Fill bên trái (GVHD) -->
+                <div class="absolute top-0 left-0 h-full bg-[#00429D]/85 flex items-center justify-center text-white font-bold text-[12px] transition-all duration-75"
+                     [style.width.%]="activeClo.gvhd_beta || 0">
+                  <span *ngIf="(activeClo.gvhd_beta || 0) > 10">{{ activeClo.gvhd_beta || 0 }}%</span>
+                </div>
+                
+                <!-- Phần Fill bên phải (Doanh nghiệp) -->
+                <div class="absolute top-0 right-0 h-full flex items-center justify-center text-slate-600 font-bold text-[12px] transition-all duration-75"
+                     [style.width.%]="activeClo.company_beta || 0">
+                  <span *ngIf="(activeClo.company_beta || 0) > 10">{{ activeClo.company_beta || 0 }}%</span>
+                </div>
+
+                <!-- Handle Divider -->
+                <div class="absolute top-0 bottom-0 w-[1px] bg-white shadow z-10 transition-all duration-75 pointer-events-none"
+                     [style.left.%]="activeClo.gvhd_beta || 0">
+                  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-6 bg-white border border-slate-300 rounded shadow-sm flex items-center justify-center text-slate-400 group-hover:border-[#00429D] group-hover:text-[#00429D] transition-colors">
+                    <span class="material-symbols-outlined text-[12px]">drag_indicator</span>
+                  </div>
+                </div>
+
+                <!-- Hidden input range -->
+                <input type="range" min="0" max="100" step="1"
+                       [(ngModel)]="activeClo.gvhd_beta"
+                       (input)="onBetaWeightChange(activeClo)"
+                       class="absolute top-0 left-0 w-full h-full opacity-0 cursor-ew-resize z-20 m-0 p-0" />
+              </div>
+
+              <!-- Clickable Tick Marks -->
+              <div class="absolute top-9 left-0 w-full h-4 z-0 mt-0.5 px-0 pointer-events-none">
+                 <div class="relative w-full h-full">
+                     <button (click)="setBetaWeights(activeClo, 30)" class="absolute left-[30%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                         <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                         <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">30</span>
+                     </button>
+                     <button (click)="setBetaWeights(activeClo, 50)" class="absolute left-[50%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                         <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                         <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">50</span>
+                     </button>
+                     <button (click)="setBetaWeights(activeClo, 70)" class="absolute left-[70%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                         <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                         <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">70</span>
+                     </button>
+                     <button (click)="setBetaWeights(activeClo, 100)" class="absolute left-[100%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                         <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                         <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">100</span>
+                     </button>
+                 </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="flex flex-col gap-1 md:col-span-2">
-            <label class="text-[11px] font-bold text-slate-600">Mô tả chuẩn đầu ra</label>
-            <input [(ngModel)]="activeClo.description" 
-                   class="w-full border border-slate-350 rounded-lg px-3 py-2 text-[13px] focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] focus:outline-none" 
-                     placeholder="Nhập nội dung mô tả chuẩn đầu ra..."/>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 md:col-span-1">
-            <div class="flex flex-col gap-1">
-              <label class="text-[10px] font-bold text-slate-550">GVHD chấm (%)</label>
-              <div class="relative">
-                <input [(ngModel)]="activeClo.gvhd_beta" type="number" min="0" max="100" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 text-[12px] text-center font-bold text-slate-700 focus:border-[#00429D] focus:outline-none" />
-                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]">%</span>
-              </div>
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-[10px] font-bold text-slate-550">Doanh nghiệp (%)</label>
-              <div class="relative">
-                <input [(ngModel)]="activeClo.company_beta" type="number" min="0" max="100" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 text-[12px] text-center font-bold text-slate-700 focus:border-[#00429D] focus:outline-none" />
-                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]">%</span>
-              </div>
-            </div>
-          </div>
+        <!-- Mô tả -->
+        <div class="flex flex-col gap-1.5 w-full mb-6">
+          <label class="text-[11px] font-bold text-slate-650">Mô tả chuẩn đầu ra</label>
+          <textarea [(ngModel)]="activeClo.description" 
+                    rows="2"
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-[13px] text-slate-700 focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] focus:outline-none resize-none shadow-sm transition-shadow" 
+                    placeholder="Nhập nội dung mô tả chuẩn đầu ra..."></textarea>
         </div>
 
         <!-- Rubrics Section -->
@@ -216,11 +312,9 @@
             <!-- Mẫu nhanh -->
             <div class="flex items-center gap-1.5">
               <span class="text-[11px] text-slate-500 font-medium">Mẫu nhanh:</span>
-              <button (click)="applyPreset(activeClo, 'scale-4')" class="border border-slate-300 bg-white text-slate-750 px-2.5 py-1 rounded text-[11px] hover:border-[#00429D] hover:text-[#00429D] transition-colors cursor-pointer font-bold shadow-sm">
-                Thang 4 mức (1-4)
-              </button>
-              <button (click)="applyPreset(activeClo, 'scale-10')" class="border border-slate-300 bg-white text-slate-750 px-2.5 py-1 rounded text-[11px] hover:border-[#00429D] hover:text-[#00429D] transition-colors cursor-pointer font-bold shadow-sm">
-                Thang 10 mức (2-5-8-10)
+              <button (click)="applyPreset(activeClo, 'scale-5')" class="border border-[#00429D] bg-blue-50 text-[#00429D] px-3 py-1.5 rounded text-[11px] hover:bg-[#00429D] hover:text-white transition-colors cursor-pointer font-bold shadow-sm flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+                Thang 5 mức chuẩn (0-4)
               </button>
             </div>
           </div>

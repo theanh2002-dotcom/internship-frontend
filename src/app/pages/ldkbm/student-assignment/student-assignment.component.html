@@ -2,7 +2,6 @@
 <section class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
   <div>
     <h2 class="font-headline-xl text-[24px] font-bold text-slate-800">Danh sách Sinh viên</h2>
-    <p class="font-body-md text-[14px] text-slate-500 mt-1">Import và phân công Giảng viên hướng dẫn cho sinh viên thuộc khoa.</p>
   </div>
   <div class="flex items-center gap-3">
     <!-- Dropdown Đợt thực tập -->
@@ -63,7 +62,7 @@
   <div *ngIf="!isLoading && students.length === 0" class="flex flex-col items-center justify-center py-16 px-4">
     <span class="material-symbols-outlined text-[64px] text-slate-300 mb-4">group_off</span>
     <p class="text-slate-500 font-medium text-lg">Chưa có sinh viên nào trong đợt này</p>
-    <p class="text-slate-400 text-sm mt-1">Hãy thêm sinh viên bằng tay hoặc Import Excel (Cột: Mã SV, Họ tên, Lớp, Email).</p>
+    <p class="text-slate-400 text-sm mt-1">Hãy thêm sinh viên bằng tay hoặc Import Excel (Cột: Mã SV, Họ tên, Lớp).</p>
   </div>
 
   <div *ngIf="students.length > 0" class="overflow-x-auto">
