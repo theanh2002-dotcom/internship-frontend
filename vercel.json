@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://140.245.57.77/:path*"
+      "destination": "https://internship-service.mooo.com/:path*"
     },
     {
       "source": "/(.*)",
