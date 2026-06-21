@@ -232,22 +232,77 @@ export class StudentAssignmentComponent implements OnInit {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json<any>(worksheet);
+
+        // Đọc raw array (header: 1) để xử lý merge cell header
+        const rawRows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        if (rawRows.length < 2) {
+          this.showError('File Excel trống hoặc không có dữ liệu.');
+          return;
+        }
+
+        // Xác định header: tìm vị trí cột dựa trên header row
+        const headerRow = rawRows[0].map((h: any) => String(h || '').trim());
+
+        // Tìm index cột theo tên header (hỗ trợ nhiều format)
+        const mssvIdx = headerRow.findIndex((h: string) => h === 'MSSV' || h === 'Mã SV');
+        const lopIdx = headerRow.findIndex((h: string) => h === 'Lớp');
+        const hoVaTenIdx = headerRow.findIndex((h: string) => h === 'Họ và tên' || h === 'Họ tên');
+
+        // Format merge cell: "Họ và tên" merge 2 cột → dữ liệu nằm ở cột B (họ đệm) và C (tên)
+        // Format đơn giản: "Họ tên" hoặc "Họ và tên" 1 cột
+        const isMergedFormat = hoVaTenIdx >= 0 && (
+          // Kiểm tra nếu cột tiếp theo sau "Họ và tên" là trống (merge cell)
+          headerRow[hoVaTenIdx + 1] === '' || headerRow[hoVaTenIdx + 1] === undefined ||
+          // Hoặc cột tiếp theo là "Lớp" nhưng cách 2 vị trí
+          lopIdx === hoVaTenIdx + 2
+        );
 
         const students: StudentItem[] = [];
-        for (const row of json) {
-          if (row['Mã SV'] && row['Họ tên']) {
+
+        for (let i = 1; i < rawRows.length; i++) {
+          const row = rawRows[i];
+          if (!row || row.length === 0) continue;
+
+          let studentCode = '';
+          let fullName = '';
+          let className = '';
+
+          if (mssvIdx >= 0) {
+            // Có header rõ ràng → đọc theo index
+            studentCode = String(row[mssvIdx] || '').trim();
+            
+            if (isMergedFormat && hoVaTenIdx >= 0) {
+              // Format merge: họ đệm ở cột hoVaTenIdx, tên ở cột hoVaTenIdx + 1
+              const hoDem = String(row[hoVaTenIdx] || '').trim();
+              const ten = String(row[hoVaTenIdx + 1] || '').trim();
+              fullName = ten ? `${hoDem} ${ten}` : hoDem;
+            } else if (hoVaTenIdx >= 0) {
+              // Format 1 cột họ tên
+              fullName = String(row[hoVaTenIdx] || '').trim();
+            }
+            
+            className = lopIdx >= 0 ? String(row[lopIdx] || '').trim() : '';
+          } else {
+            // Fallback: đọc theo vị trí cột A=MSSV, B=Họ đệm, C=Tên, D=Lớp
+            studentCode = String(row[0] || '').trim();
+            const hoDem = String(row[1] || '').trim();
+            const ten = String(row[2] || '').trim();
+            fullName = ten ? `${hoDem} ${ten}` : hoDem;
+            className = String(row[3] || '').trim();
+          }
+
+          if (studentCode && fullName) {
             students.push({
-              student_code: String(row['Mã SV']).trim(),
-              full_name: String(row['Họ tên']).trim(),
-              class_name: String(row['Lớp'] || '').trim(),
-              email: row['Email'] ? String(row['Email']).trim() : ''
+              student_code: studentCode,
+              full_name: fullName,
+              class_name: className,
+              email: ''
             });
           }
         }
 
         if (students.length === 0) {
-          this.showError('Không tìm thấy dữ liệu hợp lệ trong file Excel. File cần có cột "Mã SV", "Họ tên" và "Lớp".');
+          this.showError('Không tìm thấy dữ liệu hợp lệ trong file Excel. File cần có cột "MSSV", "Họ và tên" và "Lớp".');
           return;
         }
 
@@ -279,12 +334,35 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   downloadTemplate(): void {
-    const data = [
-      { 'Mã SV': '1501665', 'Họ tên': 'Lại Thế Anh', 'Lớp': '65PM4' },
-      { 'Mã SV': '0002267', 'Họ tên': 'Mai Văn Cường', 'Lớp': '67CNPM' },
-      { 'Mã SV': '85365', 'Họ tên': 'Vũ Huy Hoàng', 'Lớp': '65PM4' }
+    // Tạo dữ liệu dạng array of arrays (để hỗ trợ merge cell header)
+    const rows: any[][] = [
+      ['MSSV', 'Họ và tên', null, 'Lớp'],  // Header: "Họ và tên" merge B1:C1
+      ['1501665', 'Lại Thế', 'Anh', '65PM4'],
+      ['0002267', 'Mai Văn', 'Cường', '67CNPM'],
+      ['85365', 'Vũ Huy', 'Hoàng', '65PM4'],
+      ['113465', 'Lê Ngọc', 'Lâm', '65PM4'],
+      ['119365', 'Vũ Ngọc Hoài', 'Linh', '65PM3'],
+      ['0197766', 'Nguyễn Hoàng', 'Nam', '66CNPM'],
+      ['142165', 'Nguyễn Phương', 'Nam', '65PM6'],
+      ['154765', 'Đỗ Khoa Hải', 'Phong', '65PM6'],
+      ['181165', 'Lê Bá', 'Thắng', '65PM6']
     ];
-    const ws = XLSX.utils.json_to_sheet(data);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    
+    // Merge cell B1:C1 cho tiêu đề "Họ và tên"
+    ws['!merges'] = [
+      { s: { r: 0, c: 1 }, e: { r: 0, c: 2 } }  // B1:C1
+    ];
+
+    // Đặt độ rộng cột
+    ws['!cols'] = [
+      { wch: 10 },  // A: MSSV
+      { wch: 18 },  // B: Họ đệm
+      { wch: 10 },  // C: Tên
+      { wch: 12 }   // D: Lớp
+    ];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'SinhVien');
     XLSX.writeFile(wb, 'Template_Import_SinhVien.xlsx');
