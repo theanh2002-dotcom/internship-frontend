@@ -122,11 +122,28 @@
 <app-modal [isOpen]="isManualModalOpen" title="Thêm Sinh viên" saveText="Thêm" (close)="closeManualModal()" (save)="saveManualStudent()">
   <div class="space-y-4">
     
-    <div class="flex flex-col gap-1.5">
-      <label class="font-label-md text-[13px] text-slate-600">Email sinh viên <span class="text-red-500">*</span></label>
-      <input [(ngModel)]="formEmail" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: nguyenvana@gmail.com" type="email"/>
-      <span class="text-[12px] text-slate-500">Hệ thống sẽ tự động tìm tài khoản theo Email để nạp Mã SV, Họ tên và Lớp.</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Mã sinh viên (MSSV) <span class="text-red-500">*</span></label>
+        <input [(ngModel)]="formStudentCode" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: 1501665" type="text"/>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Họ và tên <span class="text-red-500">*</span></label>
+        <input [(ngModel)]="formFullName" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: Nguyễn Văn A" type="text"/>
+      </div>
     </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Lớp <span class="text-slate-400 font-normal">(tùy chọn)</span></label>
+        <input [(ngModel)]="formClassName" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: 65PM4" type="text"/>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-[13px] text-slate-600">Email <span class="text-slate-400 font-normal">(tùy chọn)</span></label>
+        <input [(ngModel)]="formEmail" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" placeholder="VD: nguyenvana@gmail.com" type="email"/>
+      </div>
+    </div>
+
   </div>
 </app-modal>
 
