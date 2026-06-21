@@ -91,8 +91,10 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  onFacultyChange(): void {
-    this.formSubDepartmentId = null;
+  onFacultyChange(resetSubDept = true): void {
+    if (resetSubDept) {
+      this.formSubDepartmentId = null;
+    }
     this.subDepartments = [];
     if (this.formFacultyId) {
       this.departmentService.getChildren(this.formFacultyId).subscribe({
@@ -128,9 +130,10 @@ export class UserManagementComponent implements OnInit {
           if (dept.parent_id) {
              this.formFacultyId = dept.parent_id;
              this.formSubDepartmentId = user.department_id;
-             this.onFacultyChange(); // load subs
+             this.onFacultyChange(false); // load subs but don't reset formSubDepartmentId
           } else {
              this.formFacultyId = user.department_id;
+             this.onFacultyChange(false); // load subs for this faculty so user can select them
           }
         }
       });
