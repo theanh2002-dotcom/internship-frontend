@@ -312,7 +312,21 @@
             <!-- Mẫu nhanh -->
             <div class="flex items-center gap-1.5">
               <span class="text-[11px] text-slate-500 font-medium">Mẫu nhanh:</span>
-              <button (click)="applyPreset(activeClo, 'scale-5')" class="border border-[#00429D] bg-blue-50 text-[#00429D] px-3 py-1.5 rounded text-[11px] hover:bg-[#00429D] hover:text-white transition-colors cursor-pointer font-bold shadow-sm flex items-center gap-1">
+              <button (click)="applyPreset(activeClo, 'scale-10')" 
+                [ngClass]="{
+                  'border-[#00429D] bg-blue-50 text-[#00429D] font-bold': isPresetActive(activeClo, 'scale-10'),
+                  'border-slate-200 bg-white text-slate-600 font-semibold hover:bg-slate-50 hover:text-slate-800': !isPresetActive(activeClo, 'scale-10')
+                }"
+                class="border px-3 py-1.5 rounded text-[11px] transition-colors cursor-pointer shadow-sm flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">checklist</span>
+                Thang 5 mức (10đ)
+              </button>
+              <button (click)="applyPreset(activeClo, 'scale-5')" 
+                [ngClass]="{
+                  'border-[#00429D] bg-blue-50 text-[#00429D] font-bold': isPresetActive(activeClo, 'scale-5'),
+                  'border-slate-200 bg-white text-slate-600 font-semibold hover:bg-slate-50 hover:text-slate-800': !isPresetActive(activeClo, 'scale-5')
+                }"
+                class="border px-3 py-1.5 rounded text-[11px] transition-colors cursor-pointer shadow-sm flex items-center gap-1">
                 <span class="material-symbols-outlined text-[14px]">auto_awesome</span>
                 Thang 5 mức chuẩn (0-4)
               </button>
