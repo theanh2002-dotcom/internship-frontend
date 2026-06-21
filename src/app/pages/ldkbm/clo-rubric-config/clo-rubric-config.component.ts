@@ -182,11 +182,11 @@ export class CloRubricConfigComponent implements OnInit {
         break;
       case 'scale-10':
         clo.rubrics = [
-          { score_level: 0, description: 'Mức 1 - Kém: Hoàn toàn không đạt yêu cầu chuẩn đầu ra.' },
-          { score_level: 4, description: 'Mức 2 - Yếu: Kiến thức và kỹ năng còn nhiều hạn chế, chưa đáp ứng yêu cầu.' },
-          { score_level: 6, description: 'Mức 3 - Trung bình: Đáp ứng mức tối thiểu yêu cầu của chuẩn đầu ra.' },
-          { score_level: 8, description: 'Mức 4 - Khá/Tốt: Thực hiện tốt công việc, nắm vững chuyên môn.' },
-          { score_level: 10, description: 'Mức 5 - Xuất sắc: Năng lực nổi trội, giải quyết công việc xuất sắc và chủ động.' }
+          { score_level: 0.0, description: 'Mức 0 (<4): Kém (0.0đ) - Hoàn toàn không đạt yêu cầu chuẩn đầu ra.' },
+          { score_level: 4.5, description: 'Mức 1 (4 - 5.4): Yếu (4.5đ) - Chưa đạt chuẩn đầu ra hoặc cần nhiều hướng dẫn.' },
+          { score_level: 6.0, description: 'Mức 2 (5.5 - 6.9): Trung bình (6.0đ) - Đạt chuẩn đầu ra ở mức cơ bản, hoàn thành công việc được giao.' },
+          { score_level: 7.5, description: 'Mức 3 (7 - 8.4): Khá (7.5đ) - Áp dụng tốt chuẩn đầu ra, làm việc độc lập tương đối ổn định.' },
+          { score_level: 9.0, description: 'Mức 4 (>=8.5): Tốt/Xuất sắc (9.0đ) - Vận dụng sáng tạo và xuất sắc chuẩn đầu ra, chủ động giải quyết vấn đề.' }
         ];
         break;
     }
@@ -199,7 +199,7 @@ export class CloRubricConfigComponent implements OnInit {
       return clo.rubrics[0].score_level === 0 && clo.rubrics[4].score_level === 4;
     }
     if (presetType === 'scale-10') {
-      return clo.rubrics[0].score_level === 0 && clo.rubrics[4].score_level === 10;
+      return clo.rubrics[0].score_level === 0 && clo.rubrics[4].score_level === 9.0;
     }
     return false;
   }

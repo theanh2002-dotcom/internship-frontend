@@ -49,11 +49,9 @@ export class AuthInterceptor implements HttpInterceptor {
               const isExpired = payload.exp * 1000 < Date.now();
               if (isExpired) {
                 this.authService.logout();
-              } else {
-                // Token còn hạn nhưng không có quyền → redirect về dashboard
-                const dashboardRoute = this.authService.getRoleDashboardRoute();
-                this.router.navigate([dashboardRoute]);
               }
+              // Lưu ý: Không tự động redirect về dashboard ở đây nữa.
+              // Hãy để component hoặc service gọi API tự catch lỗi 403 và hiển thị Toast thông báo.
             } catch {
               // Token không decode được → logout
               this.authService.logout();
