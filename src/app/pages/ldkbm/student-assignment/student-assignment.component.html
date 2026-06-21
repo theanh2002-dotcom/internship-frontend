@@ -76,6 +76,7 @@
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Họ và tên</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Lớp</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">GV Hướng dẫn</th>
+          <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">ĐV Thực tập</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Trạng thái</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase text-center">Hành động</th>
         </tr>
@@ -96,6 +97,13 @@
             <span *ngIf="!student.gvhd_name" class="text-[13px] text-slate-400 italic">Chưa phân công</span>
           </td>
           <td class="py-3 px-4">
+            <div *ngIf="student.company_info?.supervisor_email" class="flex flex-col text-[12px]">
+              <span class="font-medium text-slate-700" title="Tên người hướng dẫn">{{ student.company_info?.supervisor_name }}</span>
+              <span class="text-slate-500" title="Tài khoản (Email)">TK: {{ student.company_info?.supervisor_email }}</span>
+            </div>
+            <span *ngIf="!student.company_info?.supervisor_email" class="text-[13px] text-slate-400 italic">Chưa khai báo</span>
+          </td>
+          <td class="py-3 px-4">
             <span class="px-2 py-1 rounded-full text-[11px] font-bold border"
                   [ngClass]="{
                     'bg-slate-100 text-slate-600 border-slate-200': student.status === 'IMPORTED',
@@ -106,9 +114,14 @@
             </span>
           </td>
           <td class="py-3 px-4 text-center">
-            <button (click)="deleteStudent(student.id)" class="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors" title="Xóa khỏi đợt thực tập">
-              <span class="material-symbols-outlined text-[18px]">delete</span>
-            </button>
+            <div class="flex items-center justify-center gap-1">
+              <button (click)="openAssignModalForOne(student.id)" class="text-slate-400 hover:text-[#00429D] p-1 rounded hover:bg-blue-50 transition-colors" title="Phân công GVHD">
+                <span class="material-symbols-outlined text-[18px]">assignment_ind</span>
+              </button>
+              <button (click)="deleteStudent(student.id)" class="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors" title="Xóa khỏi đợt thực tập">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -153,11 +166,26 @@
     <p class="text-[14px] text-slate-600 mb-2">Đang chọn phân công cho <strong class="text-[#00429D]">{{ selectedStudentIds.size }}</strong> sinh viên.</p>
     
     <div class="flex flex-col gap-1.5">
-      <label class="font-label-md text-[13px] text-slate-600">Chọn GV Hướng dẫn <span class="text-red-500">*</span></label>
-      <select [(ngModel)]="selectedTeacherId" class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
-        <option [ngValue]="null">— Chọn giáo viên —</option>
-        <option *ngFor="let t of teachers" [ngValue]="t.id">{{ t.full_name }} - {{ t.email }}</option>
-      </select>
+      <label class="font-label-md text-[13px] text-slate-600 mb-2 block">Chọn GV Hướng dẫn <span class="text-red-500">*</span></label>
+      
+      <div class="border border-slate-300 rounded max-h-[250px] overflow-y-auto">
+        <label *ngFor="let t of teachers" class="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 transition-colors">
+          <input 
+            type="checkbox" 
+            [checked]="selectedTeacherIds.has(t.id)"
+            (change)="toggleTeacherSelection(t.id)"
+            class="w-4 h-4 text-[#00429D] rounded border-slate-300 focus:ring-[#00429D] cursor-pointer"
+          >
+          <div class="flex flex-col">
+            <span class="text-[14px] font-medium text-slate-700">{{ t.full_name }}</span>
+            <span class="text-[12px] text-slate-500">{{ t.email }}</span>
+          </div>
+        </label>
+        
+        <div *ngIf="teachers.length === 0" class="p-4 text-center text-slate-500 text-[13px]">
+          Chưa có giáo viên nào trong danh sách.
+        </div>
+      </div>
     </div>
   </div>
 </app-modal>

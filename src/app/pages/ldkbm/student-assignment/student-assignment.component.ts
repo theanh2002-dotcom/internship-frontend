@@ -44,7 +44,7 @@ export class StudentAssignmentComponent implements OnInit {
 
   // Assign Form
   teachers: UserResponse[] = [];
-  selectedTeacherId: number | null = null;
+  selectedTeacherIds = new Set<number>();
 
   @ViewChild('fileInput') fileInput!: ElementRef;
 
@@ -79,8 +79,7 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   loadTeachers(): void {
-    if (!this.departmentId) return;
-    this.userService.getUsers({ page: 1, limit: 1000 }, 'GVHD', this.departmentId).subscribe({
+    this.userService.getUsers({ page: 1, limit: 1000 }, 'GVHD').subscribe({
       next: (res) => {
         this.teachers = res.data || [];
       }
@@ -375,8 +374,23 @@ export class StudentAssignmentComponent implements OnInit {
       this.showError('Vui lòng chọn ít nhất 1 sinh viên để phân công.');
       return;
     }
-    this.selectedTeacherId = null;
+    this.selectedTeacherIds.clear();
     this.isAssignModalOpen = true;
+  }
+
+  openAssignModalForOne(studentId: number): void {
+    this.selectedStudentIds.clear();
+    this.selectedStudentIds.add(studentId);
+    this.selectedTeacherIds.clear();
+    this.isAssignModalOpen = true;
+  }
+
+  toggleTeacherSelection(teacherId: number): void {
+    if (this.selectedTeacherIds.has(teacherId)) {
+      this.selectedTeacherIds.delete(teacherId);
+    } else {
+      this.selectedTeacherIds.add(teacherId);
+    }
   }
 
   closeAssignModal(): void {
@@ -384,14 +398,14 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   saveAssignment(): void {
-    if (!this.selectedTeacherId) {
-      this.showError('Vui lòng chọn Giáo viên hướng dẫn.');
+    if (this.selectedTeacherIds.size === 0) {
+      this.showError('Vui lòng chọn ít nhất 1 Giáo viên hướng dẫn.');
       return;
     }
 
     const assignments: AssignItem[] = Array.from(this.selectedStudentIds).map(id => ({
       student_campaign_id: id,
-      gvhd_id: this.selectedTeacherId!
+      gvhd_ids: Array.from(this.selectedTeacherIds)
     }));
 
     const req: AssignRequest = { assignments };

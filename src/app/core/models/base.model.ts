@@ -150,7 +150,7 @@ export interface StudentCampaignResponse {
   status: string;
   campaign_id: number;
   department_id: number;
-  gvhd_id?: number;
+  gvhd_ids?: number[];
   gvhd_name?: string;
   committee_id?: number;
   company_info?: CompanyInfoResponse;

@@ -32,7 +32,7 @@ export interface ImportStudentRequest {
 
 export interface AssignItem {
   student_campaign_id: number;
-  gvhd_id?: number;
+  gvhd_ids?: number[];
   committee_id?: number;
 }
 
