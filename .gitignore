@@ -50,3 +50,5 @@ Thumbs.db
 .codemaker
 .codestudio
 screen*.html
+.vercel
+.env*
