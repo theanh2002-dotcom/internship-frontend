@@ -30,6 +30,14 @@
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
         <input [(ngModel)]="searchQuery" (input)="onFilterChange()" class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] transition-shadow" placeholder="Tìm kiếm tên, mã SV, lớp..." type="text"/>
       </div>
+      <div class="w-full md:w-64">
+        <select [(ngModel)]="selectedCampaignId" (change)="onFilterChange()" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
+          <option value="">— Tất cả đợt thực tập —</option>
+          <option *ngFor="let camp of campaigns" [value]="camp.id">
+            {{ camp.name }} ({{ camp.status === 'ACTIVE' ? 'Đang mở' : 'Đã đóng' }})
+          </option>
+        </select>
+      </div>
       <div class="w-full md:w-56">
         <select [(ngModel)]="selectedStatus" (change)="onFilterChange()" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
           <option value="">— Tất cả trạng thái —</option>
@@ -88,14 +96,14 @@
     <ng-template appTableCell="actions" let-sv>
       <div class="flex items-center justify-center gap-2 w-full">
         <!-- Nút Duyệt ĐVHD -->
-        <button *ngIf="sv.status === 'COMPANY_DECLARED'" (click)="openReviewModal(sv)"
+        <button *ngIf="sv.status === 'COMPANY_DECLARED' && isCampaignActive(sv.campaign_id)" (click)="openReviewModal(sv)"
           class="px-3 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 font-medium rounded text-[13px] transition-colors border border-amber-200 flex items-center gap-1 mx-auto">
           <span class="material-symbols-outlined text-[16px]">rule</span>
           Duyệt ĐVHD
         </button>
 
-        <!-- Trạng thái khác -->
-        <button *ngIf="sv.status !== 'COMPANY_DECLARED'" (click)="openReviewModal(sv)"
+        <!-- Trạng thái khác hoặc đợt đã đóng -->
+        <button *ngIf="sv.status !== 'COMPANY_DECLARED' || !isCampaignActive(sv.campaign_id)" (click)="openReviewModal(sv)"
           class="px-3 py-1.5 text-[#00429D] hover:bg-blue-50 font-medium rounded text-[13px] transition-colors flex items-center gap-1 mx-auto">
           <span class="material-symbols-outlined text-[16px]">visibility</span>
           Xem chi tiết
@@ -291,17 +299,25 @@
     </div>
 
     <!-- Footer -->
-    <div class="border-t border-slate-100 px-6 py-4 bg-slate-50 flex justify-end gap-3 rounded-b-xl">
-      <button (click)="closeModal()"
-        class="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors text-sm">
-        Đóng
-      </button>
-      <button *ngIf="selectedStudent.status === 'COMPANY_DECLARED'" (click)="approveCompany()" [disabled]="isApproving"
-        class="px-5 py-2 bg-[#00429D] text-white font-medium rounded-lg hover:bg-blue-800 transition-colors shadow-sm disabled:opacity-50 text-sm flex items-center gap-2">
-        <span *ngIf="isApproving" class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
-        <span *ngIf="!isApproving" class="material-symbols-outlined text-[18px]">check_circle</span>
-        Phê duyệt ĐVHD
-      </button>
+    <div class="border-t border-slate-100 px-6 py-4 bg-slate-50 flex justify-between items-center rounded-b-xl">
+      <div class="flex-1">
+        <div *ngIf="!isCampaignActive(selectedStudent.campaign_id)" class="text-red-500 font-medium text-sm flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">lock</span>
+          Đợt thực tập đã kết thúc, bạn chỉ có thể xem dữ liệu.
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button (click)="closeModal()"
+          class="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors text-sm">
+          Đóng
+        </button>
+        <button *ngIf="selectedStudent.status === 'COMPANY_DECLARED' && isCampaignActive(selectedStudent.campaign_id)" (click)="approveCompany()" [disabled]="isApproving"
+          class="px-5 py-2 bg-[#00429D] text-white font-medium rounded-lg hover:bg-blue-800 transition-colors shadow-sm disabled:opacity-50 text-sm flex items-center gap-2">
+          <span *ngIf="isApproving" class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+          <span *ngIf="!isApproving" class="material-symbols-outlined text-[18px]">check_circle</span>
+          Phê duyệt ĐVHD
+        </button>
+      </div>
     </div>
   </div>
 </div>

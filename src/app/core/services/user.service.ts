@@ -10,6 +10,7 @@ export interface UserRequest {
   full_name: string;
   role: string;
   department_id?: number | null;
+  phone?: string;
 }
 
 @Injectable({

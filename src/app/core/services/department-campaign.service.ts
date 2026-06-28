@@ -20,6 +20,7 @@ export interface CloConfigRequest {
   department_campaign_id: number;
   stage1_weight: number;
   stage2_weight: number;
+  clo_set_name: string;
   clos: CloItem[];
 }
 
@@ -42,5 +43,15 @@ export class DepartmentCampaignService {
   // Lưu cấu hình CLO & Rubric
   saveCloConfigs(request: CloConfigRequest): Observable<any> {
     return this.apiService.post<any>('/base/department-campaigns/clo-configs', request);
+  }
+
+  // Lấy danh sách bộ CLO đã lưu của khoa
+  getCloSets(departmentId: number): Observable<any> {
+    return this.apiService.get<any>(`/base/department-campaigns/clo-sets?department_id=${departmentId}`);
+  }
+
+  // Áp dụng bộ CLO có sẵn vào đợt thực tập
+  applyCloSet(departmentCampaignId: number, cloSetId: number): Observable<any> {
+    return this.apiService.post<any>(`/base/department-campaigns/${departmentCampaignId}/apply-clo-set/${cloSetId}`, {});
   }
 }

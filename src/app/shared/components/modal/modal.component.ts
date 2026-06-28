@@ -10,6 +10,7 @@ export class ModalComponent {
   @Input() title: string = '';
   @Input() saveText: string = 'Lưu lại';
   @Input() cancelText: string = 'Hủy bỏ';
+  @Input() showFooter: boolean = true;
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
 

@@ -28,6 +28,7 @@ export class StudentAssignmentComponent implements OnInit {
   totalItems = 0;
   currentPage = 1;
   pageSize = 10;
+  searchQuery = '';
 
   // For selection
   selectedStudentIds = new Set<number>();
@@ -96,11 +97,20 @@ export class StudentAssignmentComponent implements OnInit {
     }
   }
 
+  onSearch(): void {
+    this.currentPage = 1;
+    this.loadStudents();
+  }
+
   loadStudents(): void {
     if (!this.selectedCampaignId || !this.departmentId) return;
 
     this.isLoading = true;
-    const req: PaginationRequest = { page: this.currentPage, limit: this.pageSize };
+    const req: PaginationRequest = { 
+      page: this.currentPage, 
+      limit: this.pageSize,
+      searchText: this.searchQuery
+    };
     
     this.studentCampaignService.findByCampaignAndDepartment(this.selectedCampaignId, this.departmentId, req).subscribe({
       next: (res) => {

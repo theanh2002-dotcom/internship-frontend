@@ -1,7 +1,7 @@
 import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { DepartmentService, DepartmentRequest } from '../../../core/services/department.service';
-import { DepartmentResponse, PaginationRequest } from '../../../core/models/base.model';
+import { DepartmentResponse, PaginationRequest, UserResponse } from '../../../core/models/base.model';
 import { UserService } from '../../../core/services/user.service';
 
 @Component({
@@ -220,6 +220,7 @@ export class DepartmentManagementComponent implements OnInit {
   teacherEmail = '';
   teacherFullName = '';
   teacherPassword = '';
+  teacherPhone = '';
   teacherSubDept: DepartmentResponse | null = null;
 
   openAddTeacherModal(sub: DepartmentResponse): void {
@@ -227,6 +228,7 @@ export class DepartmentManagementComponent implements OnInit {
     this.teacherEmail = '';
     this.teacherFullName = '';
     this.teacherPassword = '';
+    this.teacherPhone = '';
     this.isTeacherModalOpen = true;
   }
 
@@ -236,12 +238,12 @@ export class DepartmentManagementComponent implements OnInit {
   }
 
   saveTeacher(): void {
-    if (!this.teacherEmail.trim()) {
-      this.toastService.error('Vui lòng nhập Email');
-      return;
-    }
     if (!this.teacherFullName.trim()) {
       this.toastService.error('Vui lòng nhập Họ và tên');
+      return;
+    }
+    if (!this.teacherEmail.trim()) {
+      this.toastService.error('Vui lòng nhập Email');
       return;
     }
     const finalPassword = this.teacherPassword.trim() || '123456';
@@ -251,7 +253,8 @@ export class DepartmentManagementComponent implements OnInit {
       password: finalPassword,
       full_name: this.teacherFullName.trim(),
       role: 'GVHD',
-      department_id: this.teacherSubDept!.id
+      department_id: this.teacherSubDept!.id,
+      phone: this.teacherPhone.trim()
     };
 
     this.isLoading = true;
@@ -260,12 +263,52 @@ export class DepartmentManagementComponent implements OnInit {
         this.toastService.success('Thêm giảng viên thành công');
         this.closeTeacherModal();
         this.isLoading = false;
+        if (this.isTeacherListModalOpen && this.selectedDeptForTeachers?.id === this.teacherSubDept?.id) {
+          this.loadTeachersForDept();
+        }
       },
       error: (err) => {
         this.toastService.error(err?.message || 'Thêm giảng viên thất bại');
         this.isLoading = false;
       }
     });
+  }
+
+  // ==================== TEACHER LIST MODAL ====================
+
+  isTeacherListModalOpen = false;
+  teachersInDept: UserResponse[] = [];
+  teacherListSearchText = '';
+  selectedDeptForTeachers: DepartmentResponse | null = null;
+  isTeacherListLoading = false;
+
+  openTeacherListModal(dept: DepartmentResponse): void {
+    this.selectedDeptForTeachers = dept;
+    this.isTeacherListModalOpen = true;
+    this.teacherListSearchText = '';
+    this.loadTeachersForDept();
+  }
+
+  closeTeacherListModal(): void {
+    this.isTeacherListModalOpen = false;
+    this.selectedDeptForTeachers = null;
+  }
+
+  loadTeachersForDept(): void {
+    if (!this.selectedDeptForTeachers) return;
+    this.isTeacherListLoading = true;
+    this.userService.getUsers({ page: 1, limit: 100, searchText: this.teacherListSearchText }, 'GVHD', this.selectedDeptForTeachers.id)
+      .subscribe({
+        next: (res) => {
+          this.teachersInDept = res.data || [];
+          this.isTeacherListLoading = false;
+        },
+        error: () => {
+          this.teachersInDept = [];
+          this.isTeacherListLoading = false;
+          this.toastService.error('Lỗi tải danh sách giảng viên');
+        }
+      });
   }
 
   // ==================== HELPERS ====================

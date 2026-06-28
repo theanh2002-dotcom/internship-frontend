@@ -154,8 +154,19 @@
             </div>
         </div>
 
+        <!-- Cảnh báo Campaign Inactive -->
+        <div *ngIf="!isCampaignActive" class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 flex items-start gap-3 shadow-sm">
+            <span class="material-symbols-outlined text-[24px] text-red-600 shrink-0">lock</span>
+            <div>
+                <h4 class="font-bold text-red-900">Đợt thực tập đã kết thúc</h4>
+                <p class="text-sm mt-1 leading-relaxed">
+                    Đợt thực tập này đã đóng. Bạn chỉ có thể xem dữ liệu, không thể chấm điểm hoặc sửa điểm.
+                </p>
+            </div>
+        </div>
+
         <!-- Cảnh báo thời gian đánh giá -->
-        <div *ngIf="selectedStage === 'STAGE_1' && !isStage1Open" class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 flex items-start gap-3 shadow-sm">
+        <div *ngIf="selectedStage === 'STAGE_1' && !isStage1Open && isCampaignActive" class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 flex items-start gap-3 shadow-sm">
             <span class="material-symbols-outlined text-[24px] text-amber-600 shrink-0">warning_amber</span>
             <div>
                 <h4 class="font-bold text-amber-900">Đánh giá Chặng 1 chưa mở</h4>
@@ -165,7 +176,7 @@
             </div>
         </div>
 
-        <div *ngIf="selectedStage === 'STAGE_2' && !isStage2Open" class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 flex items-start gap-3 shadow-sm">
+        <div *ngIf="selectedStage === 'STAGE_2' && !isStage2Open && isCampaignActive" class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 flex items-start gap-3 shadow-sm">
             <span class="material-symbols-outlined text-[24px] text-amber-600 shrink-0">warning_amber</span>
             <div>
                 <h4 class="font-bold text-amber-900">Đánh giá Chặng 2 chưa mở</h4>
@@ -221,8 +232,8 @@
                              (click)="selectLevel(criterion, level.points)"
                              [ngClass]="{
                                  'ring-2 ring-[#00429D] bg-blue-50 border-transparent shadow-sm': criterion.selectedPoints === level.points, 
-                                 'border-slate-200 bg-white hover:border-[#00429D] hover:bg-slate-50': criterion.selectedPoints !== level.points && ((selectedStage === 'STAGE_1' && isStage1Open) || (selectedStage === 'STAGE_2' && isStage2Open)),
-                                 'opacity-60 cursor-not-allowed bg-slate-50 border-slate-200': (selectedStage === 'STAGE_1' && !isStage1Open) || (selectedStage === 'STAGE_2' && !isStage2Open)
+                                 'border-slate-200 bg-white hover:border-[#00429D] hover:bg-slate-50': criterion.selectedPoints !== level.points && ((selectedStage === 'STAGE_1' && isStage1Open) || (selectedStage === 'STAGE_2' && isStage2Open)) && isCampaignActive,
+                                 'opacity-60 cursor-not-allowed bg-slate-50 border-slate-200': (selectedStage === 'STAGE_1' && !isStage1Open) || (selectedStage === 'STAGE_2' && !isStage2Open) || !isCampaignActive
                               }"
                              class="border rounded-xl p-4 cursor-pointer transition-all duration-200 flex flex-col relative group">
                             
@@ -249,7 +260,7 @@
             <button (click)="selectedStudent = null" class="px-6 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors">
                 Hủy bỏ
             </button>
-            <button (click)="submitEvaluation()" [disabled]="isSaving || !isFullyScored() || (selectedStage === 'STAGE_1' && !isStage1Open) || (selectedStage === 'STAGE_2' && !isStage2Open)" class="px-8 py-2.5 bg-[#00429D] text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+            <button (click)="submitEvaluation()" [disabled]="isSaving || !isFullyScored() || (selectedStage === 'STAGE_1' && !isStage1Open) || (selectedStage === 'STAGE_2' && !isStage2Open) || !isCampaignActive" class="px-8 py-2.5 bg-[#00429D] text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 <span *ngIf="isSaving" class="material-symbols-outlined animate-spin text-[20px]">autorenew</span>
                 <span *ngIf="!isSaving" class="material-symbols-outlined text-[20px]">save</span>
                 Hoàn tất Đánh giá

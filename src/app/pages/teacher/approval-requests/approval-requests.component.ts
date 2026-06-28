@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { StudentCampaignResponse } from '../../../core/models/base.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { CampaignService } from '../../../core/services/campaign.service';
 
 @Component({
   selector: 'app-approval-requests',
@@ -16,14 +17,30 @@ export class ApprovalRequestsComponent implements OnInit {
   selectedRequest: StudentCampaignResponse | null = null;
   requestType: 'COMPANY' | 'PLAN' | null = null;
   showModal = false;
+  campaigns: any[] = [];
   
-      constructor(
+  constructor(
     private studentCampaignService: StudentCampaignService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private campaignService: CampaignService
   ) {}
 
   ngOnInit(): void {
+    this.loadCampaigns();
     this.loadRequests();
+  }
+
+  loadCampaigns(): void {
+    this.campaignService.getCampaigns({ page: 1, limit: 100 }).subscribe({
+      next: (res) => {
+        this.campaigns = res.data || [];
+      }
+    });
+  }
+
+  isCampaignActive(campaignId: number): boolean {
+    const camp = this.campaigns.find(c => c.id === campaignId);
+    return camp ? camp.status === 'ACTIVE' : true; 
   }
 
   loadRequests(): void {

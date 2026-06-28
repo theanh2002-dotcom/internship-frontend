@@ -16,13 +16,34 @@
       </select>
     </div>
 
-    <!-- Nút Lưu -->
-    <button class="flex items-center justify-center gap-2 px-5 py-2 bg-[#00429D] text-white font-medium text-[13px] rounded-lg hover:bg-blue-800 transition-colors shadow-sm disabled:opacity-50 cursor-pointer w-full sm:w-auto" 
-            (click)="saveConfigs()" [disabled]="isLoading || isSaving">
-      <span *ngIf="isSaving" class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
-      <span *ngIf="!isSaving" class="material-symbols-outlined text-[18px]">save</span>
-      Lưu cấu hình
-    </button>
+    <!-- Ô nhập tên và Nút Lưu -->
+    <div *ngIf="showConfig" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto p-1.5 rounded-lg transition-all" [ngClass]="{'bg-blue-50 border border-blue-100': isEditingName || !hasExistingConfig}">
+      
+      <!-- Hiện nếu người dùng bấm nút Lưu, hoặc nếu đây là tạo mới từ đầu -->
+      <ng-container *ngIf="isEditingName || !hasExistingConfig">
+        <span *ngIf="hasExistingConfig" class="text-[12px] text-[#00429D] font-medium px-1 hidden xl:block">Nhập tên để lưu bản sao:</span>
+        <input [(ngModel)]="newCloSetName" class="border border-blue-200 rounded-md px-3 py-1.5 text-[13px] font-semibold text-slate-800 focus:border-[#00429D] focus:outline-none bg-white min-w-[220px]" placeholder="VD: Bản cập nhật của đợt..."/>
+        <button class="flex items-center justify-center gap-1.5 px-4 py-1.5 bg-[#00429D] text-white font-medium text-[13px] rounded-md hover:bg-blue-800 transition-colors shadow-sm disabled:opacity-50 cursor-pointer" 
+                (click)="saveConfigs()" [disabled]="isLoading || isSaving">
+          <span *ngIf="isSaving" class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+          <span *ngIf="!isSaving" class="material-symbols-outlined text-[16px]">check_circle</span>
+          Xác nhận Lưu
+        </button>
+        <button *ngIf="hasExistingConfig" (click)="isEditingName = false" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer" title="Hủy">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </ng-container>
+
+      <!-- Hiện nếu đang dùng cấu hình cũ và chưa bấm Lưu -->
+      <ng-container *ngIf="!isEditingName && hasExistingConfig">
+        <button class="flex items-center justify-center gap-1.5 px-4 py-1.5 bg-white border border-slate-300 text-slate-700 font-medium text-[13px] rounded-md hover:bg-slate-50 transition-colors shadow-sm cursor-pointer" 
+                (click)="isEditingName = true">
+          <span class="material-symbols-outlined text-[16px]">save_as</span>
+          Lưu thành bản mới
+        </button>
+      </ng-container>
+
+    </div>
   </div>
 </section>
 
@@ -42,10 +63,58 @@
 <!-- Form Cấu hình -->
 <div *ngIf="!isLoading && departmentCampaignId" class="space-y-6">
 
-  <!-- Cấu hình Trọng số Chặng -->
-  <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-      <h3 class="font-bold text-slate-800 text-[14px] flex items-center gap-1.5">
+  <!-- Banner: Nếu đã có cấu hình -->
+  <div *ngIf="hasExistingConfig" class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm gap-3">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+      <span class="text-[13px] text-slate-800">Đợt thực tập này đang áp dụng Bộ CLO: <strong class="text-emerald-700">{{ currentCloSetName || 'Đang tải...' }}</strong></span>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+      <span class="text-[12px] text-emerald-700 font-medium whitespace-nowrap">Đổi sang bộ khác:</span>
+      <select [(ngModel)]="selectedCloSetId" class="border border-emerald-300 rounded-lg px-3 py-1.5 text-[12px] font-semibold text-emerald-800 focus:border-emerald-500 focus:ring-1 focus:outline-none bg-white shadow-sm transition-all min-w-[200px]">
+        <option [ngValue]="null">-- Chọn bộ CLO để áp dụng --</option>
+        <option *ngFor="let set of cloSets" [value]="set.id">{{ set.name }} ({{ set.created_at | date:'dd/MM/yyyy' }})</option>
+      </select>
+      <button (click)="applyCloSet()" [disabled]="!selectedCloSetId || isLoading || selectedCloSetId === currentCloSetId" class="px-4 py-1.5 bg-emerald-600 text-white font-medium text-[12px] rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-sm cursor-pointer whitespace-nowrap">
+        Áp dụng
+      </button>
+    </div>
+  </div>
+
+  <!-- Bắt đầu khi chưa có cấu hình -->
+  <div *ngIf="!hasExistingConfig && !showConfig" class="bg-slate-50 border border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-sm">
+    <span class="material-symbols-outlined text-[48px] text-slate-300 mb-3">account_tree</span>
+    <h3 class="text-[16px] font-bold text-slate-700 mb-1">Chưa có Bộ Chuẩn đầu ra (CLO)</h3>
+    <p class="text-[13px] text-slate-500 mb-6 max-w-md">Đợt thực tập này chưa được cấu hình CLO và Rubric. Vui lòng chọn một trong hai cách dưới đây để bắt đầu.</p>
+    
+    <div class="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
+      <!-- Tạo mới -->
+      <button (click)="startCreatingNew()" class="px-6 py-2.5 bg-[#00429D] text-white font-medium text-[13px] rounded-lg hover:bg-blue-800 transition-colors shadow-sm cursor-pointer flex items-center gap-2 w-full sm:w-auto justify-center">
+        <span class="material-symbols-outlined text-[18px]">add_circle</span>
+        Tạo cấu hình mới tinh
+      </button>
+
+      <span class="text-slate-400 text-[12px] font-medium hidden sm:block">HOẶC</span>
+
+      <!-- Dùng lại -->
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <select [(ngModel)]="selectedCloSetId" class="flex-1 sm:w-64 border border-slate-300 rounded-lg px-3.5 py-2.5 text-[13px] font-semibold text-slate-700 focus:border-[#00429D] focus:ring-1 focus:outline-none bg-white shadow-sm transition-all">
+          <option [ngValue]="null">-- Chọn bộ CLO từ đợt trước --</option>
+          <option *ngFor="let set of cloSets" [value]="set.id">{{ set.name }} ({{ set.created_at | date:'dd/MM/yyyy' }})</option>
+        </select>
+        <button (click)="applyCloSet()" [disabled]="!selectedCloSetId || isLoading" class="px-5 py-2.5 bg-slate-800 text-white font-medium text-[13px] rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors shadow-sm cursor-pointer whitespace-nowrap">
+          Áp dụng ngay
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ng-container *ngIf="showConfig">
+    <!-- Cấu hình Trọng số Chặng -->
+    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+        <h3 class="font-bold text-slate-800 text-[14px] flex items-center gap-1.5">
         <span class="material-symbols-outlined text-[#00429D] text-[20px]">tune</span>
         Trọng số điểm các chặng thực tập
       </h3>
@@ -384,6 +453,8 @@
     </div>
 
   </div>
+
+  </ng-container>
 
 </div>
 

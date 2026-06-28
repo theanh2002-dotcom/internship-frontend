@@ -134,8 +134,8 @@
               <td class="py-3 px-5">
                 <span class="font-data-mono text-[13px] font-bold text-[#00429D]">{{ sub.code }}</span>
               </td>
-              <td class="py-3 px-5">
-                <div class="font-medium text-[#002d70]">{{ sub.name }}</div>
+              <td class="py-3 px-5 cursor-pointer" (click)="openTeacherListModal(sub)">
+                <div class="font-medium text-[#002d70] hover:text-[#00429D] hover:underline">{{ sub.name }}</div>
               </td>
               <td class="py-3 px-5">
                 <span class="px-2.5 py-1 rounded-full text-xs font-bold"
@@ -151,6 +151,10 @@
                   <button class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="Thêm Giảng viên"
                           (click)="openAddTeacherModal(sub)">
                     <span class="material-symbols-outlined text-[18px]">person_add</span>
+                  </button>
+                  <button class="p-1.5 text-slate-400 hover:text-[#00429D] hover:bg-blue-50 rounded transition-colors" title="Danh sách giảng viên"
+                          (click)="openTeacherListModal(sub)">
+                    <span class="material-symbols-outlined text-[18px]">group</span>
                   </button>
                   <button class="p-1.5 text-slate-400 hover:text-[#00429D] hover:bg-blue-50 rounded transition-colors" title="Chỉnh sửa"
                           (click)="openEditModal(sub, 'sub')">
@@ -219,6 +223,13 @@
     </div>
 
     <div class="flex flex-col gap-1.5">
+      <label class="font-label-md text-[13px] text-slate-600">Họ và tên <span class="text-red-500">*</span></label>
+      <input [(ngModel)]="teacherFullName"
+             class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
+             placeholder="VD: Nguyễn Văn A" type="text"/>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
       <label class="font-label-md text-[13px] text-slate-600">Email <span class="text-red-500">*</span></label>
       <input [(ngModel)]="teacherEmail"
              class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
@@ -226,10 +237,10 @@
     </div>
 
     <div class="flex flex-col gap-1.5">
-      <label class="font-label-md text-[13px] text-slate-600">Họ và tên <span class="text-red-500">*</span></label>
-      <input [(ngModel)]="teacherFullName"
+      <label class="font-label-md text-[13px] text-slate-600">Số điện thoại</label>
+      <input [(ngModel)]="teacherPhone"
              class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
-             placeholder="VD: Nguyễn Văn A" type="text"/>
+             placeholder="VD: 0987654321" type="text"/>
     </div>
 
     <div class="flex flex-col gap-1.5">
@@ -238,6 +249,52 @@
              class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
              placeholder="Nhập mật khẩu cho giảng viên" type="password"/>
       <span class="text-[11px] text-slate-500 italic">Nếu để trống, mật khẩu mặc định sẽ là <strong>123456</strong>.</span>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Danh sách Giảng viên -->
+<app-modal [isOpen]="isTeacherListModalOpen"
+           title="Danh sách Giảng viên"
+           [showFooter]="false"
+           (close)="closeTeacherListModal()">
+  <div class="space-y-4">
+    <div *ngIf="selectedDeptForTeachers" class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 rounded text-[13px] flex items-center gap-2">
+      <span class="material-symbols-outlined text-[16px]">account_balance</span>
+      Bộ môn: <strong>{{ selectedDeptForTeachers.name }}</strong>
+    </div>
+
+    <!-- Tìm kiếm -->
+    <div class="relative">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+      <input type="text" [(ngModel)]="teacherListSearchText" (keyup.enter)="loadTeachersForDept()" placeholder="Tìm kiếm giảng viên..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
+    </div>
+
+    <div *ngIf="isTeacherListLoading" class="flex justify-center py-8">
+      <span class="material-symbols-outlined animate-spin text-[24px] text-[#00429D]">progress_activity</span>
+    </div>
+
+    <div *ngIf="!isTeacherListLoading && teachersInDept.length === 0" class="text-center py-8 text-slate-500 text-sm">
+      Không có giảng viên nào
+    </div>
+
+    <div *ngIf="!isTeacherListLoading && teachersInDept.length > 0" class="max-h-[400px] overflow-y-auto border border-slate-200 rounded-lg">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+          <tr>
+            <th class="py-2 px-4 font-label-md text-[12px] font-medium text-slate-500 uppercase">Họ và tên</th>
+            <th class="py-2 px-4 font-label-md text-[12px] font-medium text-slate-500 uppercase">Email</th>
+            <th class="py-2 px-4 font-label-md text-[12px] font-medium text-slate-500 uppercase">SĐT</th>
+          </tr>
+        </thead>
+        <tbody class="font-body-md text-[13px] text-slate-800 divide-y divide-slate-100">
+          <tr *ngFor="let gv of teachersInDept" class="hover:bg-slate-50 bg-white">
+            <td class="py-2 px-4 font-medium">{{ gv.full_name }}</td>
+            <td class="py-2 px-4 text-slate-600">{{ gv.email }}</td>
+            <td class="py-2 px-4 text-slate-600">{{ gv.phone || '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </app-modal>

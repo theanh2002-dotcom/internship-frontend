@@ -42,6 +42,7 @@ export class RubricEvaluationComponent implements OnInit {
 
   selectedStage: 'STAGE_1' | 'STAGE_2' = 'STAGE_1';
   campaign: any = null;
+  isCampaignActive = true;
   isStage1Open = false;
   isStage2Open = false;
   midtermStartDateStr = '';
@@ -195,6 +196,7 @@ export class RubricEvaluationComponent implements OnInit {
       next: (camp: any) => {
         const campaign = camp.data || camp.payload || camp;
         this.campaign = campaign;
+        this.isCampaignActive = campaign.status === 'ACTIVE';
         const now = new Date();
 
         const gConfig = this.selectedStudent?.group_config || null;
@@ -290,6 +292,7 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   selectLevel(criterion: RubricCriterion, points: number) {
+    if (!this.isCampaignActive) return;
     // Disable scoring if the phase is not open
     if (this.selectedStage === 'STAGE_1' && !this.isStage1Open) return;
     if (this.selectedStage === 'STAGE_2' && !this.isStage2Open) return;

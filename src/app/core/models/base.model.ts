@@ -106,6 +106,7 @@ export interface UserResponse {
   department_id: number | null;
   department_name: string | null;
   status: string; // "ACTIVE" | "INACTIVE"
+  phone?: string;
   created_at: string;
 }
 

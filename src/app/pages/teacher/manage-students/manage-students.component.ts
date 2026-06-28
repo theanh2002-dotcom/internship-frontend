@@ -27,10 +27,12 @@ export class ManageStudentsComponent implements OnInit {
 
   searchQuery = '';
   selectedStatus = '';
+  selectedCampaignId: number | '' = '';
   currentPage = 1;
   pageSize = 10;
   totalItems = 0;
 
+  campaigns: any[] = [];
   filteredStudents: StudentCampaignResponse[] = [];
   paginatedStudents: StudentCampaignResponse[] = [];
 
@@ -60,7 +62,16 @@ export class ManageStudentsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.loadCampaigns();
     this.loadMyStudents();
+  }
+
+  loadCampaigns(): void {
+    this.campaignService.getCampaigns({ page: 1, limit: 100 }).subscribe({
+      next: (res) => {
+        this.campaigns = res.data || [];
+      }
+    });
   }
 
   loadMyStudents(): void {
@@ -79,6 +90,10 @@ export class ManageStudentsComponent implements OnInit {
 
   applyFilters(): void {
     let result = [...this.students];
+
+    if (this.selectedCampaignId) {
+      result = result.filter(s => s.campaign_id === Number(this.selectedCampaignId));
+    }
 
     if (this.searchQuery) {
       const query = this.searchQuery.toLowerCase().trim();
@@ -125,6 +140,11 @@ export class ManageStudentsComponent implements OnInit {
     }
 
     this.paginate();
+  }
+
+  isCampaignActive(campaignId: number): boolean {
+    const camp = this.campaigns.find(c => c.id === campaignId);
+    return camp ? camp.status === 'ACTIVE' : true; 
   }
 
   paginate(): void {

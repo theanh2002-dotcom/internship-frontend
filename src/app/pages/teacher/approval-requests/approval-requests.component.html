@@ -52,9 +52,12 @@
           </span>
         </td>
         <td class="py-3 px-4 text-center">
-          <button (click)="openRequest(req)" class="text-[#00429D] hover:underline font-medium text-sm">
+          <button *ngIf="isCampaignActive(req.campaign_id)" (click)="openRequest(req)" class="text-[#00429D] hover:underline font-medium text-sm">
             Xem & Duyệt
           </button>
+          <span *ngIf="!isCampaignActive(req.campaign_id)" class="text-red-500 font-medium text-xs flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">lock</span> Đóng
+          </span>
         </td>
       </tr>
     </tbody>
@@ -131,13 +134,21 @@
       </div>
     </div>
     
-    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3 shrink-0">
-      <button (click)="closeModal()" [disabled]="isProcessing" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">Đóng</button>
-      <button (click)="reject()" [disabled]="isProcessing" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">Từ chối</button>
-      <button (click)="approve()" [disabled]="isProcessing" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 flex items-center gap-2 disabled:opacity-50">
-        <span *ngIf="isProcessing" class="material-symbols-outlined animate-spin text-[16px]">autorenew</span>
-        Phê duyệt
-      </button>
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center shrink-0">
+      <div class="flex-1">
+        <div *ngIf="selectedRequest && !isCampaignActive(selectedRequest.campaign_id)" class="text-red-500 font-medium text-sm flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">lock</span>
+          Đợt thực tập đã kết thúc, bạn chỉ có thể xem dữ liệu.
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button (click)="closeModal()" [disabled]="isProcessing" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">Đóng</button>
+        <button *ngIf="selectedRequest && isCampaignActive(selectedRequest.campaign_id)" (click)="reject()" [disabled]="isProcessing" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">Từ chối</button>
+        <button *ngIf="selectedRequest && isCampaignActive(selectedRequest.campaign_id)" (click)="approve()" [disabled]="isProcessing" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 flex items-center gap-2 disabled:opacity-50">
+          <span *ngIf="isProcessing" class="material-symbols-outlined animate-spin text-[16px]">autorenew</span>
+          Phê duyệt
+        </button>
+      </div>
     </div>
   </div>
 </div>

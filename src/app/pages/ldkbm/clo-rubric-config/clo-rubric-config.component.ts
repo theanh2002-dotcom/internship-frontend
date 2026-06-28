@@ -20,6 +20,10 @@ export class CloRubricConfigComponent implements OnInit {
   stage1Weight: number = 30;
   stage2Weight: number = 70;
 
+  cloSets: any[] = [];
+  selectedCloSetId: number | null = null;
+  newCloSetName: string = '';
+
   clos: CloItem[] = [];
   selectedCloIndex: number = 0;
 
@@ -47,6 +51,11 @@ export class CloRubricConfigComponent implements OnInit {
     });
   }
 
+  hasExistingConfig: boolean = false;
+  isEditingName: boolean = false;
+  currentCloSetId: number | null = null;
+  currentCloSetName: string = '';
+
   onCampaignChange(): void {
     if (!this.selectedCampaignId) return;
     
@@ -56,13 +65,22 @@ export class CloRubricConfigComponent implements OnInit {
     }
     
     this.isLoading = true;
+    this.showConfig = false;
+    this.hasExistingConfig = false;
+    this.isEditingName = false;
+    this.currentCloSetId = null;
+    this.currentCloSetName = '';
+
     // Tìm hoặc tạo DepartmentCampaign
     this.deptCampaignService.findOrCreate(this.selectedCampaignId, this.departmentId).subscribe({
       next: (res: any) => {
         this.departmentCampaignId = res.id;
+        this.currentCloSetId = res.clo_set_id || null;
+
         if (res.stage1_weight !== undefined) this.stage1Weight = res.stage1_weight;
         if (res.stage2_weight !== undefined) this.stage2Weight = res.stage2_weight;
         if (this.departmentCampaignId) {
+          this.loadCloSets();
           this.loadCloConfigs();
         } else {
           this.toastService.error('Không thể xác định luồng Đợt thực tập của Khoa.');
@@ -76,12 +94,49 @@ export class CloRubricConfigComponent implements OnInit {
     });
   }
 
+  loadCloSets(): void {
+    if (!this.departmentId) return;
+    this.deptCampaignService.getCloSets(this.departmentId).subscribe({
+      next: (res: any) => {
+        this.cloSets = Array.isArray(res) ? res : (res.data || res.payload || []);
+        // Tìm tên của bộ CLO hiện tại nếu có
+        if (this.currentCloSetId) {
+          const currentSet = this.cloSets.find(s => s.id === this.currentCloSetId);
+          if (currentSet) {
+            this.currentCloSetName = currentSet.name;
+          }
+        }
+      }
+    });
+  }
+
+  applyCloSet(): void {
+    if (!this.departmentCampaignId || !this.selectedCloSetId) return;
+    this.isLoading = true;
+    this.deptCampaignService.applyCloSet(this.departmentCampaignId, this.selectedCloSetId).subscribe({
+      next: () => {
+        this.toastService.success('Đã áp dụng bộ CLO thành công');
+        this.currentCloSetId = this.selectedCloSetId;
+        const currentSet = this.cloSets.find(s => s.id === this.currentCloSetId);
+        if (currentSet) this.currentCloSetName = currentSet.name;
+        this.loadCloConfigs();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.toastService.error(err.message || 'Lỗi khi áp dụng bộ CLO');
+      }
+    });
+  }
+
+  showConfig: boolean = false;
+
   loadCloConfigs(): void {
     if (!this.departmentCampaignId) return;
 
     this.deptCampaignService.getCloConfigs(this.departmentCampaignId).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         const data = Array.isArray(res) ? res : (res.data || res.payload || []);
+        
         if (data.length > 0) {
           this.clos = data.map((clo: any) => {
             if (clo.rubrics) {
@@ -90,11 +145,20 @@ export class CloRubricConfigComponent implements OnInit {
             return clo;
           });
           this.selectedCloIndex = 0;
+          this.showConfig = true; // Auto show if existing configs exist
+          this.hasExistingConfig = true;
         } else {
-          // Khởi tạo 1 CLO trống mặc định
-          this.clos = [this.createEmptyClo()];
-          this.selectedCloIndex = 0;
+          this.clos = [];
+          this.showConfig = false; // Hide UI until user chooses
+          this.hasExistingConfig = false;
         }
+        
+        // Tự động phân bổ lại tổng điểm (nếu chưa lưu weight nào)
+        if (this.clos.length > 0 && this.stage1Weight === 0 && this.stage2Weight === 0) {
+          this.stage1Weight = 50;
+          this.stage2Weight = 50;
+        }
+
         this.isLoading = false;
       },
       error: (err) => {
@@ -102,6 +166,15 @@ export class CloRubricConfigComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  startCreatingNew(): void {
+    this.showConfig = true;
+    this.newCloSetName = '';
+    // Thêm sẵn 1 CLO trống để user bắt đầu nếu rỗng
+    if (this.clos.length === 0) {
+      this.addClo();
+    }
   }
 
   createEmptyClo(): CloItem {
@@ -252,10 +325,16 @@ export class CloRubricConfigComponent implements OnInit {
       return;
     }
 
+    if (!this.newCloSetName || !this.newCloSetName.trim()) {
+      this.showError('Vui lòng nhập tên cho bộ CLO mới.');
+      return;
+    }
+
     const request: CloConfigRequest = {
       department_campaign_id: this.departmentCampaignId,
       stage1_weight: this.stage1Weight,
       stage2_weight: this.stage2Weight,
+      clo_set_name: this.newCloSetName,
       clos: this.clos
     };
 
@@ -264,7 +343,9 @@ export class CloRubricConfigComponent implements OnInit {
       next: () => {
         this.isSaving = false;
         this.showSuccess('Đã lưu cấu hình CLO & Rubric thành công!');
-        this.loadCloConfigs(); // reload
+        this.newCloSetName = ''; // Reset input
+        this.loadCloSets(); // reload dropdown
+        this.loadCloConfigs(); // reload configs
       },
       error: (err) => {
         this.isSaving = false;

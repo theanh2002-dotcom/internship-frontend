@@ -23,6 +23,10 @@ export class StudentCampaignService {
       .set('page', pageRequest.page.toString())
       .set('limit', pageRequest.limit.toString());
       
+    if (pageRequest.searchText) {
+      params = params.set('searchText', pageRequest.searchText);
+    }
+      
     return this.apiService.get<BasePagination<any>>('/base/student-campaigns', params);
   }
 
