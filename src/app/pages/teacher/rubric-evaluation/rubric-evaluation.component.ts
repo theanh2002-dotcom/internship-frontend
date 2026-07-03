@@ -89,9 +89,8 @@ export class RubricEvaluationComponent implements OnInit {
     source$.subscribe({
       next: (res) => {
         const all = Array.isArray(res) ? res : (res.data || res.payload || []);
-        this.allStudents = all.filter((s: any) => 
-          ['PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(s.status)
-        ).map((s: any) => ({ ...s, gradingStatus: 'Đang tải...' }));
+        this.allStudents = all.filter((s: any) => s.status !== 'SUSPENDED')
+          .map((s: any) => ({ ...s, gradingStatus: 'Đang tải...' }));
         this.filterStudents();
         this.isLoading = false;
         this.checkAllEvaluationsStatus();
