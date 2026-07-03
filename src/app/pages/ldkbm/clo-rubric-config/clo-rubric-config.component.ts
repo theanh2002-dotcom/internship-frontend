@@ -24,6 +24,8 @@ export class CloRubricConfigComponent implements OnInit {
   selectedCloSetId: number | null = null;
   newCloSetName: string = '';
 
+  cloCount: number = 7;
+  hasDefinedCloCount: boolean = false;
   clos: CloItem[] = [];
   selectedCloIndex: number = 0;
 
@@ -66,6 +68,7 @@ export class CloRubricConfigComponent implements OnInit {
     
     this.isLoading = true;
     this.showConfig = false;
+    this.hasDefinedCloCount = false;
     this.hasExistingConfig = false;
     this.isEditingName = false;
     this.currentCloSetId = null;
@@ -139,6 +142,8 @@ export class CloRubricConfigComponent implements OnInit {
         
         if (data.length > 0) {
           this.clos = data.map((clo: any) => {
+            clo.stage1_weight = clo.stage1_weight ?? this.stage1Weight;
+            clo.stage2_weight = clo.stage2_weight ?? this.stage2Weight;
             if (clo.rubrics) {
               clo.rubrics.sort((a: any, b: any) => a.score_level - b.score_level);
             }
@@ -146,10 +151,12 @@ export class CloRubricConfigComponent implements OnInit {
           });
           this.selectedCloIndex = 0;
           this.showConfig = true; // Auto show if existing configs exist
+          this.hasDefinedCloCount = true;
           this.hasExistingConfig = true;
         } else {
           this.clos = [];
           this.showConfig = false; // Hide UI until user chooses
+          this.hasDefinedCloCount = false;
           this.hasExistingConfig = false;
         }
         
@@ -170,18 +177,47 @@ export class CloRubricConfigComponent implements OnInit {
 
   startCreatingNew(): void {
     this.showConfig = true;
+    this.hasDefinedCloCount = false;
     this.newCloSetName = '';
-    // Thêm sẵn 1 CLO trống để user bắt đầu nếu rỗng
-    if (this.clos.length === 0) {
-      this.addClo();
-    }
+    this.clos = [];
+    this.cloCount = 7;
   }
 
-  createEmptyClo(): CloItem {
+  defineCloCount(): void {
+    const count = Number(this.cloCount);
+    if (!Number.isInteger(count) || count <= 0 || count > 20) {
+      this.showError('Số lượng CLO phải từ 1 đến 20.');
+      return;
+    }
+
+    this.clos = Array.from({ length: count }, (_, index) => this.createEmptyClo(index + 1));
+    this.distributeAlphaWeights();
+    this.selectedCloIndex = 0;
+    this.hasDefinedCloCount = true;
+  }
+
+  private distributeAlphaWeights(): void {
+    if (this.clos.length === 0) return;
+
+    const base = Math.floor((100 / this.clos.length) * 100) / 100;
+    let assigned = 0;
+    this.clos.forEach((clo, index) => {
+      if (index === this.clos.length - 1) {
+        clo.alpha_weight = Number((100 - assigned).toFixed(2));
+      } else {
+        clo.alpha_weight = base;
+        assigned += base;
+      }
+    });
+  }
+
+  createEmptyClo(index?: number): CloItem {
     return {
-      clo_code: '',
+      clo_code: index ? `CLO${index}` : '',
       description: '',
       alpha_weight: 0,
+      stage1_weight: this.stage1Weight,
+      stage2_weight: this.stage2Weight,
       gvhd_beta: 50,
       company_beta: 50,
       rubrics: []
@@ -189,7 +225,7 @@ export class CloRubricConfigComponent implements OnInit {
   }
 
   addClo(): void {
-    this.clos.push(this.createEmptyClo());
+    this.clos.push(this.createEmptyClo(this.clos.length + 1));
     this.selectedCloIndex = this.clos.length - 1;
   }
 
@@ -232,9 +268,18 @@ export class CloRubricConfigComponent implements OnInit {
     clo.company_beta = 100 - (clo.gvhd_beta || 0);
   }
 
+  onCloStage1WeightChange(clo: CloItem): void {
+    clo.stage2_weight = 100 - (clo.stage1_weight || 0);
+  }
+
   setStageWeights(stage1: number): void {
     this.stage1Weight = stage1;
     this.stage2Weight = 100 - stage1;
+  }
+
+  setCloStageWeights(clo: CloItem, stage1: number): void {
+    clo.stage1_weight = stage1;
+    clo.stage2_weight = 100 - stage1;
   }
 
   setBetaWeights(clo: CloItem, gvhd: number): void {
@@ -289,6 +334,12 @@ export class CloRubricConfigComponent implements OnInit {
         return;
       }
       totalAlpha += clo.alpha_weight || 0;
+
+      const totalCloStageWeight = (clo.stage1_weight || 0) + (clo.stage2_weight || 0);
+      if (Math.abs(totalCloStageWeight - 100) > 0.01) {
+        this.showError(`Tổng trọng số Chặng 1 + Chặng 2 của ${clo.clo_code} phải bằng 100%.`);
+        return;
+      }
 
       const totalBeta = (clo.gvhd_beta || 0) + (clo.company_beta || 0);
       if (Math.abs(totalBeta - 100) > 0.01) {

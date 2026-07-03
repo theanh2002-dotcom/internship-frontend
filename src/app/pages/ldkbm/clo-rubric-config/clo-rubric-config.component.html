@@ -17,7 +17,7 @@
     </div>
 
     <!-- Ô nhập tên và Nút Lưu -->
-    <div *ngIf="showConfig" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto p-1.5 rounded-lg transition-all" [ngClass]="{'bg-blue-50 border border-blue-100': isEditingName || !hasExistingConfig}">
+    <div *ngIf="showConfig && hasDefinedCloCount" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto p-1.5 rounded-lg transition-all" [ngClass]="{'bg-blue-50 border border-blue-100': isEditingName || !hasExistingConfig}">
       
       <!-- Hiện nếu người dùng bấm nút Lưu, hoặc nếu đây là tạo mới từ đầu -->
       <ng-container *ngIf="isEditingName || !hasExistingConfig">
@@ -111,6 +111,31 @@
   </div>
 
   <ng-container *ngIf="showConfig">
+    <div *ngIf="!hasDefinedCloCount" class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+      <div class="flex flex-col gap-4 max-w-xl">
+        <div>
+          <h3 class="font-bold text-slate-800 text-[15px] flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[#00429D] text-[20px]">format_list_numbered</span>
+            Định nghĩa số lượng CLO
+          </h3>
+          <p class="text-[12px] text-slate-500 mt-1">Nhập số CLO cần cấu hình. Hệ thống sẽ tạo danh sách CLO và chia đều alpha ban đầu.</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+          <label class="flex flex-col gap-1.5">
+            <span class="text-[11px] font-bold text-slate-650">Số CLO</span>
+            <input [(ngModel)]="cloCount" type="number" min="1" max="20" step="1"
+                   class="w-full sm:w-40 border border-slate-300 rounded-lg px-3 py-2 text-[13px] font-semibold text-slate-800 focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] focus:outline-none shadow-sm"/>
+          </label>
+          <button (click)="defineCloCount()" class="px-5 py-2 bg-[#00429D] text-white font-medium text-[13px] rounded-lg hover:bg-blue-800 transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            Tiếp tục cấu hình
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="hasDefinedCloCount">
     <!-- Cấu hình Trọng số Chặng -->
     <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
@@ -361,6 +386,59 @@
           </div>
         </div>
 
+        <div class="border border-slate-200 rounded-xl p-4 mb-5 bg-slate-50/40">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+            <div>
+              <label class="text-[11px] font-bold text-slate-650">Trọng số CLO theo chặng</label>
+              <p class="text-[11px] text-slate-500 mt-0.5">Áp dụng riêng cho {{ activeClo.clo_code || 'CLO đang chọn' }}</p>
+            </div>
+            <span class="px-2 py-0.5 rounded font-bold text-[11px]"
+                  [ngClass]="((activeClo.stage1_weight || 0) + (activeClo.stage2_weight || 0) === 100) ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'">
+              {{ (activeClo.stage1_weight || 0) + (activeClo.stage2_weight || 0) }}% / 100%
+            </span>
+          </div>
+
+          <div class="relative w-full pb-5">
+            <div class="relative w-full h-9 bg-slate-100 rounded-lg shadow-inner border border-slate-200 overflow-hidden group z-10">
+              <div class="absolute top-0 left-0 h-full bg-[#00429D]/85 flex items-center justify-center text-white font-bold text-[12px] transition-all duration-75"
+                   [style.width.%]="activeClo.stage1_weight || 0">
+                <span *ngIf="(activeClo.stage1_weight || 0) > 10">C1 {{ activeClo.stage1_weight || 0 }}%</span>
+              </div>
+              <div class="absolute top-0 right-0 h-full flex items-center justify-center text-slate-600 font-bold text-[12px] transition-all duration-75"
+                   [style.width.%]="activeClo.stage2_weight || 0">
+                <span *ngIf="(activeClo.stage2_weight || 0) > 10">C2 {{ activeClo.stage2_weight || 0 }}%</span>
+              </div>
+              <div class="absolute top-0 bottom-0 w-[1px] bg-white shadow z-10 transition-all duration-75 pointer-events-none"
+                   [style.left.%]="activeClo.stage1_weight || 0">
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-6 bg-white border border-slate-300 rounded shadow-sm flex items-center justify-center text-slate-400 group-hover:border-[#00429D] group-hover:text-[#00429D] transition-colors">
+                  <span class="material-symbols-outlined text-[12px]">drag_indicator</span>
+                </div>
+              </div>
+              <input type="range" min="0" max="100" step="1"
+                     [(ngModel)]="activeClo.stage1_weight"
+                     (input)="onCloStage1WeightChange(activeClo)"
+                     class="absolute top-0 left-0 w-full h-full opacity-0 cursor-ew-resize z-20 m-0 p-0" />
+            </div>
+
+            <div class="absolute top-9 left-0 w-full h-4 z-0 mt-0.5 px-0 pointer-events-none">
+              <div class="relative w-full h-full">
+                <button (click)="setCloStageWeights(activeClo, 30)" class="absolute left-[30%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                  <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                  <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">30</span>
+                </button>
+                <button (click)="setCloStageWeights(activeClo, 50)" class="absolute left-[50%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                  <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                  <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">50</span>
+                </button>
+                <button (click)="setCloStageWeights(activeClo, 70)" class="absolute left-[70%] -translate-x-1/2 flex flex-col items-center pointer-events-auto cursor-pointer group/mark outline-none border-none bg-transparent">
+                  <div class="w-0.5 h-1.5 bg-slate-300 group-hover/mark:bg-[#00429D] transition-colors rounded"></div>
+                  <span class="text-[9px] font-bold text-slate-400 group-hover/mark:text-[#00429D] leading-none mt-0.5">70</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Mô tả -->
         <div class="flex flex-col gap-1.5 w-full mb-6">
           <label class="text-[11px] font-bold text-slate-650">Mô tả chuẩn đầu ra</label>
@@ -454,6 +532,7 @@
 
   </div>
 
+    </ng-container>
   </ng-container>
 
 </div>

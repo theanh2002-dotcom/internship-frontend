@@ -11,6 +11,8 @@ export interface CloItem {
   clo_code: string;
   description: string;
   alpha_weight: number;
+  stage1_weight: number;
+  stage2_weight: number;
   gvhd_beta: number;
   company_beta: number;
   rubrics: RubricItem[];
