@@ -8,7 +8,7 @@
   <span class="material-symbols-outlined text-[64px] text-amber-400 mb-4">lock</span>
   <p class="text-slate-700 font-bold text-lg">Chưa thể truy cập TTTN-03</p>
   <p class="text-slate-500 text-sm mt-2 text-center max-w-md">Bạn cần hoàn thành Kế hoạch Thực tập (TTTN-02) và được GVHD cùng Đơn vị hướng dẫn phê duyệt trước khi ghi nhật ký.</p>
-  <a routerLink="/student/internship-plan" class="mt-6 px-6 py-2.5 bg-[#00429D] text-white rounded-lg text-sm font-medium hover:bg-blue-800 transition-colors shadow-sm flex items-center gap-2">
+  <a routerLink="/student/internship-report" [queryParams]="{ step: 'TTTN-02' }" class="mt-6 px-6 py-2.5 bg-[#00429D] text-white rounded-lg text-sm font-medium hover:bg-blue-800 transition-colors shadow-sm flex items-center gap-2">
     <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
     Đi đến TTTN-02
   </a>
@@ -188,7 +188,7 @@
 
                         <!-- Actions -->
                         <div class="flex justify-end gap-4 pt-4 border-t border-slate-200">
-                            <button class="px-5 py-2.5 rounded-lg border border-slate-400 text-slate-900 text-sm hover:bg-slate-100 transition-colors">
+                            <button (click)="submitLog()" [disabled]="isSaving" class="px-5 py-2.5 rounded-lg border border-slate-400 text-slate-900 text-sm hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 Lưu bản nháp
                             </button>
                             <button (click)="submitLog()" [disabled]="isSaving" class="px-5 py-2.5 rounded-lg bg-[#00429D] text-white text-sm hover:bg-[#002d70] transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">

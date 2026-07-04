@@ -9,17 +9,23 @@ import { CampaignService } from '../../../core/services/campaign.service';
 
 interface RubricLevel {
   label: string;
+  level: number;
+  range: string;
   description: string;
-  points: number;
 }
 
 interface RubricCriterion {
-  id: string; // clo_code
+  id: string;
   name: string;
   description: string;
   maxScore: number;
+  alphaWeight: number;
+  stage1Weight: number;
+  stage2Weight: number;
+  gvhdBeta: number;
+  companyBeta: number;
   levels: RubricLevel[];
-  selectedPoints?: number;
+  selectedScore?: number | null;
 }
 
 @Component({
@@ -30,15 +36,16 @@ interface RubricCriterion {
 export class RubricEvaluationComponent implements OnInit {
   isLoading = true;
   isSaving = false;
-  
+
   allStudents: StudentCampaignResponse[] = [];
   students: StudentCampaignResponse[] = [];
-  searchTerm: string = '';
-  selectedGradingStatus: string = '';
+  searchTerm = '';
+  selectedGradingStatus = '';
   selectedStudent: StudentCampaignResponse | null = null;
-  
+
   criteria: RubricCriterion[] = [];
   existingEvaluation: any = null;
+  generalComment = '';
 
   selectedStage: 'STAGE_1' | 'STAGE_2' = 'STAGE_1';
   campaign: any = null;
@@ -47,11 +54,15 @@ export class RubricEvaluationComponent implements OnInit {
   isStage2Open = false;
   midtermStartDateStr = '';
   tttn06StartDateStr = '';
+  departmentStage1Weight = 30;
+  departmentStage2Weight = 70;
 
   currentPage = 1;
   pageSize = 10;
   totalItems = 0;
   paginatedStudents: StudentCampaignResponse[] = [];
+
+  isCompanySupervisor = false;
 
   columns = [
     { key: 'STT', label: 'STT', width: '60px', align: 'center' },
@@ -61,7 +72,15 @@ export class RubricEvaluationComponent implements OnInit {
     { key: 'gradingStatus', label: 'Trạng thái', width: '150px', align: 'center' },
     { key: 'actions', label: 'Thao tác', align: 'center', width: '150px' }
   ];
-  
+
+  readonly scoreBands = [
+    { level: 0, label: 'Mức 0', range: '0 - dưới 4.0' },
+    { level: 1, label: 'Mức 1', range: '4.0 - dưới 5.5' },
+    { level: 2, label: 'Mức 2', range: '5.5 - dưới 7.0' },
+    { level: 3, label: 'Mức 3', range: '7.0 - dưới 8.5' },
+    { level: 4, label: 'Mức 4', range: '8.5 - 10.0' }
+  ];
+
   constructor(
     private studentCampaignService: StudentCampaignService,
     private departmentCampaignService: DepartmentCampaignService,
@@ -71,8 +90,6 @@ export class RubricEvaluationComponent implements OnInit {
     private campaignService: CampaignService
   ) {}
 
-  isCompanySupervisor = false;
-
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
     this.isCompanySupervisor = currentUser?.role === 'COMPANY_SUPERVISOR';
@@ -81,15 +98,15 @@ export class RubricEvaluationComponent implements OnInit {
 
   loadEligibleStudents(): void {
     this.isLoading = true;
-    const currentUser = this.authService.getCurrentUser();
-    const source$ = this.isCompanySupervisor 
+    const source$ = this.isCompanySupervisor
       ? this.studentCampaignService.getCompanyStudents()
       : this.studentCampaignService.getMyAssignedStudents();
-      
+
     source$.subscribe({
       next: (res) => {
         const all = Array.isArray(res) ? res : (res.data || res.payload || []);
-        this.allStudents = all.filter((s: any) => s.status !== 'SUSPENDED')
+        this.allStudents = all
+          .filter((s: any) => s.status !== 'SUSPENDED')
           .map((s: any) => ({ ...s, gradingStatus: 'Đang tải...' }));
         this.filterStudents();
         this.isLoading = false;
@@ -104,32 +121,26 @@ export class RubricEvaluationComponent implements OnInit {
 
   checkAllEvaluationsStatus(): void {
     const currentUser = this.authService.getCurrentUser();
-    if (!currentUser) return;
-    const evaluatorType = currentUser.role === 'COMPANY_SUPERVISOR' ? 'COMPANY_SUPERVISOR' : 'GVHD';
+    if (!currentUser || this.allStudents.length === 0) return;
 
+    const evaluatorType = currentUser.role === 'COMPANY_SUPERVISOR' ? 'COMPANY_SUPERVISOR' : 'GVHD';
     let completedCount = 0;
+
     this.allStudents.forEach(student => {
       this.evaluationService.findEvaluations(student.id).subscribe({
         next: (res) => {
           const evals = Array.isArray(res) ? res : (res.data || res.payload || []);
-          const myEval = evals.find((e: any) => e.evaluator_type === evaluatorType && e.evaluator_id === currentUser.userId);
-          (student as any).gradingStatus = myEval ? 'Đã chấm' : 'Chưa chấm';
-          
+          const myEvals = evals.filter((e: any) => e.evaluator_type === evaluatorType && e.evaluator_id === currentUser.userId);
+          const hasStage1 = myEvals.some((e: any) => e.stage === 'STAGE_1');
+          const hasStage2 = myEvals.some((e: any) => e.stage === 'STAGE_2');
+          (student as any).gradingStatus = hasStage1 && hasStage2 ? 'Đã chấm đủ' : myEvals.length > 0 ? 'Đã chấm 1 phần' : 'Chưa chấm';
           completedCount++;
-          if (completedCount === this.allStudents.length) {
-            this.filterStudents();
-          } else {
-            this.paginate();
-          }
+          completedCount === this.allStudents.length ? this.filterStudents() : this.paginate();
         },
         error: () => {
           (student as any).gradingStatus = 'Lỗi trạng thái';
           completedCount++;
-          if (completedCount === this.allStudents.length) {
-            this.filterStudents();
-          } else {
-            this.paginate();
-          }
+          completedCount === this.allStudents.length ? this.filterStudents() : this.paginate();
         }
       });
     });
@@ -140,8 +151,8 @@ export class RubricEvaluationComponent implements OnInit {
 
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase().trim();
-      result = result.filter(s => 
-        (s.full_name && s.full_name.toLowerCase().includes(term)) || 
+      result = result.filter(s =>
+        (s.full_name && s.full_name.toLowerCase().includes(term)) ||
         (s.student_code && s.student_code.toLowerCase().includes(term)) ||
         (s.company_info?.company_name && s.company_info.company_name.toLowerCase().includes(term))
       );
@@ -164,8 +175,7 @@ export class RubricEvaluationComponent implements OnInit {
 
   paginate(): void {
     const startIndex = (this.currentPage - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    this.paginatedStudents = this.students.slice(startIndex, endIndex);
+    this.paginatedStudents = this.students.slice(startIndex, startIndex + this.pageSize);
   }
 
   onFilterChange(): void {
@@ -182,6 +192,7 @@ export class RubricEvaluationComponent implements OnInit {
     this.selectedStudent = student;
     this.criteria = [];
     this.existingEvaluation = null;
+    this.generalComment = '';
     this.campaign = null;
     this.isStage1Open = false;
     this.isStage2Open = false;
@@ -198,16 +209,20 @@ export class RubricEvaluationComponent implements OnInit {
         this.isCampaignActive = campaign.status === 'ACTIVE';
         const now = new Date();
 
-        const gConfig = this.selectedStudent?.group_config || null;
-        const activeSource = gConfig ? gConfig : campaign;
+        const groupConfig = this.selectedStudent?.group_config || null;
+        const activeSource = groupConfig || campaign;
 
-        // Stage 1 checks
-        const midtermStart = activeSource.midterm_start_date ? new Date(activeSource.midterm_start_date) : new Date(new Date(activeSource.start_date).getTime() + 21 * 24 * 60 * 60 * 1000);
+        const startDate = activeSource.start_date || campaign.start_date;
+        const endDate = activeSource.end_date || campaign.end_date;
+        const midtermStart = activeSource.midterm_start_date
+          ? new Date(activeSource.midterm_start_date)
+          : new Date(new Date(startDate).getTime() + 21 * 24 * 60 * 60 * 1000);
         this.midtermStartDateStr = midtermStart.toLocaleDateString('vi-VN');
         this.isStage1Open = now >= midtermStart;
 
-        // Stage 2 checks
-        const tttn06Start = activeSource.tttn06_start_date ? new Date(activeSource.tttn06_start_date) : new Date(new Date(activeSource.end_date).getTime() - 7 * 24 * 60 * 60 * 1000);
+        const tttn06Start = activeSource.tttn06_start_date
+          ? new Date(activeSource.tttn06_start_date)
+          : new Date(new Date(endDate).getTime() - 7 * 24 * 60 * 60 * 1000);
         this.tttn06StartDateStr = tttn06Start.toLocaleDateString('vi-VN');
         this.isStage2Open = now >= tttn06Start;
       },
@@ -220,19 +235,23 @@ export class RubricEvaluationComponent implements OnInit {
   onStageChange(stage: 'STAGE_1' | 'STAGE_2'): void {
     this.selectedStage = stage;
     this.existingEvaluation = null;
-    // Reset selected points in criteria
-    this.criteria.forEach(c => c.selectedPoints = undefined);
+    this.generalComment = '';
+    this.criteria.forEach(c => c.selectedScore = undefined);
     this.checkExistingEvaluation();
   }
 
   loadRubricConfig(): void {
     if (!this.selectedStudent) return;
     this.isLoading = true;
-    
+
     this.departmentCampaignService.findOrCreate(this.selectedStudent.campaign_id, this.selectedStudent.department_id)
       .subscribe({
         next: (deptRes) => {
-          const deptCampId = deptRes.id !== undefined ? deptRes.id : (deptRes.data?.id || deptRes.payload?.id);
+          const deptCampaign = deptRes.id !== undefined ? deptRes : (deptRes.data || deptRes.payload || {});
+          const deptCampId = deptCampaign.id;
+          this.departmentStage1Weight = this.toNumber(deptCampaign.stage1_weight, 30);
+          this.departmentStage2Weight = this.toNumber(deptCampaign.stage2_weight, 70);
+
           this.departmentCampaignService.getCloConfigs(deptCampId).subscribe({
             next: (cloRes) => {
               this.buildCriteriaFromApi(Array.isArray(cloRes) ? cloRes : (cloRes.data || cloRes.payload || []));
@@ -247,19 +266,32 @@ export class RubricEvaluationComponent implements OnInit {
 
   buildCriteriaFromApi(clos: any[]): void {
     this.criteria = clos.map(clo => {
-      // Sắp xếp level tăng dần
-      const rubrics = [...(clo.rubrics || [])].sort((a: any, b: any) => a.score_level - b.score_level);
-      
+      const rubrics = [...(clo.rubrics || [])].sort((a: any, b: any) => Number(a.score_level) - Number(b.score_level));
+      const usesLevelCode = rubrics.length > 0 && rubrics.every((r: any) => {
+        const value = Number(r.score_level);
+        return Number.isInteger(value) && value >= 0 && value <= 4;
+      });
+
       return {
         id: clo.clo_code,
         name: `CLO: ${clo.clo_code}`,
         description: clo.description,
-        maxScore: 4.0, // Thường điểm tối đa level là 4
-        levels: rubrics.map((r: any) => ({
-          label: `Mức ${r.score_level}`,
-          description: r.description,
-          points: r.score_level
-        }))
+        maxScore: 10,
+        alphaWeight: this.toNumber(clo.alpha_weight, 0),
+        stage1Weight: this.toNumber(clo.stage1_weight, this.departmentStage1Weight),
+        stage2Weight: this.toNumber(clo.stage2_weight, this.departmentStage2Weight),
+        gvhdBeta: this.toNumber(clo.gvhd_beta, 0),
+        companyBeta: this.toNumber(clo.company_beta, 0),
+        levels: rubrics.map((r: any, index: number) => {
+          const level = usesLevelCode ? Number(r.score_level) : index;
+          const band = this.scoreBands.find(b => b.level === level) || this.scoreBands[index] || this.scoreBands[0];
+          return {
+            label: band.label,
+            level: band.level,
+            range: band.range,
+            description: r.description || ''
+          };
+        })
       };
     });
   }
@@ -273,16 +305,19 @@ export class RubricEvaluationComponent implements OnInit {
     this.evaluationService.findEvaluations(this.selectedStudent.id).subscribe({
       next: (res) => {
         const evaluations = Array.isArray(res) ? res : (res.data || res.payload || []);
-        // Tìm bài chấm
-        const myEval = evaluations.find((e: any) => e.evaluator_type === evaluatorType && e.evaluator_id === currentUser.userId && e.stage === this.selectedStage);
+        const myEval = evaluations.find((e: any) =>
+          e.evaluator_type === evaluatorType &&
+          e.evaluator_id === currentUser.userId &&
+          e.stage === this.selectedStage
+        );
         if (myEval) {
           this.existingEvaluation = myEval;
-          // Fill lại điểm cũ
-          myEval.scores.forEach((s: any) => {
-            const crit = this.criteria.find(c => c.id === s.clo_code);
-            if (crit) crit.selectedPoints = s.score_level;
+          this.generalComment = myEval.general_comment || '';
+          (myEval.scores || []).forEach((score: any) => {
+            const crit = this.criteria.find(c => c.id === score.clo_code);
+            if (crit) crit.selectedScore = this.clampScore(score.score_level);
           });
-          this.toastService.success(`Bạn đã chấm điểm Chặng ${this.selectedStage === 'STAGE_1' ? '1' : '2'} cho sinh viên này rồi. Bạn có thể sửa điểm nếu cần.`);
+          this.toastService.success(this.getExistingEvaluationMessage());
         }
         this.isLoading = false;
       },
@@ -290,25 +325,149 @@ export class RubricEvaluationComponent implements OnInit {
     });
   }
 
-  selectLevel(criterion: RubricCriterion, points: number) {
-    if (!this.isCampaignActive) return;
-    // Disable scoring if the phase is not open
-    if (this.selectedStage === 'STAGE_1' && !this.isStage1Open) return;
-    if (this.selectedStage === 'STAGE_2' && !this.isStage2Open) return;
-    criterion.selectedPoints = points;
+  get visibleCriteria(): RubricCriterion[] {
+    return this.criteria.filter(c => this.getStageWeight(c) > 0);
   }
 
-  getTotalScore(): number {
-    return this.criteria.reduce((total, c) => total + (c.selectedPoints || 0), 0);
+  get hiddenCriteriaCount(): number {
+    return this.criteria.length - this.visibleCriteria.length;
   }
-  
+
+  get hasRubricConfig(): boolean {
+    return this.criteria.length > 0;
+  }
+
+  get canSubmit(): boolean {
+    return !this.isSaving && this.isFullyScored() && !this.isScoringLocked();
+  }
+
+  getStageWeight(criterion: RubricCriterion): number {
+    return this.selectedStage === 'STAGE_1' ? criterion.stage1Weight : criterion.stage2Weight;
+  }
+
+  getStageLabel(): string {
+    return this.selectedStage === 'STAGE_1' ? 'Chặng 1 (Giữa kỳ)' : 'Chặng 2 (Cuối kỳ)';
+  }
+
+  getStageWeightTitle(): string {
+    return this.selectedStage === 'STAGE_1' ? 'Trọng số Chặng 1' : 'Trọng số Chặng 2';
+  }
+
+  getStageStartText(): string {
+    return this.selectedStage === 'STAGE_1' ? this.midtermStartDateStr : this.tttn06StartDateStr;
+  }
+
+  getScoreLevel(score: number | null | undefined): number | null {
+    if (score === null || score === undefined || Number.isNaN(Number(score))) return null;
+    const value = Number(score);
+    if (value < 0 || value > 10) return null;
+    if (value < 4) return 0;
+    if (value < 5.5) return 1;
+    if (value < 7) return 2;
+    if (value < 8.5) return 3;
+    return 4;
+  }
+
+  getScoreLevelLabel(score: number | null | undefined): string {
+    const level = this.getScoreLevel(score);
+    if (level === null) return 'Chưa nhập';
+    const band = this.scoreBands.find(b => b.level === level);
+    return band ? `${band.label} (${band.range})` : `Mức ${level}`;
+  }
+
+  getLevelBadgeClass(criterion: RubricCriterion): string {
+    const level = this.getScoreLevel(criterion.selectedScore);
+    if (level === null) return 'bg-slate-100 text-slate-500 border-slate-200';
+    if (level === 0) return 'bg-red-50 text-red-700 border-red-200';
+    if (level === 1) return 'bg-amber-50 text-amber-700 border-amber-200';
+    if (level === 2) return 'bg-blue-50 text-blue-700 border-blue-200';
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  }
+
+  getLevelClass(criterion: RubricCriterion, level: RubricLevel): string {
+    return this.getScoreLevel(criterion.selectedScore) === level.level
+      ? 'border-[#00429D] bg-blue-50 text-[#00429D]'
+      : 'border-slate-200 bg-white text-slate-600';
+  }
+
+  getScoreInputClass(criterion: RubricCriterion): string {
+    return this.isScoreValid(criterion) || criterion.selectedScore === undefined || criterion.selectedScore === null
+      ? 'border-slate-300 focus:border-[#00429D] focus:ring-[#00429D]'
+      : 'border-red-300 focus:border-red-500 focus:ring-red-500';
+  }
+
+  normalizeScore(criterion: RubricCriterion): void {
+    if (criterion.selectedScore === null || criterion.selectedScore === undefined || criterion.selectedScore === ('' as any)) {
+      criterion.selectedScore = undefined;
+      return;
+    }
+    const value = Number(criterion.selectedScore);
+    if (Number.isNaN(value)) {
+      criterion.selectedScore = undefined;
+      return;
+    }
+    criterion.selectedScore = this.clampScore(value);
+  }
+
+  isScoreValid(criterion: RubricCriterion): boolean {
+    const value = Number(criterion.selectedScore);
+    return criterion.selectedScore !== null && criterion.selectedScore !== undefined && !Number.isNaN(value) && value >= 0 && value <= 10;
+  }
+
+  getAverageScore(): number {
+    const scores = this.visibleCriteria.filter(c => this.isScoreValid(c)).map(c => Number(c.selectedScore));
+    return scores.length === 0 ? 0 : scores.reduce((sum, score) => sum + score, 0) / scores.length;
+  }
+
+  getFilledCriteriaCount(): number {
+    return this.visibleCriteria.filter(c => this.isScoreValid(c)).length;
+  }
+
+  getProgressText(): string {
+    return `${this.getFilledCriteriaCount()}/${this.visibleCriteria.length} CLO đã nhập điểm`;
+  }
+
+  getNoVisibleCriteriaMessage(): string {
+    if (!this.hasRubricConfig) {
+      return 'Khoa chưa thiết lập cấu hình CLO & Rubric.';
+    }
+    return `Không có CLO nào cần chấm ở ${this.getStageLabel()} vì trọng số chặng bằng 0%.`;
+  }
+
+  getExistingEvaluationMessage(): string {
+    return `Bạn đã chấm điểm ${this.getStageLabel()} cho sinh viên này. Có thể cập nhật và lưu lại điểm.`;
+  }
+
+  getSubmitText(): string {
+    return this.existingEvaluation ? 'Lưu cập nhật điểm' : 'Hoàn tất đánh giá';
+  }
+
+  getCommentPlaceholder(): string {
+    return this.selectedStage === 'STAGE_1'
+      ? 'Nhận xét chung về kết quả giữa kỳ, tiến độ, thái độ và các điểm cần cải thiện...'
+      : 'Nhận xét chung về kết quả cuối kỳ, báo cáo/sản phẩm và mức độ đạt chuẩn đầu ra...';
+  }
+
+  getRubricLevels(criterion: RubricCriterion): RubricLevel[] {
+    return criterion.levels.length > 0
+      ? criterion.levels
+      : this.scoreBands.map(b => ({ label: b.label, level: b.level, range: b.range, description: '' }));
+  }
+
+  isScoringLocked(): boolean {
+    if (!this.isCampaignActive) return true;
+    return this.selectedStage === 'STAGE_1' ? !this.isStage1Open : !this.isStage2Open;
+  }
+
   isFullyScored(): boolean {
-    return this.criteria.length > 0 && this.criteria.every(c => c.selectedPoints !== undefined);
+    return this.visibleCriteria.length > 0 && this.visibleCriteria.every(c => this.isScoreValid(c));
   }
 
-  submitEvaluation() {
+  submitEvaluation(): void {
+    this.visibleCriteria.forEach(c => this.normalizeScore(c));
+
     if (!this.selectedStudent || !this.isFullyScored()) {
-      this.toastService.error('Vui lòng chấm điểm cho tất cả tiêu chí.');
+      this.toastService.error('Vui lòng nhập điểm thang 10 cho tất cả CLO có trọng số ở chặng này.');
       return;
     }
 
@@ -331,30 +490,28 @@ export class RubricEvaluationComponent implements OnInit {
       evaluator_type: evaluatorType as any,
       evaluator_id: currentUser.userId,
       stage: this.selectedStage,
-      scores: this.criteria.map(c => ({
+      general_comment: this.generalComment,
+      scores: this.visibleCriteria.map(c => ({
         clo_code: c.id,
-        score_level: c.selectedPoints!
+        score_level: Number(c.selectedScore)
       }))
     };
 
     this.evaluationService.submitEvaluation(payload).subscribe({
-      next: () => {
+      next: (res) => {
+        this.existingEvaluation = res?.payload || res?.data || res;
         this.toastService.success('Lưu bảng điểm thành công!');
         this.isSaving = false;
-        // Auto-calculate final result so it shows up in Bảng tổng hợp
         this.evaluationService.calculateFinalResult(this.selectedStudent!.id).subscribe();
-        
-        // Update local status
-        if (this.selectedStudent) {
-            const index = this.allStudents.findIndex(s => s.id === this.selectedStudent!.id);
-            if (index !== -1) {
-              (this.allStudents[index] as any).gradingStatus = 'Đã chấm';
-              this.filterStudents();
-            }
+
+        const index = this.allStudents.findIndex(s => s.id === this.selectedStudent!.id);
+        if (index !== -1) {
+          (this.allStudents[index] as any).gradingStatus = 'Đã chấm 1 phần';
+          this.filterStudents();
         }
       },
       error: (err) => {
-        const msg = err.error?.message || 'Có lỗi khi lưu bảng điểm.';
+        const msg = err?.error?.message || err?.message || 'Có lỗi khi lưu bảng điểm.';
         this.toastService.error(msg);
         this.isSaving = false;
       }
@@ -363,7 +520,26 @@ export class RubricEvaluationComponent implements OnInit {
 
   handleError(msg: string): void {
     this.toastService.error(msg);
-    this.toastService.error(msg);
     this.isLoading = false;
+  }
+
+  trackCriterion(_index: number, criterion: RubricCriterion): string {
+    return criterion.id;
+  }
+
+  trackLevel(_index: number, level: RubricLevel): number {
+    return level.level;
+  }
+
+  private toNumber(value: any, fallback: number): number {
+    if (value === null || value === undefined || value === '') return fallback;
+    const numberValue = Number(value);
+    return Number.isNaN(numberValue) ? fallback : numberValue;
+  }
+
+  private clampScore(value: any): number {
+    const numberValue = Number(value);
+    if (Number.isNaN(numberValue)) return 0;
+    return Math.min(10, Math.max(0, Math.round(numberValue * 10) / 10));
   }
 }

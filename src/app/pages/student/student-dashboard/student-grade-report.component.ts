@@ -128,4 +128,16 @@ export class StudentGradeReportComponent implements OnInit, OnChanges {
       ];
     }
   }
+
+  getStage1Score(): number | null {
+    return this.finalResult?.stage1_score ?? this.finalResult?.stage_1_score ?? null;
+  }
+
+  getStage2Score(): number | null {
+    return this.finalResult?.stage2_score ?? this.finalResult?.stage_2_score ?? null;
+  }
+
+  getFinalHpScore(): number | null {
+    return this.finalResult?.final_hp_score ?? null;
+  }
 }

@@ -82,7 +82,7 @@ export class WeeklyLogComponent implements OnInit {
           }
 
           // Status Gate check: TTTN-03 chỉ mở khi TTTN-02 đã được CẢ 2 bên duyệt (IN_PROGRESS)
-          const allowedStatuses = ['IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
+          const allowedStatuses = ['PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
           this.canAccess = allowedStatuses.includes(this.campaign!.status);
 
           if (this.canAccess) {

@@ -90,13 +90,13 @@ export class GeneralDashboardComponent implements OnInit {
         this.allStudents = students;
         this.totalStudents = res.total || students.length;
         
-        this.assignedStudents = students.filter((s: any) => s.gvhd_id !== null).length;
+        this.assignedStudents = students.filter((s: any) => this.hasAssignedGvhd(s)).length;
         this.approvedPlans = students.filter((s: any) => ['PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(s.status)).length;
         this.completedStudents = students.filter((s: any) => s.status === 'COMPLETED' || s.status === 'STAGE2_EVALUATED').length;
         
         // Tính toán phân phối tiến độ
         if (students.length > 0) {
-          const unassignedCount = students.filter((s: any) => s.gvhd_id === null).length;
+          const unassignedCount = students.filter((s: any) => !this.hasAssignedGvhd(s)).length;
           const companyDeclaredCount = students.filter((s: any) => s.status === 'COMPANY_DECLARED' || s.status === 'IMPORTED').length;
           const planPendingCount = students.filter((s: any) => s.status === 'COMPANY_APPROVED' || s.status === 'PLAN_SUBMITTED').length;
           const inProgressCount = students.filter((s: any) => s.status === 'PLAN_APPROVED' || s.status === 'IN_PROGRESS').length;
@@ -148,6 +148,13 @@ export class GeneralDashboardComponent implements OnInit {
 
     this.filteredStudents = result;
     this.tableCurrentPage = 1;
+  }
+
+  private hasAssignedGvhd(student: any): boolean {
+    if (Array.isArray(student.gvhd_ids)) {
+      return student.gvhd_ids.length > 0;
+    }
+    return student.gvhd_id !== null && student.gvhd_id !== undefined;
   }
 
   onSearchChange(): void {

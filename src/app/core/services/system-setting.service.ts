@@ -7,23 +7,17 @@ export interface SystemSettingBulkRequest {
   settings: { [key: string]: string };
 }
 
-export interface BaseResponse<T> {
-  data: T;
-  success?: boolean;
-  message?: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })
 export class SystemSettingService {
   constructor(private apiService: ApiService) {}
 
-  getAll(): Observable<BaseResponse<SystemSettingResponse[]>> {
-    return this.apiService.get<BaseResponse<SystemSettingResponse[]>>('/base/settings');
+  getAll(): Observable<SystemSettingResponse[]> {
+    return this.apiService.get<SystemSettingResponse[]>('/base/settings');
   }
 
-  updateBulk(request: SystemSettingBulkRequest): Observable<BaseResponse<any>> {
-    return this.apiService.post<BaseResponse<any>>('/base/settings/bulk-update', request);
+  updateBulk(request: SystemSettingBulkRequest): Observable<string> {
+    return this.apiService.post<string>('/base/settings/bulk-update', request);
   }
 }

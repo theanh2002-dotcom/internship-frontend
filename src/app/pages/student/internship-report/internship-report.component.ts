@@ -53,7 +53,7 @@ export class InternshipReportComponent implements OnInit {
   determineUnlock(status: string) {
     // Logic xác định step mở khóa lớn nhất hiện tại
     const tttn02Statuses = ['COMPANY_APPROVED', 'PLAN_SUBMITTED', 'PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
-    const tttn03Statuses = ['IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
+    const tttn03Statuses = ['PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
     const tttn06Statuses = ['STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
 
     if (tttn06Statuses.includes(status)) {
@@ -90,6 +90,8 @@ export class InternshipReportComponent implements OnInit {
   getTttn01Status(): string {
     if (!this.campaign) return 'Chưa gửi';
     const s = this.campaign.status;
+    if (s === 'IMPORTED' || s === 'ACTIVE') return 'Chưa kê khai';
+    if (s === 'COMPANY_DECLARED') return 'Chờ duyệt';
     if (s === 'DRAFT') return 'Chưa kê khai';
     if (s === 'PENDING_COMPANY') return 'Chờ duyệt';
     if (s === 'COMPANY_REJECTED') return 'Bị từ chối';
@@ -99,6 +101,7 @@ export class InternshipReportComponent implements OnInit {
   getTttn02Status(): string {
     if (!this.campaign) return '';
     const s = this.campaign.status;
+    if (['IMPORTED', 'ACTIVE', 'COMPANY_DECLARED', 'COMPANY_APPROVED'].includes(s)) return 'Chưa lập';
     if (['DRAFT', 'PENDING_COMPANY', 'COMPANY_REJECTED', 'COMPANY_APPROVED'].includes(s)) return 'Chưa lập';
     if (s === 'PLAN_SUBMITTED') return 'Chờ duyệt';
     if (s === 'PLAN_REJECTED') return 'Bị từ chối';

@@ -37,7 +37,7 @@ export class SystemSettingsComponent implements OnInit {
     this.isLoading = true;
     this.settingService.getAll().subscribe({
       next: (res) => {
-        const data = res.data || [];
+        const data = Array.isArray(res) ? res : [];
         data.forEach(item => {
           if (item.settingKey in this.settings) {
             (this.settings as any)[item.settingKey] = item.settingValue;

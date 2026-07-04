@@ -108,10 +108,10 @@
             </div>
           </td>
           <td colspan="3" class="px-2 py-3 text-center border text-[11px] text-slate-500 font-medium bg-slate-50/50">
-            Tổng Chặng 1: <span class="font-bold text-slate-800 text-xs">{{ finalResult.stage_1_score !== null ? (finalResult.stage_1_score | number:'1.1-1') : '-' }}</span>
+            Tổng Chặng 1: <span class="font-bold text-slate-800 text-xs">{{ getStage1Score() !== null ? (getStage1Score() | number:'1.1-1') : '-' }}</span>
           </td>
           <td colspan="3" class="px-2 py-3 text-center border text-[11px] text-slate-500 font-medium bg-slate-50/50">
-            Tổng Chặng 2: <span class="font-bold text-slate-800 text-xs">{{ finalResult.stage_2_score !== null ? (finalResult.stage_2_score | number:'1.1-1') : '-' }}</span>
+            Tổng Chặng 2: <span class="font-bold text-slate-800 text-xs">{{ getStage2Score() !== null ? (getStage2Score() | number:'1.1-1') : '-' }}</span>
           </td>
           <td class="px-2 py-3 text-center border bg-[#00429D]/10 font-bold text-[#00429D] text-sm">
             {{ finalResult.final_hp_score !== null ? (finalResult.final_hp_score | number:'1.1-1') : '-' }}

@@ -335,7 +335,7 @@ export class StudentDashboardComponent implements OnInit {
           title: `Nộp nhật ký thực tập Tuần ${this.currentWeek} (TTTN-03)`,
           deadline: 'Cuối tuần',
           type: 'warning',
-          route: '/student/weekly-log'
+          route: '/student/internship-report'
         });
       } else {
         this.upcomingTasks.push({
@@ -527,17 +527,11 @@ export class StudentDashboardComponent implements OnInit {
     this.router.navigate(['/student/internship-report'], { queryParams: { step: milestone.stepCode } });
   }
 
-  getConvertedScore(level: any): number {
-    if (level === null || level === undefined) return 0;
-    const l = Number(level);
-    switch (l) {
-      case 0: return 0.0;
-      case 1: return 4.5;
-      case 2: return 6.0;
-      case 3: return 7.5;
-      case 4: return 9.0;
-      default: return 0.0;
-    }
+  getConvertedScore(score: any): number {
+    if (score === null || score === undefined) return 0;
+    const value = Number(score);
+    if (Number.isNaN(value)) return 0;
+    return Math.min(10, Math.max(0, value));
   }
 
   loadDetailedScores(studentCampaignId: number, campaignId: number, departmentId: number) {
@@ -602,10 +596,13 @@ export class StudentDashboardComponent implements OnInit {
 
               // CLOi
               let cloFinal: number | null = null;
+              const cloStage1Weight = clo.stage1_weight !== null && clo.stage1_weight !== undefined ? clo.stage1_weight : this.stage1Weight;
+              const cloStage2Weight = clo.stage2_weight !== null && clo.stage2_weight !== undefined ? clo.stage2_weight : this.stage2Weight;
+
               if (s1Tb !== null || s2Tb !== null) {
                 const s1Part = s1Tb !== null ? s1Tb : 0;
                 const s2Part = s2Tb !== null ? s2Tb : 0;
-                cloFinal = (s1Part * this.stage1Weight + s2Part * this.stage2Weight) / 100.0;
+                cloFinal = (s1Part * cloStage1Weight + s2Part * cloStage2Weight) / 100.0;
               }
 
               const alpha = clo.alpha_weight !== null ? clo.alpha_weight : 15;
@@ -622,6 +619,8 @@ export class StudentDashboardComponent implements OnInit {
                 s2_tb: s2Tb,
                 clo_final: cloFinal,
                 alpha_weight: alpha,
+                stage1_weight: cloStage1Weight,
+                stage2_weight: cloStage2Weight,
                 clo_converted: cloConverted
               };
             });

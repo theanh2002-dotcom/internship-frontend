@@ -6,6 +6,7 @@ import { FinalReportService } from '../../../core/services/final-report.service'
 import { FinalReportRequest, ReportItem } from '../../../core/models/request.model';
 import { FinalReportResponse, StudentCampaignResponse } from '../../../core/models/base.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 interface UploadingFile {
   name: string;
@@ -200,6 +201,12 @@ export class FinalReportComponent implements OnInit {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  getFileUrl(fileUrl: string): string {
+    if (!fileUrl) return '#';
+    if (/^https?:\/\//i.test(fileUrl)) return fileUrl;
+    return `${environment.apiUrl}${fileUrl}`;
   }
 
   showError(msg: string): void {
