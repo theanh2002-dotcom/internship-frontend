@@ -551,16 +551,16 @@ export class StudentDashboardComponent implements OnInit {
               
               // Stage 1
               const s1Evals = evals.filter((e: any) => e.stage === 'STAGE_1');
-              const s1GvhdScores = s1Evals
+              const s1GvhdScoreItems = s1Evals
                 .filter((e: any) => e.evaluator_type === 'GVHD')
-                .flatMap((e: any) => (e.scores || []).filter((s: any) => s.clo_code === cloCode))
-                .map((s: any) => this.getConvertedScore(s.score_level));
+                .flatMap((e: any) => (e.scores || []).filter((s: any) => s.clo_code === cloCode));
+              const s1GvhdScores = s1GvhdScoreItems.map((s: any) => this.getConvertedScore(s.score_level));
               const s1GvhdScore = s1GvhdScores.length > 0 ? (s1GvhdScores.reduce((a: number, b: number) => a + b, 0) / s1GvhdScores.length) : null;
 
-              const s1CompanyScores = s1Evals
+              const s1CompanyScoreItems = s1Evals
                 .filter((e: any) => e.evaluator_type === 'COMPANY_SUPERVISOR' || e.evaluator_type === 'COMPANY')
-                .flatMap((e: any) => (e.scores || []).filter((s: any) => s.clo_code === cloCode))
-                .map((s: any) => this.getConvertedScore(s.score_level));
+                .flatMap((e: any) => (e.scores || []).filter((s: any) => s.clo_code === cloCode));
+              const s1CompanyScores = s1CompanyScoreItems.map((s: any) => this.getConvertedScore(s.score_level));
               const s1CompanyScore = s1CompanyScores.length > 0 ? (s1CompanyScores.reduce((a: number, b: number) => a + b, 0) / s1CompanyScores.length) : null;
 
               const betaGvhd = clo.gvhd_beta !== null ? clo.gvhd_beta : 50;
@@ -575,16 +575,16 @@ export class StudentDashboardComponent implements OnInit {
 
               // Stage 2
               const s2Evals = evals.filter((e: any) => e.stage === 'STAGE_2');
-              const s2GvhdScores = s2Evals
+              const s2GvhdScoreItems = s2Evals
                 .filter((e: any) => e.evaluator_type === 'GVHD')
-                .flatMap((e: any) => (e.scores || []).filter((s: any) => s.clo_code === cloCode))
-                .map((s: any) => this.getConvertedScore(s.score_level));
+                .flatMap((e: any) => (e.scores || []).filter((s: any) => s.clo_code === cloCode));
+              const s2GvhdScores = s2GvhdScoreItems.map((s: any) => this.getConvertedScore(s.score_level));
               const s2GvhdScore = s2GvhdScores.length > 0 ? (s2GvhdScores.reduce((a: number, b: number) => a + b, 0) / s2GvhdScores.length) : null;
 
-              const s2CompanyScores = s2Evals
+              const s2CompanyScoreItems = s2Evals
                 .filter((e: any) => e.evaluator_type === 'COMPANY_SUPERVISOR' || e.evaluator_type === 'COMPANY')
-                .flatMap((e: any) => (e.scores || []).filter((s: any) => s.clo_code === cloCode))
-                .map((s: any) => this.getConvertedScore(s.score_level));
+                .flatMap((e: any) => (e.scores || []).filter((s: any) => s.clo_code === cloCode));
+              const s2CompanyScores = s2CompanyScoreItems.map((s: any) => this.getConvertedScore(s.score_level));
               const s2CompanyScore = s2CompanyScores.length > 0 ? (s2CompanyScores.reduce((a: number, b: number) => a + b, 0) / s2CompanyScores.length) : null;
 
               let s2GvhdPart = s2GvhdScore !== null ? s2GvhdScore : 0;
@@ -614,9 +614,13 @@ export class StudentDashboardComponent implements OnInit {
                 s1_company: s1CompanyScore,
                 s1_gvhd: s1GvhdScore,
                 s1_tb: s1Tb,
+                s1_company_comment: this.getScoreComments(s1CompanyScoreItems),
+                s1_gvhd_comment: this.getScoreComments(s1GvhdScoreItems),
                 s2_company: s2CompanyScore,
                 s2_gvhd: s2GvhdScore,
                 s2_tb: s2Tb,
+                s2_company_comment: this.getScoreComments(s2CompanyScoreItems),
+                s2_gvhd_comment: this.getScoreComments(s2GvhdScoreItems),
                 clo_final: cloFinal,
                 alpha_weight: alpha,
                 stage1_weight: cloStage1Weight,
@@ -634,5 +638,12 @@ export class StudentDashboardComponent implements OnInit {
         this.cloDetails = [];
       }
     });
+  }
+
+  getScoreComments(scoreItems: any[]): string | null {
+    const comments = (scoreItems || [])
+      .map((s: any) => (s.comment || s.short_comment || '').trim())
+      .filter((comment: string) => comment.length > 0);
+    return comments.length > 0 ? comments.join('; ') : null;
   }
 }

@@ -55,6 +55,21 @@
             <td class="px-3 py-2.5 font-bold text-slate-900 border text-center bg-slate-50/30">{{ clo.clo_code }}</td>
             <td class="px-3 py-2.5 text-slate-700 border font-medium leading-relaxed min-w-[180px] max-w-[280px] whitespace-normal">
               {{ clo.description }}
+              <div *ngIf="clo.s1_company_comment || clo.s1_gvhd_comment || clo.s2_company_comment || clo.s2_gvhd_comment"
+                   class="mt-2 space-y-1 text-[10px] font-normal text-slate-500">
+                <p *ngIf="clo.s1_company_comment || clo.s1_gvhd_comment">
+                  <span class="font-semibold text-slate-600">NX Chặng 1:</span>
+                  <span *ngIf="clo.s1_company_comment">ĐVHD: {{ clo.s1_company_comment }}</span>
+                  <span *ngIf="clo.s1_company_comment && clo.s1_gvhd_comment"> | </span>
+                  <span *ngIf="clo.s1_gvhd_comment">GVHD: {{ clo.s1_gvhd_comment }}</span>
+                </p>
+                <p *ngIf="clo.s2_company_comment || clo.s2_gvhd_comment">
+                  <span class="font-semibold text-slate-600">NX Chặng 2:</span>
+                  <span *ngIf="clo.s2_company_comment">ĐVHD: {{ clo.s2_company_comment }}</span>
+                  <span *ngIf="clo.s2_company_comment && clo.s2_gvhd_comment"> | </span>
+                  <span *ngIf="clo.s2_gvhd_comment">GVHD: {{ clo.s2_gvhd_comment }}</span>
+                </p>
+              </div>
             </td>
             <!-- Chặng 1 -->
             <td class="px-2 py-2.5 text-center border text-slate-600">

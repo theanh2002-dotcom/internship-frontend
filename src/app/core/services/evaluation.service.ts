@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 export interface ScoreItem {
   clo_code: string;
   score_level: number;
+  comment?: string;
 }
 
 export interface EvaluationRequest {

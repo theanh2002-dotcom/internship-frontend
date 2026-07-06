@@ -110,8 +110,8 @@
         <span class="material-symbols-outlined">arrow_back</span>
       </button>
       <div>
-        <h2 class="text-2xl font-bold text-slate-900">Phiếu nhập điểm Rubric</h2>
-        <p class="text-slate-600 text-sm mt-0.5">Nhập điểm thang 10; hệ thống tự xác định Mức 0-4 theo khoảng điểm trong quy định.</p>
+        <h2 class="text-2xl font-bold text-slate-900">Phiếu đánh giá thực tập tốt nghiệp</h2>
+        <p class="text-slate-600 text-sm mt-0.5">{{ getStageLabel() }} - điểm theo thang 10 và mức đạt 0-4.</p>
       </div>
     </div>
 
@@ -135,8 +135,8 @@
         </div>
       </div>
       <div class="bg-white border-2 border-[#00429D] p-4 rounded-lg text-center min-w-[130px] shadow-sm">
-        <p class="text-xs font-bold text-[#00429D] uppercase mb-1">Điểm TB nhập</p>
-        <div class="text-3xl font-black text-[#00429D]">{{ getAverageScore() | number:'1.1-1' }}</div>
+        <p class="text-xs font-bold text-[#00429D] uppercase mb-1">Điểm TB chặng</p>
+        <div class="text-3xl font-black text-[#00429D]">{{ getAverageScoreText() }}</div>
       </div>
     </div>
 
@@ -169,8 +169,8 @@
     <section class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
       <div class="p-5 border-b border-slate-200 bg-slate-50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h3 class="text-lg font-semibold text-slate-900">Bảng nhập điểm {{ getStageLabel() }}</h3>
-          <p class="text-sm text-slate-600 mt-1">CLO có trọng số bằng 0% ở chặng hiện tại sẽ được ẩn khỏi phiếu nhập.</p>
+          <h3 class="text-lg font-semibold text-slate-900 uppercase">{{ getStageTemplateTitle() }}</h3>
+          <p class="text-sm text-slate-600 mt-1">{{ getStageTemplateSubtitle() }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
           <span *ngIf="hiddenCriteriaCount > 0" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
@@ -197,62 +197,102 @@
       </div>
 
       <div *ngIf="visibleCriteria.length > 0" class="overflow-x-auto">
-        <table class="w-full text-left text-sm border-collapse">
-          <thead class="bg-slate-50 border-b border-slate-200 text-slate-700">
-            <tr>
-              <th class="px-4 py-3 border-r border-slate-200 min-w-[260px]">Câu hỏi / Tiêu chí đánh giá</th>
-              <th class="px-4 py-3 border-r border-slate-200 text-center w-28">CLO</th>
-              <th class="px-4 py-3 border-r border-slate-200 text-center w-36">{{ getStageWeightTitle() }}</th>
-              <th class="px-4 py-3 border-r border-slate-200 text-center w-44">Mức đạt (0-4)</th>
-              <th class="px-4 py-3 border-r border-slate-200 text-center w-44">Điểm (thang 10)</th>
-              <th class="px-4 py-3 min-w-[420px]">Rubric tham chiếu</th>
+        <table class="w-full min-w-[1180px] text-left text-sm border-collapse">
+          <thead class="text-white">
+            <tr class="bg-[#00429D]">
+              <th rowspan="2" class="px-3 py-3 border-r border-blue-300/40 text-center w-16">STT</th>
+              <th rowspan="2" class="px-3 py-3 border-r border-blue-300/40 text-center w-24">CLO</th>
+              <th rowspan="2" class="px-4 py-3 border-r border-blue-300/40 min-w-[260px]">Mô tả năng lực</th>
+              <th colspan="4" class="px-4 py-3 border-r border-blue-300/40 text-center">Đánh giá (Thang điểm 10)</th>
+              <th rowspan="2" class="px-3 py-3 border-r border-blue-300/40 text-center w-32">{{ getStageAverageTitle() }}</th>
+              <th rowspan="2" class="px-3 py-3 border-r border-blue-300/40 text-center w-32">Mức đạt</th>
+              <th rowspan="2" class="px-4 py-3 text-left min-w-[260px]">Ghi chú / Nhận xét</th>
+            </tr>
+            <tr class="bg-[#00347c]">
+              <th class="px-3 py-2 border-r border-blue-300/40 text-center min-w-[110px]">Điểm ĐVHD</th>
+              <th class="px-3 py-2 border-r border-blue-300/40 text-center min-w-[110px]">Điểm GVHD</th>
+              <th class="px-3 py-2 border-r border-blue-300/40 text-center w-28">TDS ĐVHD (%)</th>
+              <th class="px-3 py-2 border-r border-blue-300/40 text-center w-28">TDS GVHD (%)</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200">
-            <tr *ngFor="let criterion of visibleCriteria; trackBy: trackCriterion" class="align-top hover:bg-slate-50/50">
-              <td class="px-4 py-4 border-r border-slate-200">
-                <p class="font-semibold text-slate-900">{{ criterion.description || 'Chưa có mô tả tiêu chí.' }}</p>
-                <p class="text-xs text-slate-500 mt-1">Alpha HP: {{ criterion.alphaWeight }}% | Beta: GVHD {{ criterion.gvhdBeta }}% / ĐVHD {{ criterion.companyBeta }}%</p>
-              </td>
-              <td class="px-4 py-4 border-r border-slate-200 text-center">
-                <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-blue-50 text-[#00429D] text-xs font-bold border border-blue-200">
+            <tr *ngFor="let criterion of visibleCriteria; let i = index; trackBy: trackCriterion" class="align-top odd:bg-white even:bg-slate-50 hover:bg-blue-50/40">
+              <td class="px-3 py-4 border-r border-slate-200 text-center font-semibold text-slate-700">{{ i + 1 }}</td>
+              <td class="px-3 py-4 border-r border-slate-200 text-center">
+                <span class="inline-flex items-center justify-center px-2.5 py-1 rounded bg-blue-50 text-[#00429D] text-xs font-bold border border-blue-200">
                   {{ criterion.id }}
                 </span>
               </td>
-              <td class="px-4 py-4 border-r border-slate-200 text-center">
-                <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
-                  {{ getStageWeight(criterion) }}%
-                </span>
-              </td>
-              <td class="px-4 py-4 border-r border-slate-200 text-center">
-                <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold border"
-                      [ngClass]="getLevelBadgeClass(criterion)">
-                  {{ getScoreLevelLabel(criterion.selectedScore) }}
-                </span>
-              </td>
               <td class="px-4 py-4 border-r border-slate-200">
-                <input type="number"
-                       min="0"
-                       max="10"
-                       step="0.1"
-                       [(ngModel)]="criterion.selectedScore"
-                       (blur)="normalizeScore(criterion)"
-                       [disabled]="isScoringLocked()"
-                       [ngClass]="getScoreInputClass(criterion)"
-                       class="w-full px-3 py-2 text-center text-base font-bold border rounded-lg focus:outline-none focus:ring-1 disabled:bg-slate-100 disabled:text-slate-400"/>
-                <p class="mt-1 text-[11px] text-slate-400 text-center">Nhập từ 0 đến 10, làm tròn 0.1</p>
+                <p class="font-semibold text-slate-900">{{ criterion.description || 'Chưa có mô tả tiêu chí.' }}</p>
+                <p class="text-xs text-slate-500 mt-1">Alpha HP: {{ criterion.alphaWeight }}% | Trọng số chặng: {{ getStageWeight(criterion) }}%</p>
+              </td>
+              <td class="px-3 py-4 border-r border-slate-200 bg-amber-50/60 min-w-[110px]">
+                <ng-container *ngIf="isCurrentEvaluatorColumn('COMPANY_SUPERVISOR', criterion); else readonlyCompanyScore">
+                  <input type="number"
+                         min="0"
+                         max="10"
+                         step="0.1"
+                         [(ngModel)]="criterion.selectedScore"
+                         (blur)="normalizeScore(criterion)"
+                         [disabled]="isScoringLocked()"
+                         [ngClass]="getScoreInputClass(criterion)"
+                         class="w-full min-w-[72px] px-2 py-2 text-center text-base font-bold border rounded focus:outline-none focus:ring-1 disabled:bg-slate-100 disabled:text-slate-400"/>
+                </ng-container>
+                <ng-template #readonlyCompanyScore>
+                  <div class="min-h-[42px] flex items-center justify-center text-center font-semibold text-slate-700">
+                    {{ getCompanyScoreText(criterion) }}
+                  </div>
+                </ng-template>
+              </td>
+              <td class="px-3 py-4 border-r border-slate-200 bg-amber-50/60 min-w-[110px]">
+                <ng-container *ngIf="isCurrentEvaluatorColumn('GVHD', criterion); else readonlyGvhdScore">
+                  <input type="number"
+                         min="0"
+                         max="10"
+                         step="0.1"
+                         [(ngModel)]="criterion.selectedScore"
+                         (blur)="normalizeScore(criterion)"
+                         [disabled]="isScoringLocked()"
+                         [ngClass]="getScoreInputClass(criterion)"
+                         class="w-full min-w-[72px] px-2 py-2 text-center text-base font-bold border rounded focus:outline-none focus:ring-1 disabled:bg-slate-100 disabled:text-slate-400"/>
+                </ng-container>
+                <ng-template #readonlyGvhdScore>
+                  <div class="min-h-[42px] flex items-center justify-center text-center font-semibold text-slate-700">
+                    {{ getGvhdScoreText(criterion) }}
+                  </div>
+                </ng-template>
+              </td>
+              <td class="px-3 py-4 border-r border-slate-200 text-center text-slate-700">
+                {{ criterion.companyBeta | number:'1.0-0' }}%
+              </td>
+              <td class="px-3 py-4 border-r border-slate-200 text-center text-slate-700">
+                {{ criterion.gvhdBeta | number:'1.0-0' }}%
+              </td>
+              <td class="px-3 py-4 border-r border-slate-200 text-center bg-blue-50/70">
+                <span class="font-black text-[#00429D]">{{ getStageAverageScoreText(criterion) }}</span>
+              </td>
+              <td class="px-3 py-4 border-r border-slate-200 text-center bg-blue-50/70">
+                <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold border"
+                      [ngClass]="getStageResultBadgeClass(criterion)">
+                  {{ getStageLevelLabel(criterion) }}
+                </span>
               </td>
               <td class="px-4 py-4">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-2">
-                  <div *ngFor="let level of getRubricLevels(criterion); trackBy: trackLevel"
-                       class="border rounded-lg p-2 min-h-[96px]"
-                       [ngClass]="getLevelClass(criterion, level)">
-                    <p class="font-bold text-xs">{{ level.label }}</p>
-                    <p class="text-[11px] font-semibold mt-0.5">{{ level.range }}</p>
-                    <p class="text-[11px] leading-snug mt-1 text-slate-500">{{ level.description || 'Chưa có mô tả mức.' }}</p>
-                  </div>
-                </div>
+                <textarea [(ngModel)]="criterion.comment"
+                          [disabled]="isScoringLocked() || !canCurrentEvaluatorScore(criterion)"
+                          maxlength="500"
+                          placeholder="Nhận xét theo CLO..."
+                          class="w-full min-h-[76px] px-3 py-2 border border-slate-300 rounded text-sm leading-relaxed focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] disabled:bg-slate-100 disabled:text-slate-400 resize-y"></textarea>
+                <p class="mt-1 text-[11px] text-slate-400">{{ (criterion.comment || '').length }}/500</p>
               </td>
+            </tr>
+            <tr class="bg-[#00429D] text-white font-semibold">
+              <td colspan="7" class="px-4 py-3 border-r border-blue-300/40 text-right">
+                ĐIỂM TRUNG BÌNH {{ selectedStage === 'STAGE_1' ? 'CHẶNG 1' : 'CHẶNG 2' }} (chưa có trọng số HP)
+              </td>
+              <td class="px-3 py-3 border-r border-blue-300/40 text-center text-lg font-black whitespace-nowrap">{{ getAverageScoreText() }}</td>
+              <td colspan="2" class="px-4 py-3"></td>
             </tr>
           </tbody>
         </table>

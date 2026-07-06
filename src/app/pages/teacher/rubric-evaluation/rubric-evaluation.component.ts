@@ -26,6 +26,17 @@ interface RubricCriterion {
   companyBeta: number;
   levels: RubricLevel[];
   selectedScore?: number | null;
+  comment?: string;
+  gvhdScore?: number | null;
+  companyScore?: number | null;
+  gvhdComment?: string;
+  companyComment?: string;
+}
+
+interface ScoreAccumulator {
+  total: number;
+  count: number;
+  comments: string[];
 }
 
 @Component({
@@ -236,7 +247,7 @@ export class RubricEvaluationComponent implements OnInit {
     this.selectedStage = stage;
     this.existingEvaluation = null;
     this.generalComment = '';
-    this.criteria.forEach(c => c.selectedScore = undefined);
+    this.resetCriteriaEvaluationState();
     this.checkExistingEvaluation();
   }
 
@@ -282,6 +293,8 @@ export class RubricEvaluationComponent implements OnInit {
         stage2Weight: this.toNumber(clo.stage2_weight, this.departmentStage2Weight),
         gvhdBeta: this.toNumber(clo.gvhd_beta, 0),
         companyBeta: this.toNumber(clo.company_beta, 0),
+        gvhdScore: null,
+        companyScore: null,
         levels: rubrics.map((r: any, index: number) => {
           const level = usesLevelCode ? Number(r.score_level) : index;
           const band = this.scoreBands.find(b => b.level === level) || this.scoreBands[index] || this.scoreBands[0];
@@ -305,17 +318,23 @@ export class RubricEvaluationComponent implements OnInit {
     this.evaluationService.findEvaluations(this.selectedStudent.id).subscribe({
       next: (res) => {
         const evaluations = Array.isArray(res) ? res : (res.data || res.payload || []);
-        const myEval = evaluations.find((e: any) =>
+        const stageEvaluations = evaluations.filter((e: any) => e.stage === this.selectedStage);
+        this.resetCriteriaEvaluationState();
+        this.applyAggregatedScores(stageEvaluations);
+
+        const myEval = stageEvaluations.find((e: any) =>
           e.evaluator_type === evaluatorType &&
-          e.evaluator_id === currentUser.userId &&
-          e.stage === this.selectedStage
+          e.evaluator_id === currentUser.userId
         );
         if (myEval) {
           this.existingEvaluation = myEval;
           this.generalComment = myEval.general_comment || '';
           (myEval.scores || []).forEach((score: any) => {
             const crit = this.criteria.find(c => c.id === score.clo_code);
-            if (crit) crit.selectedScore = this.clampScore(score.score_level);
+            if (crit) {
+              crit.selectedScore = this.clampScore(score.score_level);
+              crit.comment = score.comment || score.short_comment || '';
+            }
           });
           this.toastService.success(this.getExistingEvaluationMessage());
         }
@@ -349,8 +368,20 @@ export class RubricEvaluationComponent implements OnInit {
     return this.selectedStage === 'STAGE_1' ? 'Chặng 1 (Giữa kỳ)' : 'Chặng 2 (Cuối kỳ)';
   }
 
-  getStageWeightTitle(): string {
-    return this.selectedStage === 'STAGE_1' ? 'Trọng số Chặng 1' : 'Trọng số Chặng 2';
+  getStageTemplateTitle(): string {
+    return this.selectedStage === 'STAGE_1'
+      ? 'Chặng 1 - Đánh giá tổng kết giữa kỳ'
+      : 'Chặng 2 - Đánh giá tổng kết cuối kỳ';
+  }
+
+  getStageTemplateSubtitle(): string {
+    const weight = this.selectedStage === 'STAGE_1' ? this.departmentStage1Weight : this.departmentStage2Weight;
+    const evaluator = this.selectedStage === 'STAGE_1' ? 'GVHD + ĐVHD' : 'Tổ đánh giá TTTN';
+    return `Trọng số chặng ${this.selectedStage === 'STAGE_1' ? '1' : '2'}: ${weight}% tổng điểm học phần | Người đánh giá: ${evaluator}`;
+  }
+
+  getStageAverageTitle(): string {
+    return this.selectedStage === 'STAGE_1' ? 'Điểm TB Chặng 1' : 'Điểm TB Chặng 2';
   }
 
   getStageStartText(): string {
@@ -390,6 +421,15 @@ export class RubricEvaluationComponent implements OnInit {
       : 'border-slate-200 bg-white text-slate-600';
   }
 
+  getStageResultBadgeClass(criterion: RubricCriterion): string {
+    const level = this.getScoreLevel(this.getStageAverageScore(criterion));
+    if (level === null) return 'bg-slate-100 text-slate-500 border-slate-200';
+    if (level === 0) return 'bg-red-50 text-red-700 border-red-200';
+    if (level === 1) return 'bg-amber-50 text-amber-700 border-amber-200';
+    if (level === 2) return 'bg-blue-50 text-blue-700 border-blue-200';
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  }
+
   getScoreInputClass(criterion: RubricCriterion): string {
     return this.isScoreValid(criterion) || criterion.selectedScore === undefined || criterion.selectedScore === null
       ? 'border-slate-300 focus:border-[#00429D] focus:ring-[#00429D]'
@@ -415,16 +455,26 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   getAverageScore(): number {
-    const scores = this.visibleCriteria.filter(c => this.isScoreValid(c)).map(c => Number(c.selectedScore));
+    const scores = this.visibleCriteria
+      .map(c => this.getStageAverageScore(c))
+      .filter((score): score is number => score !== null && score !== undefined);
     return scores.length === 0 ? 0 : scores.reduce((sum, score) => sum + score, 0) / scores.length;
   }
 
+  getAverageScoreText(): string {
+    const scores = this.visibleCriteria
+      .map(c => this.getStageAverageScore(c))
+      .filter((score): score is number => score !== null && score !== undefined);
+    if (scores.length === 0) return 'Chưa có';
+    return this.formatScore(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+  }
+
   getFilledCriteriaCount(): number {
-    return this.visibleCriteria.filter(c => this.isScoreValid(c)).length;
+    return this.scorableCriteria.filter(c => this.isScoreValid(c)).length;
   }
 
   getProgressText(): string {
-    return `${this.getFilledCriteriaCount()}/${this.visibleCriteria.length} CLO đã nhập điểm`;
+    return `${this.getFilledCriteriaCount()}/${this.scorableCriteria.length} CLO đã nhập điểm`;
   }
 
   getNoVisibleCriteriaMessage(): string {
@@ -460,11 +510,11 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   isFullyScored(): boolean {
-    return this.visibleCriteria.length > 0 && this.visibleCriteria.every(c => this.isScoreValid(c));
+    return this.scorableCriteria.length > 0 && this.scorableCriteria.every(c => this.isScoreValid(c));
   }
 
   submitEvaluation(): void {
-    this.visibleCriteria.forEach(c => this.normalizeScore(c));
+    this.scorableCriteria.forEach(c => this.normalizeScore(c));
 
     if (!this.selectedStudent || !this.isFullyScored()) {
       this.toastService.error('Vui lòng nhập điểm thang 10 cho tất cả CLO có trọng số ở chặng này.');
@@ -491,9 +541,10 @@ export class RubricEvaluationComponent implements OnInit {
       evaluator_id: currentUser.userId,
       stage: this.selectedStage,
       general_comment: this.generalComment,
-      scores: this.visibleCriteria.map(c => ({
+      scores: this.scorableCriteria.map(c => ({
         clo_code: c.id,
-        score_level: Number(c.selectedScore)
+        score_level: Number(c.selectedScore),
+        comment: c.comment?.trim() || undefined
       }))
     };
 
@@ -531,10 +582,129 @@ export class RubricEvaluationComponent implements OnInit {
     return level.level;
   }
 
+  get scorableCriteria(): RubricCriterion[] {
+    return this.visibleCriteria.filter(c => this.getCurrentEvaluatorBeta(c) > 0);
+  }
+
+  getCompanyScoreText(criterion: RubricCriterion): string {
+    if (criterion.companyBeta <= 0) return 'N/A';
+    const score = this.isCompanySupervisor ? this.toNullableScore(criterion.selectedScore) : criterion.companyScore;
+    return this.formatScore(score);
+  }
+
+  getGvhdScoreText(criterion: RubricCriterion): string {
+    if (criterion.gvhdBeta <= 0) return 'N/A';
+    const score = this.isCompanySupervisor ? criterion.gvhdScore : this.toNullableScore(criterion.selectedScore);
+    return this.formatScore(score);
+  }
+
+  getStageAverageScore(criterion: RubricCriterion): number | null {
+    const companyScore = this.isCompanySupervisor ? this.toNullableScore(criterion.selectedScore) : criterion.companyScore;
+    const gvhdScore = this.isCompanySupervisor ? criterion.gvhdScore : this.toNullableScore(criterion.selectedScore);
+    const companyRequired = criterion.companyBeta > 0;
+    const gvhdRequired = criterion.gvhdBeta > 0;
+
+    if (companyRequired && companyScore === null) return null;
+    if (gvhdRequired && gvhdScore === null) return null;
+
+    const totalWeight = (companyRequired ? criterion.companyBeta : 0) + (gvhdRequired ? criterion.gvhdBeta : 0);
+    if (totalWeight <= 0) return null;
+
+    const weightedScore =
+      (companyRequired ? (companyScore || 0) * criterion.companyBeta : 0) +
+      (gvhdRequired ? (gvhdScore || 0) * criterion.gvhdBeta : 0);
+
+    return Math.round((weightedScore / totalWeight) * 10) / 10;
+  }
+
+  getStageAverageScoreText(criterion: RubricCriterion): string {
+    return this.formatScore(this.getStageAverageScore(criterion));
+  }
+
+  getStageLevelLabel(criterion: RubricCriterion): string {
+    return this.getScoreLevelLabel(this.getStageAverageScore(criterion));
+  }
+
+  isCurrentEvaluatorColumn(evaluator: 'GVHD' | 'COMPANY_SUPERVISOR', criterion: RubricCriterion): boolean {
+    if (evaluator === 'COMPANY_SUPERVISOR') {
+      return this.isCompanySupervisor && criterion.companyBeta > 0;
+    }
+    return !this.isCompanySupervisor && criterion.gvhdBeta > 0;
+  }
+
+  canCurrentEvaluatorScore(criterion: RubricCriterion): boolean {
+    return this.getCurrentEvaluatorBeta(criterion) > 0;
+  }
+
   private toNumber(value: any, fallback: number): number {
     if (value === null || value === undefined || value === '') return fallback;
     const numberValue = Number(value);
     return Number.isNaN(numberValue) ? fallback : numberValue;
+  }
+
+  private toNullableScore(value: any): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const numberValue = Number(value);
+    return Number.isNaN(numberValue) ? null : this.clampScore(numberValue);
+  }
+
+  private formatScore(value: number | null | undefined): string {
+    if (value === null || value === undefined || Number.isNaN(Number(value))) return 'Chưa có';
+    const numberValue = Math.round(Number(value) * 10) / 10;
+    return Number.isInteger(numberValue) ? `${numberValue}` : numberValue.toFixed(1);
+  }
+
+  private getCurrentEvaluatorBeta(criterion: RubricCriterion): number {
+    return this.isCompanySupervisor ? criterion.companyBeta : criterion.gvhdBeta;
+  }
+
+  private resetCriteriaEvaluationState(): void {
+    this.criteria.forEach(c => {
+      c.selectedScore = undefined;
+      c.comment = '';
+      c.gvhdScore = null;
+      c.companyScore = null;
+      c.gvhdComment = '';
+      c.companyComment = '';
+    });
+  }
+
+  private applyAggregatedScores(evaluations: any[]): void {
+    const gvhdScores = this.buildScoreMap(evaluations, 'GVHD');
+    const companyScores = this.buildScoreMap(evaluations, 'COMPANY_SUPERVISOR');
+
+    this.criteria.forEach(criterion => {
+      const gvhd = gvhdScores.get(criterion.id);
+      const company = companyScores.get(criterion.id);
+
+      criterion.gvhdScore = gvhd ? this.clampScore(gvhd.total / gvhd.count) : null;
+      criterion.companyScore = company ? this.clampScore(company.total / company.count) : null;
+      criterion.gvhdComment = gvhd?.comments[0] || '';
+      criterion.companyComment = company?.comments[0] || '';
+    });
+  }
+
+  private buildScoreMap(evaluations: any[], evaluatorType: 'GVHD' | 'COMPANY_SUPERVISOR'): Map<string, ScoreAccumulator> {
+    const scoreMap = new Map<string, ScoreAccumulator>();
+    evaluations
+      .filter((evaluation: any) => evaluation.evaluator_type === evaluatorType)
+      .forEach((evaluation: any) => {
+        (evaluation.scores || []).forEach((score: any) => {
+          const scoreValue = this.toNullableScore(score.score_level);
+          if (!score.clo_code || scoreValue === null) return;
+
+          const current = scoreMap.get(score.clo_code) || { total: 0, count: 0, comments: [] };
+          current.total += scoreValue;
+          current.count += 1;
+
+          const comment = score.comment || score.short_comment;
+          if (comment) current.comments.push(comment);
+
+          scoreMap.set(score.clo_code, current);
+        });
+      });
+
+    return scoreMap;
   }
 
   private clampScore(value: any): number {
