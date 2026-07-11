@@ -70,7 +70,7 @@ export class CompanyDeclarationComponent implements OnInit {
     if (!this.selectedCampaign) return;
 
     // Validate simple
-    if (!this.formData.company_name || !this.formData.supervisor_name) {
+    if (!this.isCompanyInfoFormValid()) {
       this.toastService.error('Vui lòng điền đầy đủ các thông tin bắt buộc (*).');
       return;
     }
@@ -92,6 +92,17 @@ export class CompanyDeclarationComponent implements OnInit {
     });
   }
   
+  isCompanyInfoFormValid(): boolean {
+    return !!this.formData.company_name?.trim()
+      && !!this.formData.supervisor_name?.trim()
+      && this.isValidSupervisorEmail();
+  }
+
+  isValidSupervisorEmail(): boolean {
+    const email = this.formData.supervisor_email?.trim();
+    return !!email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
   get statusLabel(): string {
     if (!this.selectedCampaign) return '';
     switch (this.selectedCampaign.status) {
