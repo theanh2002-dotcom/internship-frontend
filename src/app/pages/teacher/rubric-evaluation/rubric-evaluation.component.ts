@@ -159,7 +159,9 @@ export class RubricEvaluationComponent implements OnInit {
         this.isCompanyEvaluation(evaluation) && evaluation.evaluator_id === currentUser.userId
       );
       const hasStage1 = myCompanyEvals.some((evaluation: any) => evaluation.stage === 'STAGE_1');
-      return hasStage1 ? 'Đã chấm' : 'Chưa chấm';
+      const hasStage2 = myCompanyEvals.some((evaluation: any) => evaluation.stage === 'STAGE_2');
+      if (hasStage1 && hasStage2) return 'Đã chấm';
+      return myCompanyEvals.length > 0 ? 'Chưa chấm đủ' : 'Chưa chấm';
     }
 
     const myGvhdEvals = evaluations.filter((evaluation: any) =>

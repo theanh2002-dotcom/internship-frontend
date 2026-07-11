@@ -184,7 +184,7 @@
           <span *ngIf="hiddenCriteriaCount > 0" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
             Đã ẩn {{ hiddenCriteriaCount }} CLO trọng số 0%
           </span>
-          <div *ngIf="!isCompanySupervisor" class="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-slate-200 shadow-inner">
+          <div class="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-slate-200 shadow-inner">
             <button type="button"
                     (click)="onStageChange('STAGE_1')"
                     [class]="selectedStage === 'STAGE_1' ? 'bg-[#00429D] text-white px-3 py-1.5 rounded-md font-medium text-sm shadow-sm' : 'text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-md text-sm'">
