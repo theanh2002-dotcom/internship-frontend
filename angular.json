@@ -32,6 +32,9 @@
             "styles": [
               "src/styles.scss"
             ],
+            "allowedCommonJsDependencies": [
+              "xlsx-js-style"
+            ],
             "scripts": []
           },
           "configurations": {

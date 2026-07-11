@@ -134,17 +134,13 @@ export class RubricEvaluationComponent implements OnInit {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser || this.allStudents.length === 0) return;
 
-    const evaluatorType = currentUser.role === 'COMPANY_SUPERVISOR' ? 'COMPANY_SUPERVISOR' : 'GVHD';
     let completedCount = 0;
 
     this.allStudents.forEach(student => {
       this.evaluationService.findEvaluations(student.id).subscribe({
         next: (res) => {
           const evals = Array.isArray(res) ? res : (res.data || res.payload || []);
-          const myEvals = evals.filter((e: any) => e.evaluator_type === evaluatorType && e.evaluator_id === currentUser.userId);
-          const hasStage1 = myEvals.some((e: any) => e.stage === 'STAGE_1');
-          const hasStage2 = myEvals.some((e: any) => e.stage === 'STAGE_2');
-          (student as any).gradingStatus = hasStage1 && hasStage2 ? 'Đã chấm đủ' : myEvals.length > 0 ? 'Đã chấm 1 phần' : 'Chưa chấm';
+          (student as any).gradingStatus = this.resolveGradingStatus(evals, currentUser);
           completedCount++;
           completedCount === this.allStudents.length ? this.filterStudents() : this.paginate();
         },
@@ -155,6 +151,33 @@ export class RubricEvaluationComponent implements OnInit {
         }
       });
     });
+  }
+
+  private resolveGradingStatus(evaluations: any[], currentUser: any): string {
+    if (currentUser.role === 'COMPANY_SUPERVISOR') {
+      const myCompanyEvals = evaluations.filter((evaluation: any) =>
+        this.isCompanyEvaluation(evaluation) && evaluation.evaluator_id === currentUser.userId
+      );
+      const hasStage1 = myCompanyEvals.some((evaluation: any) => evaluation.stage === 'STAGE_1');
+      return hasStage1 ? 'Đã chấm' : 'Chưa chấm';
+    }
+
+    const myGvhdEvals = evaluations.filter((evaluation: any) =>
+      evaluation.evaluator_type === 'GVHD' && evaluation.evaluator_id === currentUser.userId
+    );
+    const hasGvhdStage1 = myGvhdEvals.some((evaluation: any) => evaluation.stage === 'STAGE_1');
+    const hasGvhdStage2 = myGvhdEvals.some((evaluation: any) => evaluation.stage === 'STAGE_2');
+    const hasCompanyStage1 = evaluations.some((evaluation: any) =>
+      evaluation.stage === 'STAGE_1' && this.isCompanyEvaluation(evaluation)
+    );
+
+    if (hasGvhdStage1 && hasCompanyStage1 && hasGvhdStage2) return 'Hoàn tất chấm điểm';
+    if (!hasGvhdStage1 && !hasCompanyStage1 && !hasGvhdStage2) return 'Chưa chấm';
+    if (!hasCompanyStage1 && (hasGvhdStage1 || hasGvhdStage2)) return 'DVHD chưa chấm';
+    if (!hasGvhdStage1 && hasCompanyStage1 && !hasGvhdStage2) return 'GVHD chưa chấm';
+    if (!hasGvhdStage1) return 'GVHD chưa chấm C1';
+    if (!hasGvhdStage2) return 'GVHD chưa chấm C2';
+    return 'Chưa chấm đủ';
   }
 
   filterStudents(): void {
@@ -557,8 +580,7 @@ export class RubricEvaluationComponent implements OnInit {
 
         const index = this.allStudents.findIndex(s => s.id === this.selectedStudent!.id);
         if (index !== -1) {
-          (this.allStudents[index] as any).gradingStatus = 'Đã chấm 1 phần';
-          this.filterStudents();
+          this.refreshStudentGradingStatus(this.allStudents[index]);
         }
       },
       error: (err) => {
@@ -671,7 +693,7 @@ export class RubricEvaluationComponent implements OnInit {
 
   private applyAggregatedScores(evaluations: any[]): void {
     const gvhdScores = this.buildScoreMap(evaluations, 'GVHD');
-    const companyScores = this.buildScoreMap(evaluations, 'COMPANY_SUPERVISOR');
+    const companyScores = this.buildScoreMap(evaluations, ['COMPANY_SUPERVISOR', 'COMPANY']);
 
     this.criteria.forEach(criterion => {
       const gvhd = gvhdScores.get(criterion.id);
@@ -684,10 +706,11 @@ export class RubricEvaluationComponent implements OnInit {
     });
   }
 
-  private buildScoreMap(evaluations: any[], evaluatorType: 'GVHD' | 'COMPANY_SUPERVISOR'): Map<string, ScoreAccumulator> {
+  private buildScoreMap(evaluations: any[], evaluatorTypes: string | string[]): Map<string, ScoreAccumulator> {
+    const allowedTypes = Array.isArray(evaluatorTypes) ? evaluatorTypes : [evaluatorTypes];
     const scoreMap = new Map<string, ScoreAccumulator>();
     evaluations
-      .filter((evaluation: any) => evaluation.evaluator_type === evaluatorType)
+      .filter((evaluation: any) => allowedTypes.includes(evaluation.evaluator_type))
       .forEach((evaluation: any) => {
         (evaluation.scores || []).forEach((score: any) => {
           const scoreValue = this.toNullableScore(score.score_level);
@@ -705,6 +728,24 @@ export class RubricEvaluationComponent implements OnInit {
       });
 
     return scoreMap;
+  }
+
+  private refreshStudentGradingStatus(student: StudentCampaignResponse): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
+
+    this.evaluationService.findEvaluations(student.id).subscribe({
+      next: (res) => {
+        const evals = Array.isArray(res) ? res : (res.data || res.payload || []);
+        (student as any).gradingStatus = this.resolveGradingStatus(evals, currentUser);
+        this.filterStudents();
+      },
+      error: () => this.filterStudents()
+    });
+  }
+
+  private isCompanyEvaluation(evaluation: any): boolean {
+    return evaluation?.evaluator_type === 'COMPANY_SUPERVISOR' || evaluation?.evaluator_type === 'COMPANY';
   }
 
   private clampScore(value: any): number {
