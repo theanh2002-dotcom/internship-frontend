@@ -59,6 +59,9 @@ export class RubricEvaluationComponent implements OnInit {
   generalComment = '';
 
   selectedStage: 'STAGE_1' | 'STAGE_2' = 'STAGE_1';
+  activeTab: 'STAGE_1' | 'STAGE_2' | 'SUMMARY' = 'STAGE_1';
+  finalResult: any = null;
+  isSummaryLoading = false;
   campaign: any = null;
   isCampaignActive = true;
   isStage1Open = false;
@@ -233,8 +236,11 @@ export class RubricEvaluationComponent implements OnInit {
     this.isStage1Open = false;
     this.isStage2Open = false;
     this.selectedStage = 'STAGE_1';
+    this.activeTab = 'STAGE_1';
+    this.finalResult = null;
     this.loadCampaignInfo(student.campaign_id);
     this.loadRubricConfig();
+    this.loadFinalResult();
   }
 
   loadCampaignInfo(campaignId: number): void {
@@ -270,10 +276,16 @@ export class RubricEvaluationComponent implements OnInit {
 
   onStageChange(stage: 'STAGE_1' | 'STAGE_2'): void {
     this.selectedStage = stage;
+    this.activeTab = stage;
     this.existingEvaluation = null;
     this.generalComment = '';
     this.resetCriteriaEvaluationState();
     this.checkExistingEvaluation();
+  }
+
+  onSummaryTab(): void {
+    this.activeTab = 'SUMMARY';
+    this.loadFinalResult();
   }
 
   loadRubricConfig(): void {
@@ -361,7 +373,6 @@ export class RubricEvaluationComponent implements OnInit {
               crit.comment = score.comment || score.short_comment || '';
             }
           });
-          this.toastService.success(this.getExistingEvaluationMessage());
         }
         this.isLoading = false;
       },
@@ -405,6 +416,16 @@ export class RubricEvaluationComponent implements OnInit {
     return `Trọng số chặng ${this.selectedStage === 'STAGE_1' ? '1' : '2'}: ${weight}% tổng điểm học phần | Người đánh giá: ${evaluator}`;
   }
 
+  getActiveTabTitle(): string {
+    return this.activeTab === 'SUMMARY' ? 'Tổng hợp điểm' : this.getStageTemplateTitle();
+  }
+
+  getActiveTabSubtitle(): string {
+    return this.activeTab === 'SUMMARY'
+      ? 'Xem trực tiếp điểm trung bình Chặng 1, Chặng 2 và điểm học phần cuối cùng.'
+      : this.getStageTemplateSubtitle();
+  }
+
   getStageAverageTitle(): string {
     return this.selectedStage === 'STAGE_1' ? 'Điểm TB Chặng 1' : 'Điểm TB Chặng 2';
   }
@@ -429,6 +450,18 @@ export class RubricEvaluationComponent implements OnInit {
     if (level === null) return 'Chưa nhập';
     const band = this.scoreBands.find(b => b.level === level);
     return band ? `${band.label} (${band.range})` : `Mức ${level}`;
+  }
+
+  getScoreLevelName(score: number | null | undefined): string {
+    const level = this.getScoreLevel(score);
+    if (level === null) return 'Chưa nhập';
+    return this.scoreBands.find(b => b.level === level)?.label || `Mức ${level}`;
+  }
+
+  getScoreLevelRange(score: number | null | undefined): string {
+    const level = this.getScoreLevel(score);
+    if (level === null) return '';
+    return this.scoreBands.find(b => b.level === level)?.range || '';
   }
 
   getLevelBadgeClass(criterion: RubricCriterion): string {
@@ -531,7 +564,18 @@ export class RubricEvaluationComponent implements OnInit {
 
   isScoringLocked(): boolean {
     if (!this.isCampaignActive) return true;
+    if (this.isStageManuallyLocked()) return true;
     return this.selectedStage === 'STAGE_1' ? !this.isStage1Open : !this.isStage2Open;
+  }
+
+  isStageManuallyLocked(stage: 'STAGE_1' | 'STAGE_2' = this.selectedStage): boolean {
+    return stage === 'STAGE_1'
+      ? Boolean(this.finalResult?.stage1_locked)
+      : Boolean(this.finalResult?.stage2_locked);
+  }
+
+  get canLockCurrentStage(): boolean {
+    return Boolean(this.selectedStudent && this.existingEvaluation && !this.isStageManuallyLocked() && !this.isSaving);
   }
 
   isFullyScored(): boolean {
@@ -578,7 +622,9 @@ export class RubricEvaluationComponent implements OnInit {
         this.existingEvaluation = res?.payload || res?.data || res;
         this.toastService.success('Lưu bảng điểm thành công!');
         this.isSaving = false;
-        this.evaluationService.calculateFinalResult(this.selectedStudent!.id).subscribe();
+        this.evaluationService.calculateFinalResult(this.selectedStudent!.id).subscribe({
+          next: (scoreRes) => this.finalResult = this.unwrapResponse(scoreRes)
+        });
 
         const index = this.allStudents.findIndex(s => s.id === this.selectedStudent!.id);
         if (index !== -1) {
@@ -591,6 +637,58 @@ export class RubricEvaluationComponent implements OnInit {
         this.isSaving = false;
       }
     });
+  }
+
+  lockCurrentStage(): void {
+    if (!this.selectedStudent || !this.canLockCurrentStage) return;
+    const ok = window.confirm('Sau khi khóa điểm, bạn sẽ không thể sửa điểm của chặng này. Tiếp tục khóa?');
+    if (!ok) return;
+
+    this.isSaving = true;
+    this.evaluationService.lockFinalResultStage(this.selectedStudent.id, this.selectedStage).subscribe({
+      next: (res) => {
+        this.finalResult = this.unwrapResponse(res);
+        this.isSaving = false;
+        this.toastService.success('Đã khóa điểm chặng.');
+      },
+      error: (err) => {
+        this.isSaving = false;
+        this.toastService.error(err?.error?.message || 'Không thể khóa điểm chặng.');
+      }
+    });
+  }
+
+  loadFinalResult(): void {
+    if (!this.selectedStudent) return;
+    this.isSummaryLoading = true;
+    this.evaluationService.getFinalResult(this.selectedStudent.id).subscribe({
+      next: (res) => {
+        this.finalResult = this.unwrapResponse(res);
+        this.isSummaryLoading = false;
+      },
+      error: () => {
+        this.finalResult = null;
+        this.isSummaryLoading = false;
+      }
+    });
+  }
+
+  getStageScore(stage: 'STAGE_1' | 'STAGE_2'): number | null {
+    if (!this.finalResult) return null;
+    return stage === 'STAGE_1'
+      ? (this.finalResult.stage1_score ?? this.finalResult.stage_1_score ?? null)
+      : (this.finalResult.stage2_score ?? this.finalResult.stage_2_score ?? null);
+  }
+
+  getFinalHpScore(): number | null {
+    return this.finalResult?.final_hp_score ?? null;
+  }
+
+  getSummaryStatusText(): string {
+    const score = this.getFinalHpScore();
+    if (score === null) return 'Chưa có kết quả';
+    if (this.finalResult?.is_paralyzed || score < 5) return 'Không đạt';
+    return 'Đạt';
   }
 
   handleError(msg: string): void {
@@ -748,6 +846,10 @@ export class RubricEvaluationComponent implements OnInit {
 
   private isCompanyEvaluation(evaluation: any): boolean {
     return evaluation?.evaluator_type === 'COMPANY_SUPERVISOR' || evaluation?.evaluator_type === 'COMPANY';
+  }
+
+  private unwrapResponse(response: any): any {
+    return response?.payload || response?.data || response || null;
   }
 
   private clampScore(value: any): number {

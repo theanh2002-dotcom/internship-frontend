@@ -15,13 +15,9 @@
         <span class="material-symbols-outlined text-xs">info</span>
         Dữ liệu mô phỏng minh họa
       </span>
-      <span *ngIf="finalResult.is_approved" class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1 px-3 rounded-full text-xs font-bold">
+      <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1 px-3 rounded-full text-xs font-bold">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        Đã công bố chính thức
-      </span>
-      <span *ngIf="!finalResult.is_approved" class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 py-1 px-3 rounded-full text-xs font-bold">
-        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-        Điểm số dự kiến (Chờ duyệt)
+        Đã có kết quả
       </span>
     </div>
   </div>

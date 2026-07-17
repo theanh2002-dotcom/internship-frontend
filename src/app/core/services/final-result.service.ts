@@ -9,12 +9,16 @@ export interface FinalResultResponse {
   student_code: string;
   full_name: string;
   class_name: string;
-  stage_1_score: number;
-  stage_2_score: number;
-  final_hp_score: number;
+  stage_1_score?: number;
+  stage_2_score?: number;
+  stage1_score?: number;
+  stage2_score?: number;
+  final_hp_score: number | null;
   grade_level: string;
   is_paralyzed: boolean;
   is_approved: boolean;
+  stage1_locked?: boolean;
+  stage2_locked?: boolean;
   status: string;
 }
 
@@ -27,6 +31,10 @@ export class FinalResultService {
 
   approveFinalResult(studentCampaignId: number): Observable<any> {
     return this.apiService.patch<any>(`/base/final-results/${studentCampaignId}/approve`, {});
+  }
+
+  lockFinalResultStage(studentCampaignId: number, stage: 'STAGE_1' | 'STAGE_2'): Observable<any> {
+    return this.apiService.patch<any>(`/base/evaluations/final-result/${studentCampaignId}/lock?stage=${stage}`, {});
   }
 
   getFinalResultsByCampaign(departmentCampaignId: number): Observable<FinalResultResponse[]> {

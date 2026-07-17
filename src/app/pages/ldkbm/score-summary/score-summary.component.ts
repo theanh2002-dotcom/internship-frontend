@@ -111,7 +111,11 @@ export class LdkbmScoreSummaryComponent implements OnInit {
     this.error = null;
     this.finalResultService.getFinalResultsByCampaign(this.departmentCampaignId).subscribe({
       next: (res) => {
-        this.results = res || [];
+        this.results = (res || []).map((item: any) => ({
+          ...item,
+          stage_1_score: item.stage_1_score ?? item.stage1_score,
+          stage_2_score: item.stage_2_score ?? item.stage2_score
+        }));
         this.onFilterChange();
         this.loading = false;
       },
@@ -135,10 +139,8 @@ export class LdkbmScoreSummaryComponent implements OnInit {
       if (!matchesSearch) return false;
 
       // 2. Status filter mapping
-      if (this.selectedStatusFilter === 'approved') {
-        return r.is_approved;
-      } else if (this.selectedStatusFilter === 'pending_approval') {
-        return !r.is_approved && r.final_hp_score !== null && r.final_hp_score !== undefined;
+      if (this.selectedStatusFilter === 'has_score') {
+        return r.final_hp_score !== null && r.final_hp_score !== undefined;
       } else if (this.selectedStatusFilter === 'pending_score') {
         return r.final_hp_score === null || r.final_hp_score === undefined;
       } else if (this.selectedStatusFilter === 'passed') {
@@ -183,12 +185,12 @@ export class LdkbmScoreSummaryComponent implements OnInit {
   }
 
   calculateAll(): void {
-    const studentsToCalc = this.results.filter(r => !r.is_approved);
+    const studentsToCalc = this.results;
     if (studentsToCalc.length === 0) {
-      alert('Không có sinh viên nào cần tính điểm (hoặc tất cả đã được duyệt).');
+      alert('Không có sinh viên nào cần tính điểm.');
       return;
     }
-    if (confirm(`Bạn có chắc muốn tính toán lại điểm cho ${studentsToCalc.length} sinh viên chưa duyệt?`)) {
+    if (confirm(`Bạn có chắc muốn tính toán lại điểm cho ${studentsToCalc.length} sinh viên?`)) {
       this.loading = true;
       let completedCount = 0;
       studentsToCalc.forEach(s => {
@@ -207,52 +209,6 @@ export class LdkbmScoreSummaryComponent implements OnInit {
     }
   }
 
-  approveSingle(studentCampaignId: number): void {
-    if (confirm('Bạn có chắc chắn muốn duyệt điểm cho sinh viên này?')) {
-      this.loading = true;
-      this.error = null;
-      this.finalResultService.approveFinalResult(studentCampaignId).subscribe({
-        next: () => {
-          this.showSuccess('Phê duyệt điểm thành công!');
-          this.loadFinalResults();
-        },
-        error: (err) => {
-          this.error = err.error?.message || 'Phê duyệt thất bại.';
-          this.loading = false;
-        }
-      });
-    }
-  }
-
-  approveAll(): void {
-    if (confirm('Bạn có chắc chắn muốn duyệt toàn bộ kết quả?')) {
-      const pendingResults = this.results.filter(r => !r.is_approved && r.final_hp_score !== null);
-      let completedCount = 0;
-
-      if (pendingResults.length === 0) {
-        alert('Không có kết quả nào sẵn sàng để duyệt (yêu cầu phải tính điểm trước khi duyệt).');
-        return;
-      }
-
-      this.loading = true;
-      pendingResults.forEach(r => {
-        this.finalResultService.approveFinalResult(r.student_campaign_id).subscribe({
-          next: () => {
-            r.is_approved = true;
-          },
-          complete: () => {
-            completedCount++;
-            if (completedCount === pendingResults.length) {
-              this.loading = false;
-              this.showSuccess('Duyệt toàn bộ kết quả hoàn tất!');
-              this.loadFinalResults();
-            }
-          }
-        });
-      });
-    }
-  }
-
   exportToExcel(): void {
     const dataToExport = this.filteredResults.map((r, index) => ({
       'STT': index + 1,
@@ -263,7 +219,7 @@ export class LdkbmScoreSummaryComponent implements OnInit {
       'Điểm Chặng 2': r.stage_2_score !== null && r.stage_2_score !== undefined ? r.stage_2_score : '-',
       'Điểm Tổng Kết': r.final_hp_score !== null && r.final_hp_score !== undefined ? r.final_hp_score : '-',
       'Xếp Loại': r.grade_level || 'Chưa xếp loại',
-      'Trạng Thái': r.is_approved ? 'Đã duyệt' : (r.final_hp_score !== null ? 'Chờ duyệt' : 'Chưa tính điểm')
+      'Trạng Thái': r.final_hp_score !== null ? 'Đã có kết quả' : 'Chưa tính điểm'
     }));
 
     const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -278,11 +234,11 @@ export class LdkbmScoreSummaryComponent implements OnInit {
   }
 
   get approvedCount(): number {
-    return this.results.filter(r => r.is_approved).length;
+    return this.results.filter(r => r.final_hp_score !== null && r.final_hp_score !== undefined).length;
   }
 
   get pendingApprovalCount(): number {
-    return this.results.filter(r => r.final_hp_score !== null && r.final_hp_score !== undefined && !r.is_approved).length;
+    return 0;
   }
 
   get pendingScoreCount(): number {
