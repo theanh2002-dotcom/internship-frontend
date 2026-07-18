@@ -240,18 +240,20 @@ export class StudentAssignmentComponent implements OnInit {
       try {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
+        const importSheet = this.findImportSheet(workbook);
+        if (!importSheet) {
+          this.showError('Không tìm thấy sheet danh sách sinh viên. File cần có các cột "MSSV", "Họ và tên" và "Lớp".');
+          return;
+        }
 
-        // Đọc raw array (header: 1) để xử lý merge cell header
-        const rawRows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        if (rawRows.length < 2) {
-          this.showError('File Excel trống hoặc không có dữ liệu.');
+        const rawRows = importSheet.rows;
+        if (rawRows.length <= importSheet.headerRowIndex + 1) {
+          this.showError('File Excel trống hoặc không có dữ liệu sinh viên.');
           return;
         }
 
         // Xác định header: tìm vị trí cột dựa trên header row
-        const headerRow = rawRows[0].map((h: any) => String(h || '').trim());
+        const headerRow = rawRows[importSheet.headerRowIndex].map((h: any) => String(h || '').trim());
         const normalizedHeaderRow = headerRow.map((h: string) => this.normalizeHeader(h));
 
         // Tìm index cột theo tên header (hỗ trợ nhiều format)
@@ -271,7 +273,7 @@ export class StudentAssignmentComponent implements OnInit {
 
         const students: StudentItem[] = [];
 
-        for (let i = 1; i < rawRows.length; i++) {
+        for (let i = importSheet.headerRowIndex + 1; i < rawRows.length; i++) {
           const row = rawRows[i];
           if (!row || row.length === 0) continue;
 
@@ -393,6 +395,29 @@ export class StudentAssignmentComponent implements OnInit {
       .replace(/Đ/g, 'D')
       .trim()
       .toLowerCase();
+  }
+
+  private findImportSheet(workbook: XLSX.WorkBook): { rows: any[][]; headerRowIndex: number } | null {
+    for (const sheetName of workbook.SheetNames) {
+      const worksheet = workbook.Sheets[sheetName];
+      const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+      const maxHeaderScan = Math.min(rows.length, 30);
+
+      for (let i = 0; i < maxHeaderScan; i++) {
+        const normalizedRow = (rows[i] || []).map((h: any) => this.normalizeHeader(String(h || '')));
+        const hasStudentCode = normalizedRow.some((h: string) =>
+          h === 'mssv' || h === 'ma sv' || h === 'ma sinh vien' || h === 'ma so sinh vien'
+        );
+        const hasFullName = normalizedRow.some((h: string) => h === 'ho va ten' || h === 'ho ten');
+        const hasClassName = normalizedRow.some((h: string) => h === 'lop');
+
+        if (hasStudentCode && hasFullName && hasClassName) {
+          return { rows, headerRowIndex: i };
+        }
+      }
+    }
+
+    return null;
   }
 
   // --- ASSIGN TEACHER ---
