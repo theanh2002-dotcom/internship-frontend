@@ -36,6 +36,8 @@ export class StudentAssignmentComponent implements OnInit {
   // Modals
   isManualModalOpen = false;
   isAssignModalOpen = false;
+  isDeleteConfirmOpen = false;
+  studentPendingDelete: any | null = null;
 
   // Manual Form
   formStudentCode = '';
@@ -205,20 +207,61 @@ export class StudentAssignmentComponent implements OnInit {
     });
   }
 
-  deleteStudent(id: number): void {
-    if (confirm('Bạn có chắc chắn muốn xóa sinh viên này khỏi đợt thực tập?')) {
-      this.isLoading = true;
-      this.studentCampaignService.deleteStudentCampaign(id).subscribe({
-        next: () => {
-          this.showSuccess('Đã xóa sinh viên khỏi đợt thực tập.');
-          this.loadStudents();
-        },
-        error: (err) => {
-          this.showError(err.error?.message || err.message || 'Lỗi khi xóa sinh viên');
-          this.isLoading = false;
-        }
-      });
+  openDeleteConfirm(student: any): void {
+    if (!this.canDeleteStudentFromSelectedCampaign()) {
+      this.showError('Chỉ được xóa sinh viên trước thời gian bắt đầu của đợt thực tập.');
+      return;
     }
+    this.studentPendingDelete = student;
+    this.isDeleteConfirmOpen = true;
+  }
+
+  closeDeleteConfirm(): void {
+    this.isDeleteConfirmOpen = false;
+    this.studentPendingDelete = null;
+  }
+
+  confirmDeleteStudent(): void {
+    if (!this.studentPendingDelete) return;
+    if (!this.canDeleteStudentFromSelectedCampaign()) {
+      this.closeDeleteConfirm();
+      this.showError('Chỉ được xóa sinh viên trước thời gian bắt đầu của đợt thực tập.');
+      return;
+    }
+
+    const id = this.studentPendingDelete.id;
+    this.isLoading = true;
+    this.studentCampaignService.deleteStudentCampaign(id).subscribe({
+      next: () => {
+        this.closeDeleteConfirm();
+        this.showSuccess('Đã xóa sinh viên khỏi đợt thực tập.');
+        this.loadStudents();
+      },
+      error: (err) => {
+        this.showError(err.error?.message || err.message || 'Lỗi khi xóa sinh viên');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  canDeleteStudentFromSelectedCampaign(): boolean {
+    const campaign = this.getSelectedCampaign();
+    if (!campaign?.start_date) return false;
+    return new Date(this.normalizeDateString(campaign.start_date)).getTime() > Date.now();
+  }
+
+  getDeleteDisabledTitle(): string {
+    return this.canDeleteStudentFromSelectedCampaign()
+      ? 'Xóa khỏi đợt thực tập'
+      : 'Chỉ được xóa trước thời gian bắt đầu của đợt thực tập';
+  }
+
+  getSelectedCampaign(): CampaignResponse | undefined {
+    return this.campaigns.find(c => Number(c.id) === Number(this.selectedCampaignId));
+  }
+
+  private normalizeDateString(value: string): string {
+    return value.includes(' ') ? value.replace(' ', 'T') : value;
   }
 
   // --- EXCEL IMPORT ---

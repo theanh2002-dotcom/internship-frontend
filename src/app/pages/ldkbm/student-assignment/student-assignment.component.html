@@ -134,7 +134,10 @@
               <button (click)="openAssignModalForOne(student.id)" class="text-slate-400 hover:text-[#00429D] p-1 rounded hover:bg-blue-50 transition-colors" title="Phân công GVHD">
                 <span class="material-symbols-outlined text-[18px]">assignment_ind</span>
               </button>
-              <button (click)="deleteStudent(student.id)" class="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors" title="Xóa khỏi đợt thực tập">
+              <button (click)="openDeleteConfirm(student)"
+                      [disabled]="!canDeleteStudentFromSelectedCampaign()"
+                      [title]="getDeleteDisabledTitle()"
+                      class="text-slate-400 p-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-400 hover:text-red-600 hover:bg-red-50">
                 <span class="material-symbols-outlined text-[18px]">delete</span>
               </button>
             </div>
@@ -173,6 +176,35 @@
       </div>
     </div>
 
+  </div>
+</app-modal>
+
+<!-- Modal xác nhận xóa sinh viên -->
+<app-modal [isOpen]="isDeleteConfirmOpen"
+           title="Xác nhận xóa sinh viên khỏi đợt thực tập"
+           saveText="Xóa sinh viên"
+           (close)="closeDeleteConfirm()"
+           (save)="confirmDeleteStudent()">
+  <div class="space-y-4">
+    <div class="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      Thao tác này sẽ xóa sinh viên khỏi đợt thực tập hiện tại và không thể hoàn tác.
+    </div>
+
+    <div class="text-sm text-slate-700 space-y-2">
+      <p>
+        Sinh viên:
+        <strong class="text-slate-900">{{ studentPendingDelete?.full_name }}</strong>
+        <span class="font-mono text-slate-500">({{ studentPendingDelete?.student_code }})</span>
+      </p>
+      <p>
+        Đợt thực tập:
+        <strong class="text-slate-900">{{ getSelectedCampaign()?.name || getSelectedCampaign()?.code }}</strong>
+      </p>
+    </div>
+
+    <p class="text-xs text-slate-500">
+      Lưu ý: LĐKBM chỉ được xóa sinh viên trước thời gian bắt đầu của đợt thực tập.
+    </p>
   </div>
 </app-modal>
 
