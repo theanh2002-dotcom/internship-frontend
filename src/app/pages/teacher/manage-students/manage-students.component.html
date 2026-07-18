@@ -74,6 +74,10 @@
       <span class="font-medium text-slate-800">{{ sv.full_name }}</span>
     </ng-template>
 
+    <ng-template appTableCell="first_name" let-sv>
+      <span class="font-medium text-slate-700">{{ getStudentFirstName(sv) }}</span>
+    </ng-template>
+
     <!-- class_name template -->
     <ng-template appTableCell="class_name" let-sv>
       <span class="text-slate-600">{{ sv.class_name || '---' }}</span>

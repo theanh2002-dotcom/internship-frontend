@@ -39,6 +39,7 @@ export class ManageStudentsComponent implements OnInit {
   columns = [
     { key: 'student_code', label: 'Mã SV', width: '120px' },
     { key: 'full_name', label: 'Họ và tên' },
+    { key: 'first_name', label: 'Tên', width: '110px' },
     { key: 'class_name', label: 'Lớp', width: '100px' },
     { key: 'company', label: 'Đơn vị TT' },
     { key: 'status', label: 'Trạng thái', width: '180px' },
@@ -79,7 +80,8 @@ export class ManageStudentsComponent implements OnInit {
     this.isLoading = true;
     this.studentCampaignService.getMyAssignedStudents().subscribe({
       next: (res) => {
-        this.students = Array.isArray(res) ? res : [];
+        const data = Array.isArray(res) ? res : (res.data || res.payload || []);
+        this.students = data.sort((a: StudentCampaignResponse, b: StudentCampaignResponse) => this.compareStudentsByName(a, b));
         this.applyFilters();
         this.isLoading = false;
       },
@@ -103,6 +105,7 @@ export class ManageStudentsComponent implements OnInit {
       const query = this.searchQuery.toLowerCase().trim();
       result = result.filter(s => 
         (s.full_name && s.full_name.toLowerCase().includes(query)) ||
+        (this.getStudentFirstName(s).toLowerCase().includes(query)) ||
         (s.student_code && s.student_code.toLowerCase().includes(query)) ||
         (s.class_name && s.class_name.toLowerCase().includes(query)) ||
         (s.company_info?.company_name && s.company_info.company_name.toLowerCase().includes(query))
@@ -135,6 +138,8 @@ export class ManageStudentsComponent implements OnInit {
       }
     }
 
+    result = result.sort((a, b) => this.compareStudentsByName(a, b));
+
     this.filteredStudents = result;
     this.totalItems = result.length;
 
@@ -165,6 +170,37 @@ export class ManageStudentsComponent implements OnInit {
   onPageChange(page: number): void {
     this.currentPage = page;
     this.paginate();
+  }
+
+  getStudentFirstName(student: StudentCampaignResponse): string {
+    if (student.first_name) return student.first_name;
+    return this.splitFullName(student.full_name || '').firstName;
+  }
+
+  private getStudentLastName(student: StudentCampaignResponse): string {
+    if (student.last_name) return student.last_name;
+    return this.splitFullName(student.full_name || '').lastName;
+  }
+
+  private compareStudentsByName(a: StudentCampaignResponse, b: StudentCampaignResponse): number {
+    const firstNameCompare = this.getStudentFirstName(a).localeCompare(this.getStudentFirstName(b), 'vi', { sensitivity: 'base' });
+    if (firstNameCompare !== 0) return firstNameCompare;
+
+    const lastNameCompare = this.getStudentLastName(a).localeCompare(this.getStudentLastName(b), 'vi', { sensitivity: 'base' });
+    if (lastNameCompare !== 0) return lastNameCompare;
+
+    return (a.student_code || '').localeCompare(b.student_code || '', 'vi', { numeric: true });
+  }
+
+  private splitFullName(fullName: string): { lastName: string; firstName: string } {
+    const normalized = (fullName || '').trim().replace(/\s+/g, ' ');
+    if (!normalized) return { lastName: '', firstName: '' };
+    const lastSpace = normalized.lastIndexOf(' ');
+    if (lastSpace < 0) return { lastName: '', firstName: normalized };
+    return {
+      lastName: normalized.slice(0, lastSpace).trim(),
+      firstName: normalized.slice(lastSpace + 1).trim()
+    };
   }
 
   openReviewModal(student: StudentCampaignResponse): void {

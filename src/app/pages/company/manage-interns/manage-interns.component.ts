@@ -36,6 +36,7 @@ export class ManageInternsComponent implements OnInit {
 
   columns = [
     { key: 'student', label: 'Sinh viên' },
+    { key: 'firstName', label: 'Tên', width: '110px' },
     { key: 'currentWeek', label: 'Tuần hiện tại', align: 'center', width: '130px' },
     { key: 'declarationStatus', label: 'Tiếp nhận (TTTN-01)', align: 'center', width: '170px' },
     { key: 'planStatus', label: 'Kế hoạch (TTTN-02)', align: 'center', width: '170px' },
@@ -103,6 +104,8 @@ export class ManageInternsComponent implements OnInit {
             id: s.id,
             studentId: s.student_code,
             studentName: s.full_name,
+            firstName: this.getStudentFirstName(s),
+            lastName: this.getStudentLastName(s),
             university: 'Đại học Xây dựng Hà Nội', // Hardcoded as it's HUCE
             currentWeek: 'Đang tải...',
             declarationStatus,
@@ -164,6 +167,7 @@ export class ManageInternsComponent implements OnInit {
       const term = this.searchTerm.toLowerCase().trim();
       result = result.filter(i => 
         (i.studentName && i.studentName.toLowerCase().includes(term)) ||
+        (i.firstName && i.firstName.toLowerCase().includes(term)) ||
         (i.studentId && i.studentId.toLowerCase().includes(term)) ||
         (i.university && i.university.toLowerCase().includes(term))
       );
@@ -184,6 +188,8 @@ export class ManageInternsComponent implements OnInit {
         result = result.filter(i => i.logStatus === this.selectedLogStatus);
       }
     }
+
+    result = result.sort((a, b) => this.compareInternsByName(a, b));
 
     this.filteredInterns = result;
     this.totalItems = result.length;
@@ -220,6 +226,37 @@ export class ManageInternsComponent implements OnInit {
   onPageChange(page: number) {
     this.currentPage = page;
     this.paginate();
+  }
+
+  getStudentFirstName(student: any): string {
+    if (student?.first_name) return student.first_name;
+    return this.splitFullName(student?.full_name || student?.studentName || '').firstName;
+  }
+
+  private getStudentLastName(student: any): string {
+    if (student?.last_name) return student.last_name;
+    return this.splitFullName(student?.full_name || student?.studentName || '').lastName;
+  }
+
+  private compareInternsByName(a: any, b: any): number {
+    const firstNameCompare = (a.firstName || '').localeCompare(b.firstName || '', 'vi', { sensitivity: 'base' });
+    if (firstNameCompare !== 0) return firstNameCompare;
+
+    const lastNameCompare = (a.lastName || '').localeCompare(b.lastName || '', 'vi', { sensitivity: 'base' });
+    if (lastNameCompare !== 0) return lastNameCompare;
+
+    return (a.studentId || '').localeCompare(b.studentId || '', 'vi', { numeric: true });
+  }
+
+  private splitFullName(fullName: string): { lastName: string; firstName: string } {
+    const normalized = (fullName || '').trim().replace(/\s+/g, ' ');
+    if (!normalized) return { lastName: '', firstName: '' };
+    const lastSpace = normalized.lastIndexOf(' ');
+    if (lastSpace < 0) return { lastName: '', firstName: normalized };
+    return {
+      lastName: normalized.slice(0, lastSpace).trim(),
+      firstName: normalized.slice(lastSpace + 1).trim()
+    };
   }
 
   openAction(intern: any, type: 'PLAN' | 'LOG' | 'DECLARATION') {

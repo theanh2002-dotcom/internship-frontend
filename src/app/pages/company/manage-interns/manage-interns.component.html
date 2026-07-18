@@ -88,6 +88,10 @@
       <div class="text-slate-500 font-mono text-xs mt-0.5">{{ intern.studentId }} — {{ intern.university }}</div>
     </ng-template>
 
+    <ng-template appTableCell="firstName" let-intern>
+      <span class="font-medium text-slate-700">{{ intern.firstName }}</span>
+    </ng-template>
+
     <!-- currentWeek template -->
     <ng-template appTableCell="currentWeek" let-intern>
       <span *ngIf="intern.currentWeek === 'Đang tải...'" class="text-slate-400 italic text-xs">Đang tải...</span>
