@@ -124,7 +124,7 @@
     </section>
   </div>
 
-  <div *ngIf="selectedStudent && !isLoading" class="space-y-6">
+  <div *ngIf="selectedStudent && !isLoading" class="space-y-6 min-w-0">
     <div class="flex items-center gap-4">
       <button (click)="selectedStudent = null"
               class="w-11 h-11 rounded-full border border-slate-300 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-[#00429D] transition-colors shadow-sm"
@@ -188,7 +188,7 @@
       </div>
     </div>
 
-    <section class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+    <section class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden min-w-0">
       <div class="p-5 border-b border-slate-200 bg-slate-50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h3 class="text-lg font-semibold text-slate-900 uppercase">{{ getActiveTabTitle() }}</h3>
@@ -215,7 +215,7 @@
         </div>
       </div>
 
-      <div *ngIf="activeTab === 'SUMMARY'" class="p-6 space-y-5">
+      <div *ngIf="activeTab === 'SUMMARY'" class="p-4 md:p-6 space-y-5 min-w-0">
         <div *ngIf="isSummaryLoading" class="py-10 text-center text-slate-500">
           <span class="material-symbols-outlined animate-spin text-4xl mb-3 text-[#00429D]">autorenew</span>
           <p class="font-medium">Đang tổng hợp điểm...</p>
@@ -228,41 +228,54 @@
             <span class="font-mono">{{ selectedStudent.student_code }}</span>
           </div>
 
-          <div class="overflow-x-auto border border-slate-200 rounded">
-            <table class="w-full min-w-[1220px] text-sm border-collapse">
+          <div class="w-full max-w-full overflow-x-auto border border-slate-200 rounded">
+            <table class="w-full min-w-[860px] table-fixed text-xs border-collapse">
+              <colgroup>
+                <col class="w-[4%]">
+                <col class="w-[6%]">
+                <col class="w-[22%]">
+                <col class="w-[9%]">
+                <col class="w-[7%]">
+                <col class="w-[5%]">
+                <col class="w-[7%]">
+                <col class="w-[5%]">
+                <col class="w-[9%]">
+                <col class="w-[12%]">
+                <col class="w-[13%]">
+              </colgroup>
               <thead class="text-slate-700">
                 <tr>
-                  <th rowspan="2" class="px-3 py-3 border border-slate-200 bg-slate-100 text-center w-16">STT</th>
-                  <th rowspan="2" class="px-3 py-3 border border-slate-200 bg-slate-100 text-center w-20">CLO</th>
-                  <th rowspan="2" class="px-4 py-3 border border-slate-200 bg-slate-100 text-center min-w-[240px]">Mô tả năng lực</th>
-                  <th rowspan="2" class="px-3 py-3 border border-slate-200 bg-slate-100 text-center w-28">Trọng số HP<br>(alpha_i)</th>
-                  <th colspan="2" class="px-3 py-3 border border-slate-200 bg-emerald-50 text-emerald-900 text-center">Điểm Chặng 1 ({{ departmentStage1Weight }}%)</th>
-                  <th colspan="2" class="px-3 py-3 border border-slate-200 bg-orange-50 text-orange-900 text-center">Điểm Chặng 2 ({{ departmentStage2Weight }}%)</th>
-                  <th rowspan="2" class="px-3 py-3 border border-slate-200 bg-blue-50 text-blue-900 text-center w-28">Điểm CLOi</th>
-                  <th rowspan="2" class="px-3 py-3 border border-slate-200 bg-blue-50 text-blue-900 text-center w-28">Mức đạt</th>
-                  <th rowspan="2" class="px-3 py-3 border border-slate-200 bg-blue-50 text-blue-900 text-center w-32">Đóng góp<br>(CLOi*ai)</th>
+                  <th rowspan="2" class="px-2 py-2 border border-slate-200 bg-slate-100 text-center">STT</th>
+                  <th rowspan="2" class="px-2 py-2 border border-slate-200 bg-slate-100 text-center">CLO</th>
+                  <th rowspan="2" class="px-3 py-2 border border-slate-200 bg-slate-100 text-center">Mô tả năng lực</th>
+                  <th rowspan="2" class="px-2 py-2 border border-slate-200 bg-slate-100 text-center">Trọng số HP<br>(alpha_i)</th>
+                  <th colspan="2" class="px-2 py-2 border border-slate-200 bg-emerald-50 text-emerald-900 text-center">Điểm Chặng 1 ({{ departmentStage1Weight }}%)</th>
+                  <th colspan="2" class="px-2 py-2 border border-slate-200 bg-orange-50 text-orange-900 text-center">Điểm Chặng 2 ({{ departmentStage2Weight }}%)</th>
+                  <th rowspan="2" class="px-2 py-2 border border-slate-200 bg-blue-50 text-blue-900 text-center">Điểm CLOi</th>
+                  <th rowspan="2" class="px-2 py-2 border border-slate-200 bg-blue-50 text-blue-900 text-center">Mức đạt</th>
+                  <th rowspan="2" class="px-2 py-2 border border-slate-200 bg-blue-50 text-blue-900 text-center">Đóng góp<br>(CLOi*ai)</th>
                 </tr>
                 <tr>
-                  <th class="px-3 py-2 border border-slate-200 bg-emerald-50/70 text-emerald-900 text-center">TB C1</th>
-                  <th class="px-3 py-2 border border-slate-200 bg-emerald-50/70 text-emerald-900 text-center">W1</th>
-                  <th class="px-3 py-2 border border-slate-200 bg-orange-50/70 text-orange-900 text-center">TB C2</th>
-                  <th class="px-3 py-2 border border-slate-200 bg-orange-50/70 text-orange-900 text-center">W2</th>
+                  <th class="px-2 py-2 border border-slate-200 bg-emerald-50/70 text-emerald-900 text-center">TB C1</th>
+                  <th class="px-2 py-2 border border-slate-200 bg-emerald-50/70 text-emerald-900 text-center">W1</th>
+                  <th class="px-2 py-2 border border-slate-200 bg-orange-50/70 text-orange-900 text-center">TB C2</th>
+                  <th class="px-2 py-2 border border-slate-200 bg-orange-50/70 text-orange-900 text-center">W2</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let row of summaryRows; let i = index"
                     class="odd:bg-white even:bg-slate-50 hover:bg-slate-100/70">
-                  <td class="px-3 py-3 border border-slate-200 text-center font-semibold text-slate-800">{{ i + 1 }}</td>
-                  <td class="px-3 py-3 border border-slate-200 text-center font-bold text-slate-900">{{ row.criterion.id }}</td>
-                  <td class="px-3 py-3 border border-slate-200 text-slate-800 leading-snug">{{ row.criterion.description }}</td>
-                  <td class="px-3 py-3 border border-slate-200 text-center font-semibold">{{ row.criterion.alphaWeight }}%</td>
-                  <td class="px-3 py-3 border border-slate-200 text-center bg-emerald-50/50">{{ formatSummaryScore(row.stage1Average) }}</td>
-                  <td class="px-3 py-3 border border-slate-200 text-center bg-emerald-50/30">{{ row.criterion.stage1Weight }}%</td>
-                  <td class="px-3 py-3 border border-slate-200 text-center bg-orange-50/50">{{ formatSummaryScore(row.stage2Average) }}</td>
-                  <td class="px-3 py-3 border border-slate-200 text-center bg-orange-50/30">{{ row.criterion.stage2Weight }}%</td>
-                  <td class="px-3 py-3 border border-slate-200 text-center bg-blue-50/50 text-lg font-bold text-slate-900">{{ formatSummaryScore(row.cloScore) }}</td>
-                  <td class="px-3 py-3 border border-slate-200 text-center bg-blue-50/30">{{ getScoreLevelName(row.cloScore) }}</td>
-                  <td class="px-3 py-3 border border-slate-200 text-center bg-blue-50/30">{{ formatSummaryContribution(row.contribution) }}</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center font-semibold text-slate-800">{{ i + 1 }}</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center font-bold text-slate-900">{{ row.criterion.id }}</td>
+                  <td class="px-3 py-2 border border-slate-200 text-slate-800 leading-snug break-words">{{ row.criterion.description }}</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center font-semibold">{{ row.criterion.alphaWeight }}%</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center bg-emerald-50/50">{{ formatSummaryScore(row.stage1Average) }}</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center bg-emerald-50/30">{{ row.criterion.stage1Weight }}%</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center bg-orange-50/50">{{ formatSummaryScore(row.stage2Average) }}</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center bg-orange-50/30">{{ row.criterion.stage2Weight }}%</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center bg-blue-50/50 text-base font-bold text-slate-900">{{ formatSummaryScore(row.cloScore) }}</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center bg-blue-50/30">{{ getScoreLevelName(row.cloScore) }}</td>
+                  <td class="px-2 py-2 border border-slate-200 text-center bg-blue-50/30">{{ formatSummaryContribution(row.contribution) }}</td>
                 </tr>
                 <tr *ngIf="summaryRows.length === 0">
                   <td colspan="11" class="px-4 py-8 border border-slate-200 text-center text-slate-500">
@@ -270,13 +283,13 @@
                   </td>
                 </tr>
                 <tr class="bg-blue-50 text-slate-900 border-t-2 border-blue-200">
-                  <td colspan="8" class="px-4 py-4 border border-slate-200 text-center text-lg font-bold">
+                  <td colspan="8" class="px-2 py-3 border border-slate-200 text-center text-base font-bold">
                     ĐIỂM HỌC PHẦN (HP = Sum CLOi * alpha_i)
                   </td>
-                  <td class="px-4 py-4 border border-slate-200 text-center text-2xl font-bold">
+                  <td class="px-2 py-3 border border-slate-200 text-center text-xl font-bold">
                     {{ getSummaryHpScore() !== null ? (getSummaryHpScore() | number:'1.1-1') : '-' }}
                   </td>
-                  <td colspan="2" class="px-4 py-4 border border-slate-200"></td>
+                  <td colspan="2" class="px-2 py-3 border border-slate-200"></td>
                 </tr>
               </tbody>
             </table>
