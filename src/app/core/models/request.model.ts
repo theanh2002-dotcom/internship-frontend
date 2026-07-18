@@ -20,6 +20,8 @@ export interface RegisterRequest {
 export interface StudentItem {
   student_code: string;
   full_name: string;
+  last_name?: string;
+  first_name?: string;
   class_name: string;
   email?: string;
   company_name?: string;

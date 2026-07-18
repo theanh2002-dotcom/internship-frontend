@@ -88,6 +88,7 @@
           </th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Mã SV</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Họ và tên</th>
+          <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Tên</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Lớp</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">GV Hướng dẫn</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">ĐV Thực tập</th>
@@ -102,6 +103,7 @@
           </td>
           <td class="py-3 px-4 font-medium text-slate-700">{{ student.student_code }}</td>
           <td class="py-3 px-4 font-bold text-[#002d70]">{{ student.full_name }}</td>
+          <td class="py-3 px-4 font-semibold text-slate-700">{{ getStudentFirstName(student) || '—' }}</td>
           <td class="py-3 px-4 text-slate-500 text-[13px]">{{ student.class_name || '—' }}</td>
           <td class="py-3 px-4">
             <div *ngIf="student.gvhd_name" class="flex items-center gap-1.5 text-[13px] font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded w-fit border border-emerald-100">

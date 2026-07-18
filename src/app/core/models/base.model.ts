@@ -147,6 +147,8 @@ export interface StudentCampaignResponse {
   id: number;
   student_code: string;
   full_name: string;
+  last_name?: string;
+  first_name?: string;
   class_name: string;
   status: string;
   campaign_id: number;

@@ -94,6 +94,7 @@ export class RubricEvaluationComponent implements OnInit {
     { key: 'STT', label: 'STT', width: '60px', align: 'center' },
     { key: 'student_code', label: 'Mã SV', width: '120px' },
     { key: 'full_name', label: 'Họ và tên' },
+    { key: 'first_name', label: 'Tên', width: '110px' },
     { key: 'company', label: 'Đơn vị thực tập' },
     { key: 'gradingStatus', label: 'Trạng thái', width: '150px', align: 'center' },
     { key: 'actions', label: 'Thao tác', align: 'center', width: '150px' }
@@ -124,7 +125,7 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   loadCampaigns(): void {
-    this.campaignService.getCampaigns({ page: 1, limit: 100 }).subscribe({
+    this.campaignService.getCampaigns({ page: 1, limit: 100 }, 'ACTIVE').subscribe({
       next: (res) => {
         this.campaigns = res.data || [];
         this.refreshAvailableCampaigns();
@@ -147,7 +148,8 @@ export class RubricEvaluationComponent implements OnInit {
         const all = Array.isArray(res) ? res : (res.data || res.payload || []);
         this.allStudents = all
           .filter((s: any) => s.status !== 'SUSPENDED')
-          .map((s: any) => ({ ...s, gradingStatus: 'Đang tải...' }));
+          .map((s: any) => ({ ...s, gradingStatus: 'Đang tải...' }))
+          .sort((a: any, b: any) => this.compareStudentsByName(a, b));
         this.refreshAvailableCampaigns();
         this.filterStudents();
         this.isLoading = false;
@@ -261,7 +263,7 @@ export class RubricEvaluationComponent implements OnInit {
     );
 
     this.availableCampaigns = this.campaigns
-      .filter(c => assignedCampaignIds.has(c.id))
+      .filter(c => c.status === 'ACTIVE' && assignedCampaignIds.has(c.id))
       .sort((a, b) => {
         const aTime = a.start_date ? new Date(a.start_date).getTime() : 0;
         const bTime = b.start_date ? new Date(b.start_date).getTime() : 0;
@@ -272,6 +274,28 @@ export class RubricEvaluationComponent implements OnInit {
       this.selectedCampaignId = null;
       this.onFilterChange();
     }
+  }
+
+  private compareStudentsByName(a: StudentCampaignResponse, b: StudentCampaignResponse): number {
+    const firstNameCompare = this.getStudentFirstName(a).localeCompare(this.getStudentFirstName(b), 'vi', { sensitivity: 'base' });
+    if (firstNameCompare !== 0) return firstNameCompare;
+
+    const lastNameCompare = this.getStudentLastName(a).localeCompare(this.getStudentLastName(b), 'vi', { sensitivity: 'base' });
+    if (lastNameCompare !== 0) return lastNameCompare;
+
+    return (a.student_code || '').localeCompare(b.student_code || '', 'vi', { numeric: true });
+  }
+
+  getStudentFirstName(student: StudentCampaignResponse): string {
+    if (student.first_name) return student.first_name;
+    const parts = (student.full_name || '').trim().split(/\s+/).filter(Boolean);
+    return parts.length > 0 ? parts[parts.length - 1] : '';
+  }
+
+  private getStudentLastName(student: StudentCampaignResponse): string {
+    if (student.last_name) return student.last_name;
+    const parts = (student.full_name || '').trim().split(/\s+/).filter(Boolean);
+    return parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
   }
 
   onPageChange(page: number): void {

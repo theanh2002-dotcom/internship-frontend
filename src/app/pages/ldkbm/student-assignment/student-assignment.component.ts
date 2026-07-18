@@ -242,7 +242,7 @@ export class StudentAssignmentComponent implements OnInit {
         const workbook = XLSX.read(data, { type: 'array' });
         const importSheet = this.findImportSheet(workbook);
         if (!importSheet) {
-          this.showError('Không tìm thấy sheet danh sách sinh viên. File cần có các cột "MSSV", "Họ và tên" và "Lớp".');
+          this.showError('Không tìm thấy sheet danh sách sinh viên. File cần có các cột "MSSV", "Họ", "Tên" và "Lớp".');
           return;
         }
 
@@ -260,6 +260,8 @@ export class StudentAssignmentComponent implements OnInit {
         const mssvIdx = normalizedHeaderRow.findIndex((h: string) => h === 'mssv' || h === 'ma sv' || h === 'ma sinh vien');
         const lopIdx = normalizedHeaderRow.findIndex((h: string) => h === 'lop');
         const hoVaTenIdx = normalizedHeaderRow.findIndex((h: string) => h === 'ho va ten' || h === 'ho ten');
+        const hoIdx = normalizedHeaderRow.findIndex((h: string) => h === 'ho' || h === 'ho dem');
+        const tenIdx = normalizedHeaderRow.findIndex((h: string) => h === 'ten');
         const companyIdx = normalizedHeaderRow.findIndex((h: string) => h === 'don vi thuc tap' || h === 'dv thuc tap' || h === 'dvtt');
 
         // Format merge cell: "Họ và tên" merge 2 cột → dữ liệu nằm ở cột B (họ đệm) và C (tên)
@@ -279,6 +281,8 @@ export class StudentAssignmentComponent implements OnInit {
 
           let studentCode = '';
           let fullName = '';
+          let lastName = '';
+          let firstName = '';
           let className = '';
           let companyName = '';
 
@@ -286,24 +290,31 @@ export class StudentAssignmentComponent implements OnInit {
             // Có header rõ ràng → đọc theo index
             studentCode = String(row[mssvIdx] || '').trim();
             
-            if (isMergedFormat && hoVaTenIdx >= 0) {
+            if (hoIdx >= 0 && tenIdx >= 0) {
+              lastName = String(row[hoIdx] || '').trim();
+              firstName = String(row[tenIdx] || '').trim();
+              fullName = `${lastName} ${firstName}`.trim();
+            } else if (isMergedFormat && hoVaTenIdx >= 0) {
               // Format merge: họ đệm ở cột hoVaTenIdx, tên ở cột hoVaTenIdx + 1
-              const hoDem = String(row[hoVaTenIdx] || '').trim();
-              const ten = String(row[hoVaTenIdx + 1] || '').trim();
-              fullName = ten ? `${hoDem} ${ten}` : hoDem;
+              lastName = String(row[hoVaTenIdx] || '').trim();
+              firstName = String(row[hoVaTenIdx + 1] || '').trim();
+              fullName = firstName ? `${lastName} ${firstName}` : lastName;
             } else if (hoVaTenIdx >= 0) {
               // Format 1 cột họ tên
               fullName = String(row[hoVaTenIdx] || '').trim();
+              const parts = this.splitFullName(fullName);
+              lastName = parts.lastName;
+              firstName = parts.firstName;
             }
-            
+
             className = lopIdx >= 0 ? String(row[lopIdx] || '').trim() : '';
             companyName = companyIdx >= 0 ? String(row[companyIdx] || '').trim() : '';
           } else {
             // Fallback: đọc theo vị trí cột A=MSSV, B=Họ đệm, C=Tên, D=Lớp, E=Đơn vị thực tập
             studentCode = String(row[0] || '').trim();
-            const hoDem = String(row[1] || '').trim();
-            const ten = String(row[2] || '').trim();
-            fullName = ten ? `${hoDem} ${ten}` : hoDem;
+            lastName = String(row[1] || '').trim();
+            firstName = String(row[2] || '').trim();
+            fullName = firstName ? `${lastName} ${firstName}` : lastName;
             className = String(row[3] || '').trim();
             companyName = String(row[4] || '').trim();
           }
@@ -312,6 +323,8 @@ export class StudentAssignmentComponent implements OnInit {
             students.push({
               student_code: studentCode,
               full_name: fullName,
+              last_name: lastName,
+              first_name: firstName,
               class_name: className,
               email: '',
               company_name: companyName
@@ -320,7 +333,7 @@ export class StudentAssignmentComponent implements OnInit {
         }
 
         if (students.length === 0) {
-          this.showError('Không tìm thấy dữ liệu hợp lệ trong file Excel. File cần có cột "MSSV", "Họ và tên" và "Lớp".');
+          this.showError('Không tìm thấy dữ liệu hợp lệ trong file Excel. File cần có cột "MSSV", "Họ", "Tên" và "Lớp".');
           return;
         }
 
@@ -354,7 +367,7 @@ export class StudentAssignmentComponent implements OnInit {
   downloadTemplate(): void {
     // Tạo dữ liệu dạng array of arrays (để hỗ trợ merge cell header)
     const rows: any[][] = [
-      ['MSSV', 'Họ và tên', null, 'Lớp', 'Đơn vị thực tập'],  // Header: "Họ và tên" merge B1:C1
+      ['MSSV', 'Họ', 'Tên', 'Lớp', 'Đơn vị thực tập'],
       ['1501665', 'Lại Thế', 'Anh', '65PM4', ''],
       ['0002267', 'Mai Văn', 'Cường', '67CNPM', ''],
       ['85365', 'Vũ Huy', 'Hoàng', '65PM4', ''],
@@ -368,11 +381,6 @@ export class StudentAssignmentComponent implements OnInit {
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
     
-    // Merge cell B1:C1 cho tiêu đề "Họ và tên"
-    ws['!merges'] = [
-      { s: { r: 0, c: 1 }, e: { r: 0, c: 2 } }  // B1:C1
-    ];
-
     // Đặt độ rộng cột
     ws['!cols'] = [
       { wch: 10 },  // A: MSSV
@@ -409,15 +417,33 @@ export class StudentAssignmentComponent implements OnInit {
           h === 'mssv' || h === 'ma sv' || h === 'ma sinh vien' || h === 'ma so sinh vien'
         );
         const hasFullName = normalizedRow.some((h: string) => h === 'ho va ten' || h === 'ho ten');
+        const hasSplitName = normalizedRow.some((h: string) => h === 'ho' || h === 'ho dem')
+          && normalizedRow.some((h: string) => h === 'ten');
         const hasClassName = normalizedRow.some((h: string) => h === 'lop');
 
-        if (hasStudentCode && hasFullName && hasClassName) {
+        if (hasStudentCode && (hasFullName || hasSplitName) && hasClassName) {
           return { rows, headerRowIndex: i };
         }
       }
     }
 
     return null;
+  }
+
+  private splitFullName(fullName: string): { lastName: string; firstName: string } {
+    const normalized = (fullName || '').trim().replace(/\s+/g, ' ');
+    if (!normalized) return { lastName: '', firstName: '' };
+    const lastSpace = normalized.lastIndexOf(' ');
+    if (lastSpace < 0) return { lastName: '', firstName: normalized };
+    return {
+      lastName: normalized.slice(0, lastSpace).trim(),
+      firstName: normalized.slice(lastSpace + 1).trim()
+    };
+  }
+
+  getStudentFirstName(student: any): string {
+    if (student?.first_name) return student.first_name;
+    return this.splitFullName(student?.full_name || '').firstName;
   }
 
   // --- ASSIGN TEACHER ---
