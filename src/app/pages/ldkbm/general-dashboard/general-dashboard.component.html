@@ -188,8 +188,11 @@
               <span *ngIf="student.company_info?.company_name" class="text-slate-700 block max-w-[200px] truncate" [title]="student.company_info.company_name">
                 {{ student.company_info.company_name }}
               </span>
-              <span *ngIf="!student.company_info?.company_name" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-500">
+              <span *ngIf="!student.company_info?.company_name && !isMissingCompanyInfoAfterProgress(student)" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-500">
                 Chưa đăng ký
+              </span>
+              <span *ngIf="isMissingCompanyInfoAfterProgress(student)" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-50 text-rose-700 border border-rose-100">
+                Thiếu dữ liệu ĐVTT
               </span>
             </td>
             <!-- Checklist progress -->
@@ -199,12 +202,12 @@
                 <div class="flex flex-col items-center" title="TTTN-01: Đăng ký nơi thực tập">
                   <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
                     [ngClass]="{
-                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-01') === 'success',
-                      'bg-amber-500 text-white animate-pulse shadow-sm': getStatusStep(student.status, 'TTTN-01') === 'warning',
-                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-01') === 'none'
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student, 'TTTN-01') === 'success',
+                      'bg-amber-500 text-white animate-pulse shadow-sm': getStatusStep(student, 'TTTN-01') === 'warning',
+                      'bg-slate-100 text-slate-400': getStatusStep(student, 'TTTN-01') === 'none'
                     }">
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-01') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-01') !== 'success'">01</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-01') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-01') !== 'success'">01</span>
                   </div>
                   <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">01</span>
                 </div>
@@ -215,12 +218,12 @@
                 <div class="flex flex-col items-center" title="TTTN-02: Kế hoạch thực tập">
                   <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
                     [ngClass]="{
-                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-02') === 'success',
-                      'bg-amber-500 text-white animate-pulse shadow-sm': getStatusStep(student.status, 'TTTN-02') === 'warning',
-                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-02') === 'none'
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student, 'TTTN-02') === 'success',
+                      'bg-amber-500 text-white animate-pulse shadow-sm': getStatusStep(student, 'TTTN-02') === 'warning',
+                      'bg-slate-100 text-slate-400': getStatusStep(student, 'TTTN-02') === 'none'
                     }">
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-02') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-02') !== 'success'">02</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-02') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-02') !== 'success'">02</span>
                   </div>
                   <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">02</span>
                 </div>
@@ -231,11 +234,11 @@
                 <div class="flex flex-col items-center" title="TTTN-03: Nhật ký tuần">
                   <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
                     [ngClass]="{
-                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-03') === 'success',
-                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-03') === 'none'
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student, 'TTTN-03') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student, 'TTTN-03') === 'none'
                     }">
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-03') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-03') !== 'success'">03</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-03') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-03') !== 'success'">03</span>
                   </div>
                   <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">03</span>
                 </div>
@@ -246,11 +249,11 @@
                 <div class="flex flex-col items-center" title="TTTN-04: Đánh giá giữa kỳ">
                   <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
                     [ngClass]="{
-                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-04') === 'success',
-                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-04') === 'none'
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student, 'TTTN-04') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student, 'TTTN-04') === 'none'
                     }">
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-04') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-04') !== 'success'">04</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-04') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-04') !== 'success'">04</span>
                   </div>
                   <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">04</span>
                 </div>
@@ -261,11 +264,11 @@
                 <div class="flex flex-col items-center" title="TTTN-06: Báo cáo thực tập">
                   <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
                     [ngClass]="{
-                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-06') === 'success',
-                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-06') === 'none'
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student, 'TTTN-06') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student, 'TTTN-06') === 'none'
                     }">
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-06') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-06') !== 'success'">06</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-06') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-06') !== 'success'">06</span>
                   </div>
                   <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">06</span>
                 </div>
@@ -276,11 +279,11 @@
                 <div class="flex flex-col items-center" title="TTTN-05: Đánh giá cuối kỳ">
                   <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
                     [ngClass]="{
-                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-05') === 'success',
-                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-05') === 'none'
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student, 'TTTN-05') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student, 'TTTN-05') === 'none'
                     }">
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-05') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-05') !== 'success'">05</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-05') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-05') !== 'success'">05</span>
                   </div>
                   <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">05</span>
                 </div>
@@ -291,11 +294,11 @@
                 <div class="flex flex-col items-center" title="TTTN-07: Bảng điểm tổng hợp">
                   <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
                     [ngClass]="{
-                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student.status, 'TTTN-07') === 'success',
-                      'bg-slate-100 text-slate-400': getStatusStep(student.status, 'TTTN-07') === 'none'
+                      'bg-emerald-500 text-white shadow-sm': getStatusStep(student, 'TTTN-07') === 'success',
+                      'bg-slate-100 text-slate-400': getStatusStep(student, 'TTTN-07') === 'none'
                     }">
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-07') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
-                    <span *ngIf="getStatusStep(student.status, 'TTTN-07') !== 'success'">07</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-07') === 'success'" class="material-symbols-outlined text-sm font-bold">check</span>
+                    <span *ngIf="getStatusStep(student, 'TTTN-07') !== 'success'">07</span>
                   </div>
                   <span class="text-[9px] text-slate-400 mt-1 font-medium scale-90">07</span>
                 </div>

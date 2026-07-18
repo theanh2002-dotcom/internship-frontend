@@ -39,6 +39,14 @@ interface ScoreAccumulator {
   comments: string[];
 }
 
+interface SummaryCloRow {
+  criterion: RubricCriterion;
+  stage1Average: number | null;
+  stage2Average: number | null;
+  cloScore: number | null;
+  contribution: number | null;
+}
+
 @Component({
   selector: 'app-rubric-evaluation',
   templateUrl: './rubric-evaluation.component.html',
@@ -61,6 +69,7 @@ export class RubricEvaluationComponent implements OnInit {
   selectedStage: 'STAGE_1' | 'STAGE_2' = 'STAGE_1';
   activeTab: 'STAGE_1' | 'STAGE_2' | 'SUMMARY' = 'STAGE_1';
   finalResult: any = null;
+  summaryEvaluations: any[] = [];
   isSummaryLoading = false;
   campaign: any = null;
   isCampaignActive = true;
@@ -286,6 +295,7 @@ export class RubricEvaluationComponent implements OnInit {
   onSummaryTab(): void {
     this.activeTab = 'SUMMARY';
     this.loadFinalResult();
+    this.loadSummaryEvaluations();
   }
 
   loadRubricConfig(): void {
@@ -673,6 +683,18 @@ export class RubricEvaluationComponent implements OnInit {
     });
   }
 
+  loadSummaryEvaluations(): void {
+    if (!this.selectedStudent) return;
+    this.evaluationService.findEvaluations(this.selectedStudent.id).subscribe({
+      next: (res) => {
+        this.summaryEvaluations = Array.isArray(res) ? res : (res.data || res.payload || []);
+      },
+      error: () => {
+        this.summaryEvaluations = [];
+      }
+    });
+  }
+
   getStageScore(stage: 'STAGE_1' | 'STAGE_2'): number | null {
     if (!this.finalResult) return null;
     return stage === 'STAGE_1'
@@ -682,6 +704,44 @@ export class RubricEvaluationComponent implements OnInit {
 
   getFinalHpScore(): number | null {
     return this.finalResult?.final_hp_score ?? null;
+  }
+
+  get summaryRows(): SummaryCloRow[] {
+    const stage1Evaluations = this.summaryEvaluations.filter((evaluation: any) => evaluation.stage === 'STAGE_1');
+    const stage2Evaluations = this.summaryEvaluations.filter((evaluation: any) => evaluation.stage === 'STAGE_2');
+    const stage1GvhdScores = this.buildScoreMap(stage1Evaluations, 'GVHD');
+    const stage1CompanyScores = this.buildScoreMap(stage1Evaluations, ['COMPANY_SUPERVISOR', 'COMPANY']);
+    const stage2GvhdScores = this.buildScoreMap(stage2Evaluations, 'GVHD');
+    const stage2CompanyScores = this.buildScoreMap(stage2Evaluations, ['COMPANY_SUPERVISOR', 'COMPANY']);
+
+    return this.criteria
+      .filter(criterion => criterion.stage1Weight > 0 || criterion.stage2Weight > 0)
+      .map(criterion => {
+        const stage1Average = this.getSummaryStageAverage(criterion, stage1GvhdScores, stage1CompanyScores);
+        const stage2Average = this.getSummaryStageAverage(criterion, stage2GvhdScores, stage2CompanyScores);
+        const cloScore = this.getSummaryCloScore(criterion, stage1Average, stage2Average);
+        const contribution = cloScore === null ? null : this.roundTo(cloScore * (criterion.alphaWeight / 100), 3);
+        return { criterion, stage1Average, stage2Average, cloScore, contribution };
+      });
+  }
+
+  getSummaryHpScore(): number | null {
+    const finalScore = this.getFinalHpScore();
+    if (finalScore !== null) return finalScore;
+    const contributions = this.summaryRows
+      .map(row => row.contribution)
+      .filter((value): value is number => value !== null);
+    if (contributions.length === 0) return null;
+    return this.roundTo(contributions.reduce((sum, value) => sum + value, 0), 1);
+  }
+
+  formatSummaryScore(value: number | null | undefined): string {
+    return value === null || value === undefined ? 'N/A' : this.formatScore(value);
+  }
+
+  formatSummaryContribution(value: number | null | undefined): string {
+    if (value === null || value === undefined) return 'N/A';
+    return Number.isInteger(value) ? `${value}` : value.toString().replace(/0+$/, '').replace(/\.$/, '');
   }
 
   getSummaryStatusText(): string {
@@ -828,6 +888,47 @@ export class RubricEvaluationComponent implements OnInit {
       });
 
     return scoreMap;
+  }
+
+  private getSummaryStageAverage(
+    criterion: RubricCriterion,
+    gvhdScores: Map<string, ScoreAccumulator>,
+    companyScores: Map<string, ScoreAccumulator>
+  ): number | null {
+    const gvhd = gvhdScores.get(criterion.id);
+    const company = companyScores.get(criterion.id);
+    const gvhdScore = gvhd ? this.clampScore(gvhd.total / gvhd.count) : null;
+    const companyScore = company ? this.clampScore(company.total / company.count) : null;
+    const companyRequired = criterion.companyBeta > 0;
+    const gvhdRequired = criterion.gvhdBeta > 0;
+
+    if (companyRequired && companyScore === null) return null;
+    if (gvhdRequired && gvhdScore === null) return null;
+
+    const totalWeight = (companyRequired ? criterion.companyBeta : 0) + (gvhdRequired ? criterion.gvhdBeta : 0);
+    if (totalWeight <= 0) return null;
+
+    const weightedScore =
+      (companyRequired ? (companyScore || 0) * criterion.companyBeta : 0) +
+      (gvhdRequired ? (gvhdScore || 0) * criterion.gvhdBeta : 0);
+
+    return this.roundTo(weightedScore / totalWeight, 1);
+  }
+
+  private getSummaryCloScore(criterion: RubricCriterion, stage1Average: number | null, stage2Average: number | null): number | null {
+    const stage1Weight = criterion.stage1Weight / 100;
+    const stage2Weight = criterion.stage2Weight / 100;
+    const activeWeight = (stage1Average !== null ? stage1Weight : 0) + (stage2Average !== null ? stage2Weight : 0);
+    if (activeWeight <= 0) return null;
+    const weightedScore =
+      (stage1Average !== null ? stage1Average * stage1Weight : 0) +
+      (stage2Average !== null ? stage2Average * stage2Weight : 0);
+    return this.roundTo(weightedScore / activeWeight, 1);
+  }
+
+  private roundTo(value: number, digits: number): number {
+    const factor = Math.pow(10, digits);
+    return Math.round(value * factor) / factor;
   }
 
   private refreshStudentGradingStatus(student: StudentCampaignResponse): void {

@@ -1,8 +1,20 @@
-<aside class="w-64 h-screen border-r border-slate-200 dark:border-slate-800 fixed left-0 top-0 bg-white dark:bg-slate-950 flex flex-col h-full py-4 z-50">
+<aside
+  class="h-screen border-r border-slate-200 dark:border-slate-800 fixed left-0 top-0 bg-white dark:bg-slate-950 flex flex-col h-full py-4 z-50 transition-all duration-200 ease-in-out"
+  [ngClass]="isCollapsed ? 'w-20' : 'w-64'">
 <!-- Header -->
-<div class="px-6 mb-8 flex flex-col gap-1">
-<h1 class="font-bold text-[#00429D] dark:text-blue-200 tracking-tight font-headline-lg text-headline-lg">HUCE CMS</h1>
-<span class="text-slate-500 font-label-md text-label-md">{{ roleName }}</span>
+<div class="px-4 mb-8 flex items-start justify-between gap-3">
+<div class="min-w-0" [ngClass]="isCollapsed ? 'w-full text-center' : ''">
+<h1 class="font-bold text-[#00429D] dark:text-blue-200 tracking-tight font-headline-lg text-headline-lg truncate">{{ isCollapsed ? 'HC' : 'HUCE CMS' }}</h1>
+<span *ngIf="!isCollapsed" class="text-slate-500 font-label-md text-label-md">{{ roleName }}</span>
+</div>
+<button
+  type="button"
+  (click)="toggleSidebar()"
+  class="h-8 w-8 shrink-0 rounded border border-slate-200 bg-white text-slate-500 hover:text-[#00429D] hover:border-[#00429D] hover:bg-blue-50 transition-colors flex items-center justify-center"
+  [attr.aria-label]="isCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'"
+  [title]="isCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'">
+  <span class="material-symbols-outlined text-[20px]">{{ isCollapsed ? 'chevron_right' : 'chevron_left' }}</span>
+</button>
 </div>
 <!-- Navigation Links -->
 <nav class="flex-1 overflow-y-auto px-3 space-y-1 font-['Public_Sans'] text-sm antialiased">
@@ -10,20 +22,22 @@
    [routerLink]="item.route" 
    [routerLinkActive]="'text-[#00429D] dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 font-bold border-r-4 border-[#00429D] opacity-90'" 
    [routerLinkActiveOptions]="{exact: item.exact || false}"
-   class="flex items-center gap-3 px-3 py-2.5 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out">
+   [title]="isCollapsed ? item.title : null"
+   class="flex items-center gap-3 px-3 py-2.5 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out"
+   [ngClass]="isCollapsed ? 'justify-center' : ''">
 <span class="material-symbols-outlined text-[20px]">{{item.icon}}</span>
-<span>{{item.title}}</span>
+<span *ngIf="!isCollapsed" class="truncate">{{item.title}}</span>
 </a>
 </nav>
 <!-- Footer Links -->
 <div class="mt-auto px-3 border-t border-slate-200 dark:border-slate-800 pt-4 space-y-1 font-['Public_Sans'] text-sm antialiased">
-<a *ngIf="isAdmin" class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out" routerLink="/admin/settings">
+<a *ngIf="isAdmin" class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out" [ngClass]="isCollapsed ? 'justify-center' : ''" [title]="isCollapsed ? 'Cài đặt hệ thống' : null" routerLink="/admin/settings">
 <span class="material-symbols-outlined text-[20px]">settings</span>
-<span>Cài đặt hệ thống</span>
+<span *ngIf="!isCollapsed">Cài đặt hệ thống</span>
 </a>
-<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out" href="#">
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors duration-200 ease-in-out" [ngClass]="isCollapsed ? 'justify-center' : ''" [title]="isCollapsed ? 'Trợ giúp' : null" href="#">
 <span class="material-symbols-outlined text-[20px]">help</span>
-<span>Trợ giúp</span>
+<span *ngIf="!isCollapsed">Trợ giúp</span>
 </a>
 </div>
 </aside>

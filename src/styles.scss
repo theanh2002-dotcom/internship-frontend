@@ -95,6 +95,15 @@ body {
   line-height: 1.5;
 }
 
+.app-shell-content {
+  margin-left: 16rem;
+  transition: margin-left 0.2s ease-in-out;
+}
+
+body.sidebar-collapsed .app-shell-content {
+  margin-left: 5rem;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-headline);
   margin-top: 0;
@@ -119,4 +128,3 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
   direction: ltr;
 }
-

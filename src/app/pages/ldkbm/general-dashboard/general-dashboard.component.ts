@@ -188,7 +188,13 @@ export class GeneralDashboardComponent implements OnInit {
     }
   }
 
-  getStatusStep(status: string, formCode: string): 'success' | 'warning' | 'none' {
+  getStatusStep(studentOrStatus: any, formCode: string): 'success' | 'warning' | 'none' {
+    const status = typeof studentOrStatus === 'string' ? studentOrStatus : studentOrStatus?.status;
+    const hasCompanyInfo = typeof studentOrStatus === 'string' ? true : this.hasCompanyInfo(studentOrStatus);
+    if (!hasCompanyInfo && ['TTTN-01', 'TTTN-02', 'TTTN-03', 'TTTN-04', 'TTTN-05', 'TTTN-06', 'TTTN-07'].includes(formCode)) {
+      return 'none';
+    }
+
     switch (formCode) {
       case 'TTTN-01':
         if (['COMPANY_APPROVED', 'PLAN_SUBMITTED', 'PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(status)) {
@@ -235,6 +241,15 @@ export class GeneralDashboardComponent implements OnInit {
       default:
         return 'none';
     }
+  }
+
+  hasCompanyInfo(student: any): boolean {
+    return !!student?.company_info?.company_name;
+  }
+
+  isMissingCompanyInfoAfterProgress(student: any): boolean {
+    return !this.hasCompanyInfo(student)
+      && !['IMPORTED', 'COMPANY_DECLARED'].includes(student?.status);
   }
 
   getStatusLabel(status: string): string {

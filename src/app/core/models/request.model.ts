@@ -22,6 +22,7 @@ export interface StudentItem {
   full_name: string;
   class_name: string;
   email?: string;
+  company_name?: string;
 }
 
 export interface ImportStudentRequest {

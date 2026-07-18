@@ -416,9 +416,7 @@ export class ScoreSummaryComponent implements OnInit {
     const clos = [...detail.clos].sort((a: any, b: any) => String(a.clo_code).localeCompare(String(b.clo_code)));
     const firstDataRow = 11;
     const totalRow = firstDataRow + clos.length;
-    const rankRow = totalRow + 1;
-    const conditionHeaderRow = rankRow + 2;
-    const lastRow = conditionHeaderRow + 5;
+    const lastRow = totalRow;
     const rows = this.createMatrix(lastRow, 12);
     const put = (row: number, col: number, value: any) => rows[row - 1][col - 1] = value;
     const student = detail.student;
@@ -444,7 +442,7 @@ export class ScoreSummaryComponent implements OnInit {
       const alpha = this.toPercentFraction(this.toNumber(clo.alpha_weight, 0));
       const activeWeight = (stage1 !== null ? w1 : 0) + (stage2 !== null ? w2 : 0);
       const cloScore = activeWeight > 0 ? this.roundScore(((stage1 || 0) * (stage1 !== null ? w1 : 0) + (stage2 || 0) * (stage2 !== null ? w2 : 0)) / activeWeight) : null;
-      const contribution = cloScore !== null ? this.roundScore(cloScore * alpha) : null;
+      const contribution = cloScore !== null ? this.roundScoreTo(cloScore * alpha, 3) : null;
       if (contribution !== null) contributions.push(contribution);
 
       put(row, 2, index + 1);
@@ -457,25 +455,17 @@ export class ScoreSummaryComponent implements OnInit {
       put(row, 9, w2);
       put(row, 10, this.formatExportScore(cloScore, 100));
       put(row, 11, this.getScoreLevelLabel(cloScore));
-      put(row, 12, contribution ?? 'Chưa có');
+      put(row, 12, contribution ?? 'N/A');
     });
 
     const hpScore = contributions.length ? this.roundScore(contributions.reduce((sum, score) => sum + score, 0)) : null;
     put(totalRow, 2, 'ĐIỂM HỌC PHẦN (HP = Sum CLOi * alpha_i)');
     put(totalRow, 10, this.formatExportScore(hpScore, 100));
-    put(rankRow, 2, 'XẾP LOẠI');
-    put(rankRow, 10, this.getFinalRankLabel(hpScore));
-    put(conditionHeaderRow, 2, 'ĐIỀU KIỆN CÔNG NHẬN HOÀN THÀNH HỌC PHẦN (Điều 15 - QĐ TTTN HUCE)');
-    put(conditionHeaderRow + 1, 2, '1. Tham gia đủ 2 chặng đánh giá'); put(conditionHeaderRow + 1, 10, 'Kiểm tra thủ công');
-    put(conditionHeaderRow + 2, 2, '2. CLO1 >= Mức 1 (điểm >= 4.0)'); put(conditionHeaderRow + 2, 10, this.getConditionResult(clos, 'CLO1', detail));
-    put(conditionHeaderRow + 3, 2, '3. CLO2 >= Mức 1 (điểm >= 4.0)'); put(conditionHeaderRow + 3, 10, this.getConditionResult(clos, 'CLO2', detail));
-    put(conditionHeaderRow + 4, 2, '4. Điểm HP >= Mức 1 (>= 4.0)'); put(conditionHeaderRow + 4, 10, hpScore !== null && hpScore >= 4 ? 'ĐẠT' : 'CHƯA ĐẠT');
-    put(conditionHeaderRow + 5, 2, '5. Đủ minh chứng bắt buộc'); put(conditionHeaderRow + 5, 10, 'Kiểm tra thủ công');
 
     const sheet = this.xlsx.utils.aoa_to_sheet(rows);
     sheet['!cols'] = [{ wch: 3 }, { wch: 7 }, { wch: 10 }, { wch: 32 }, { wch: 13 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 14 }];
     sheet['!rows'] = Array.from({ length: lastRow }, (_, index) => ({ hpt: index >= 10 && index < totalRow - 1 ? 36 : 22 }));
-    this.addMerges(sheet, ['B2:L3', 'B4:L4', 'C6:E6', 'H6:J6', 'C7:E7', 'H7:J7', 'B9:B10', 'C9:C10', 'D9:D10', 'E9:E10', 'F9:G9', 'H9:I9', 'J9:J10', 'K9:K10', 'L9:L10', `B${totalRow}:I${totalRow}`, `K${totalRow}:L${totalRow}`, `B${rankRow}:I${rankRow}`, `J${rankRow}:L${rankRow}`, `B${conditionHeaderRow}:L${conditionHeaderRow}`, `B${conditionHeaderRow + 1}:I${conditionHeaderRow + 1}`, `J${conditionHeaderRow + 1}:L${conditionHeaderRow + 1}`, `B${conditionHeaderRow + 2}:I${conditionHeaderRow + 2}`, `J${conditionHeaderRow + 2}:L${conditionHeaderRow + 2}`, `B${conditionHeaderRow + 3}:I${conditionHeaderRow + 3}`, `J${conditionHeaderRow + 3}:L${conditionHeaderRow + 3}`, `B${conditionHeaderRow + 4}:I${conditionHeaderRow + 4}`, `J${conditionHeaderRow + 4}:L${conditionHeaderRow + 4}`, `B${conditionHeaderRow + 5}:I${conditionHeaderRow + 5}`, `J${conditionHeaderRow + 5}:L${conditionHeaderRow + 5}`]);
+    this.addMerges(sheet, ['B2:L3', 'B4:L4', 'C6:E6', 'H6:J6', 'C7:E7', 'H7:J7', 'B9:B10', 'C9:C10', 'D9:D10', 'E9:E10', 'F9:G9', 'H9:I9', 'J9:J10', 'K9:K10', 'L9:L10', `B${totalRow}:I${totalRow}`, `K${totalRow}:L${totalRow}`]);
 
     const styles = this.excelStyles();
     this.styleRange(sheet, 'B2:L3', styles.title);
@@ -496,10 +486,6 @@ export class ScoreSummaryComponent implements OnInit {
     this.styleRange(sheet, `J${firstDataRow}:L${totalRow - 1}`, styles.summaryResultFill);
     this.styleRange(sheet, `B${totalRow}:L${totalRow}`, styles.totalRow);
     this.styleRange(sheet, `J${totalRow}:J${totalRow}`, styles.bigTotal);
-    this.styleRange(sheet, `B${rankRow}:I${rankRow}`, styles.rankLabel);
-    this.styleRange(sheet, `J${rankRow}:L${rankRow}`, styles.rankValue);
-    this.styleRange(sheet, `B${conditionHeaderRow}:L${conditionHeaderRow}`, styles.sectionBlue);
-    this.styleRange(sheet, `B${conditionHeaderRow + 1}:L${conditionHeaderRow + 5}`, styles.conditionRows);
     this.xlsx.utils.book_append_sheet(workbook, sheet, sheetName);
   }
 
@@ -762,6 +748,11 @@ export class ScoreSummaryComponent implements OnInit {
     return Math.round(value * 10) / 10;
   }
 
+  private roundScoreTo(value: number, digits: number): number {
+    const factor = Math.pow(10, digits);
+    return Math.round(value * factor) / factor;
+  }
+
   private getStageData(detail: any, clo: any, stage: 'STAGE_1' | 'STAGE_2'): any {
     const stageEvaluations = detail.evaluations.filter((evaluation: any) => evaluation.stage === stage);
     const companyScore = this.getAverageScoreForClo(stageEvaluations, clo.clo_code, ['COMPANY_SUPERVISOR', 'COMPANY']);
@@ -782,7 +773,7 @@ export class ScoreSummaryComponent implements OnInit {
 
   private formatStageScoreForSummary(score: number | null, weight: number): string | number {
     if (weight <= 0) return 'N/A';
-    return score === null ? 'Chưa có' : this.roundScore(score);
+    return score === null ? 'N/A' : this.roundScore(score);
   }
 
   private getFinalRankLabel(score: number | null): string {

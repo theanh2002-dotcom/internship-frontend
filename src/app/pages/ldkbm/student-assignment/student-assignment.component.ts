@@ -46,6 +46,7 @@ export class StudentAssignmentComponent implements OnInit {
   // Assign Form
   teachers: UserResponse[] = [];
   selectedTeacherIds = new Set<number>();
+  teacherSearchQuery = '';
 
   @ViewChild('fileInput') fileInput!: ElementRef;
 
@@ -251,11 +252,13 @@ export class StudentAssignmentComponent implements OnInit {
 
         // Xác định header: tìm vị trí cột dựa trên header row
         const headerRow = rawRows[0].map((h: any) => String(h || '').trim());
+        const normalizedHeaderRow = headerRow.map((h: string) => this.normalizeHeader(h));
 
         // Tìm index cột theo tên header (hỗ trợ nhiều format)
-        const mssvIdx = headerRow.findIndex((h: string) => h === 'MSSV' || h === 'Mã SV');
-        const lopIdx = headerRow.findIndex((h: string) => h === 'Lớp');
-        const hoVaTenIdx = headerRow.findIndex((h: string) => h === 'Họ và tên' || h === 'Họ tên');
+        const mssvIdx = normalizedHeaderRow.findIndex((h: string) => h === 'mssv' || h === 'ma sv' || h === 'ma sinh vien');
+        const lopIdx = normalizedHeaderRow.findIndex((h: string) => h === 'lop');
+        const hoVaTenIdx = normalizedHeaderRow.findIndex((h: string) => h === 'ho va ten' || h === 'ho ten');
+        const companyIdx = normalizedHeaderRow.findIndex((h: string) => h === 'don vi thuc tap' || h === 'dv thuc tap' || h === 'dvtt');
 
         // Format merge cell: "Họ và tên" merge 2 cột → dữ liệu nằm ở cột B (họ đệm) và C (tên)
         // Format đơn giản: "Họ tên" hoặc "Họ và tên" 1 cột
@@ -275,6 +278,7 @@ export class StudentAssignmentComponent implements OnInit {
           let studentCode = '';
           let fullName = '';
           let className = '';
+          let companyName = '';
 
           if (mssvIdx >= 0) {
             // Có header rõ ràng → đọc theo index
@@ -291,13 +295,15 @@ export class StudentAssignmentComponent implements OnInit {
             }
             
             className = lopIdx >= 0 ? String(row[lopIdx] || '').trim() : '';
+            companyName = companyIdx >= 0 ? String(row[companyIdx] || '').trim() : '';
           } else {
-            // Fallback: đọc theo vị trí cột A=MSSV, B=Họ đệm, C=Tên, D=Lớp
+            // Fallback: đọc theo vị trí cột A=MSSV, B=Họ đệm, C=Tên, D=Lớp, E=Đơn vị thực tập
             studentCode = String(row[0] || '').trim();
             const hoDem = String(row[1] || '').trim();
             const ten = String(row[2] || '').trim();
             fullName = ten ? `${hoDem} ${ten}` : hoDem;
             className = String(row[3] || '').trim();
+            companyName = String(row[4] || '').trim();
           }
 
           if (studentCode && fullName) {
@@ -305,7 +311,8 @@ export class StudentAssignmentComponent implements OnInit {
               student_code: studentCode,
               full_name: fullName,
               class_name: className,
-              email: ''
+              email: '',
+              company_name: companyName
             });
           }
         }
@@ -345,16 +352,16 @@ export class StudentAssignmentComponent implements OnInit {
   downloadTemplate(): void {
     // Tạo dữ liệu dạng array of arrays (để hỗ trợ merge cell header)
     const rows: any[][] = [
-      ['MSSV', 'Họ và tên', null, 'Lớp'],  // Header: "Họ và tên" merge B1:C1
-      ['1501665', 'Lại Thế', 'Anh', '65PM4'],
-      ['0002267', 'Mai Văn', 'Cường', '67CNPM'],
-      ['85365', 'Vũ Huy', 'Hoàng', '65PM4'],
-      ['113465', 'Lê Ngọc', 'Lâm', '65PM4'],
-      ['119365', 'Vũ Ngọc Hoài', 'Linh', '65PM3'],
-      ['0197766', 'Nguyễn Hoàng', 'Nam', '66CNPM'],
-      ['142165', 'Nguyễn Phương', 'Nam', '65PM6'],
-      ['154765', 'Đỗ Khoa Hải', 'Phong', '65PM6'],
-      ['181165', 'Lê Bá', 'Thắng', '65PM6']
+      ['MSSV', 'Họ và tên', null, 'Lớp', 'Đơn vị thực tập'],  // Header: "Họ và tên" merge B1:C1
+      ['1501665', 'Lại Thế', 'Anh', '65PM4', ''],
+      ['0002267', 'Mai Văn', 'Cường', '67CNPM', ''],
+      ['85365', 'Vũ Huy', 'Hoàng', '65PM4', ''],
+      ['113465', 'Lê Ngọc', 'Lâm', '65PM4', ''],
+      ['119365', 'Vũ Ngọc Hoài', 'Linh', '65PM3', ''],
+      ['0197766', 'Nguyễn Hoàng', 'Nam', '66CNPM', ''],
+      ['142165', 'Nguyễn Phương', 'Nam', '65PM6', ''],
+      ['154765', 'Đỗ Khoa Hải', 'Phong', '65PM6', ''],
+      ['181165', 'Lê Bá', 'Thắng', '65PM6', '']
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -369,12 +376,23 @@ export class StudentAssignmentComponent implements OnInit {
       { wch: 10 },  // A: MSSV
       { wch: 18 },  // B: Họ đệm
       { wch: 10 },  // C: Tên
-      { wch: 12 }   // D: Lớp
+      { wch: 12 },  // D: Lớp
+      { wch: 28 }   // E: Đơn vị thực tập
     ];
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'SinhVien');
     XLSX.writeFile(wb, 'Template_Import_SinhVien.xlsx');
+  }
+
+  private normalizeHeader(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .trim()
+      .toLowerCase();
   }
 
   // --- ASSIGN TEACHER ---
@@ -385,6 +403,7 @@ export class StudentAssignmentComponent implements OnInit {
       return;
     }
     this.selectedTeacherIds.clear();
+    this.teacherSearchQuery = '';
     this.isAssignModalOpen = true;
   }
 
@@ -392,7 +411,24 @@ export class StudentAssignmentComponent implements OnInit {
     this.selectedStudentIds.clear();
     this.selectedStudentIds.add(studentId);
     this.selectedTeacherIds.clear();
+    this.teacherSearchQuery = '';
     this.isAssignModalOpen = true;
+  }
+
+  get selectedStudentsForAssignment(): any[] {
+    return this.students.filter(student => this.selectedStudentIds.has(student.id));
+  }
+
+  get filteredTeachers(): UserResponse[] {
+    const query = this.teacherSearchQuery.trim().toLowerCase();
+    if (!query) {
+      return this.teachers;
+    }
+    return this.teachers.filter(teacher => {
+      const fullName = (teacher.full_name || '').toLowerCase();
+      const email = (teacher.email || '').toLowerCase();
+      return fullName.includes(query) || email.includes(query);
+    });
   }
 
   toggleTeacherSelection(teacherId: number): void {
@@ -405,6 +441,7 @@ export class StudentAssignmentComponent implements OnInit {
 
   closeAssignModal(): void {
     this.isAssignModalOpen = false;
+    this.teacherSearchQuery = '';
   }
 
   saveAssignment(): void {
