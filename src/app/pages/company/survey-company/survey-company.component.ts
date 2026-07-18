@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { CampaignResponse } from '../../../core/models/base.model';
+import { CampaignService } from '../../../core/services/campaign.service';
 import { SurveyService } from '../../../core/services/survey.service';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { ActivatedRoute } from '@angular/router';
@@ -10,6 +12,9 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class SurveyCompanyComponent implements OnInit {
   isLoading = true;
+  isLoadingStudents = false;
+  campaigns: CampaignResponse[] = [];
+  selectedCampaignId: number | null = null;
   students: any[] = [];
   selectedStudent: any = null;
 
@@ -65,41 +70,72 @@ export class SurveyCompanyComponent implements OnInit {
   constructor(
     private surveyService: SurveyService,
     private studentCampaignService: StudentCampaignService,
+    private campaignService: CampaignService,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
-    this.loadCompanyStudents();
+    this.loadCampaigns();
   }
 
-  loadCompanyStudents() {
-    this.studentCampaignService.getCompanyStudents().subscribe({
+  loadCampaigns() {
+    this.isLoading = true;
+    this.campaignService.getCampaigns({ page: 1, limit: 100, orderBy: 'startDate:DESC' }, 'ACTIVE').subscribe({
       next: (res) => {
-        this.students = Array.isArray(res) ? res : (res.data || res.payload || []);
-        
-        this.route.queryParams.subscribe(params => {
-          const studentCampaignId = params['student_campaign_id'];
-          if (studentCampaignId) {
-            const found = this.students.find(s => s.id === +studentCampaignId);
-            if (found) {
-              this.selectedStudent = found;
-              this.onStudentChange();
-              return;
-            }
-          }
-          
-          if (this.students.length > 0) {
-            this.selectedStudent = this.students[0];
-            this.onStudentChange();
-          } else {
-            this.isLoading = false;
-          }
-        });
+        this.campaigns = res.data || [];
+        this.selectedCampaignId = this.campaigns.length > 0 ? this.campaigns[0].id : null;
+        this.loadCompanyStudents();
       },
       error: () => {
+        this.campaigns = [];
+        this.selectedCampaignId = null;
+        this.students = [];
+        this.selectedStudent = null;
         this.isLoading = false;
       }
     });
+  }
+
+  loadCompanyStudents(preferredStudentCampaignId?: number | null) {
+    if (!this.selectedCampaignId) {
+      this.students = [];
+      this.selectedStudent = null;
+      this.resetForm();
+      this.isLoading = false;
+      return;
+    }
+
+    this.isLoadingStudents = true;
+    this.studentCampaignService.getCompanyStudents(this.selectedCampaignId).subscribe({
+      next: (res) => {
+        this.students = Array.isArray(res) ? res : (res.data || res.payload || []);
+        const queryStudentId = this.route.snapshot.queryParamMap.get('student_campaign_id');
+        const targetId = preferredStudentCampaignId || (queryStudentId ? +queryStudentId : null);
+        const found = targetId ? this.students.find(s => s.id === targetId) : null;
+
+        this.selectedStudent = found || this.students[0] || null;
+        this.isLoadingStudents = false;
+
+        if (this.selectedStudent) {
+          this.onStudentChange();
+        } else {
+          this.resetForm();
+          this.isLoading = false;
+        }
+      },
+      error: () => {
+        this.students = [];
+        this.selectedStudent = null;
+        this.isLoadingStudents = false;
+        this.isLoading = false;
+      }
+    });
+  }
+
+  onCampaignChange() {
+    this.selectedStudent = null;
+    this.resetForm();
+    this.loadCompanyStudents(null);
   }
 
   onStudentChange() {
