@@ -3,18 +3,31 @@
   <p class="font-body-md text-[14px] text-slate-500 mt-1">Xác nhận Tiếp nhận (TTTN-01), Duyệt Kế hoạch (TTTN-02) và Xác nhận Tiến độ hàng tuần (TTTN-03).</p>
 </div>
 
-<!-- Empty (DB) -->
-<div *ngIf="interns.length === 0"
+<div *ngIf="isLoading"
      class="flex flex-col items-center justify-center py-16 bg-white border border-slate-200 rounded-lg shadow-sm">
-  <span class="material-symbols-outlined text-[64px] text-slate-300 mb-4">groups</span>
-  <p class="text-slate-500 font-medium text-lg">Không có sinh viên nào thực tập tại đơn vị lúc này.</p>
+  <span class="material-symbols-outlined animate-spin text-[48px] text-[#00429D] mb-4">autorenew</span>
+  <p class="text-slate-500 font-medium text-lg">Đang tải danh sách thực tập sinh...</p>
+</div>
+
+<div *ngIf="!isLoading && campaigns.length === 0"
+     class="flex flex-col items-center justify-center py-16 bg-white border border-slate-200 rounded-lg shadow-sm">
+  <span class="material-symbols-outlined text-[64px] text-slate-300 mb-4">event_busy</span>
+  <p class="text-slate-500 font-medium text-lg">Không có đợt thực tập đang mở.</p>
 </div>
 
 <!-- Table Card Section (Same as Admin Table style) -->
-<section *ngIf="interns.length > 0" class="flex flex-col bg-white border border-slate-200 rounded-lg shadow-sm">
+<section *ngIf="!isLoading && campaigns.length > 0" class="flex flex-col bg-white border border-slate-200 rounded-lg shadow-sm">
   <!-- Filters Header -->
   <div class="px-5 py-4 border-b border-slate-200 flex flex-col xl:flex-row justify-between items-center gap-4 bg-slate-50 rounded-t-lg">
     <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+      <!-- Campaign selector -->
+      <div class="w-full sm:w-64">
+        <select [(ngModel)]="selectedCampaignId" (change)="onCampaignChange()" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
+          <option *ngFor="let campaign of campaigns" [ngValue]="campaign.id">
+            {{ campaign.name || campaign.code }}
+          </option>
+        </select>
+      </div>
       <!-- Search input -->
       <div class="relative w-full sm:w-64">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
@@ -59,7 +72,9 @@
   <!-- Empty search results -->
   <div *ngIf="paginatedInterns.length === 0" class="flex flex-col items-center justify-center py-16 px-4">
     <span class="material-symbols-outlined text-[64px] text-slate-300 mb-4">search_off</span>
-    <p class="text-slate-500 font-medium text-lg">Không tìm thấy sinh viên nào khớp bộ lọc</p>
+    <p class="text-slate-500 font-medium text-lg">
+      {{ interns.length === 0 ? 'Không có sinh viên nào thực tập tại đơn vị trong đợt này.' : 'Không tìm thấy sinh viên nào khớp bộ lọc' }}
+    </p>
   </div>
 
   <!-- Table -->

@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { CampaignResponse } from '../../../core/models/base.model';
+import { CampaignService } from '../../../core/services/campaign.service';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { WeeklyLogService } from '../../../core/services/weekly-log.service';
 @Component({
@@ -11,6 +13,9 @@ export class ManageInternsComponent implements OnInit {
   selectedIntern: any = null;
   actionType: 'PLAN' | 'LOG' | 'DECLARATION' | null = null;
   showModal = false;
+  isLoading = false;
+  campaigns: CampaignResponse[] = [];
+  selectedCampaignId: number | null = null;
   
   // Weekly logs tracking: { [studentCampaignId]: WeeklyLog[] }
   weeklyLogs: { [key: number]: any[] } = {};
@@ -40,15 +45,48 @@ export class ManageInternsComponent implements OnInit {
 
   constructor(
     private studentCampaignService: StudentCampaignService,
-    private weeklyLogService: WeeklyLogService
+    private weeklyLogService: WeeklyLogService,
+    private campaignService: CampaignService
   ) {}
 
   ngOnInit() {
-    this.loadInterns();
+    this.loadCampaigns();
+  }
+
+  loadCampaigns() {
+    this.isLoading = true;
+    this.campaignService.getCampaigns({ page: 1, limit: 100, orderBy: 'startDate:DESC' }, 'ACTIVE').subscribe({
+      next: (res) => {
+        this.campaigns = res.data || [];
+        this.selectedCampaignId = this.campaigns.length > 0 ? this.campaigns[0].id : null;
+        if (this.selectedCampaignId) {
+          this.loadInterns();
+        } else {
+          this.interns = [];
+          this.filterInterns();
+          this.isLoading = false;
+        }
+      },
+      error: () => {
+        this.campaigns = [];
+        this.selectedCampaignId = null;
+        this.interns = [];
+        this.filterInterns();
+        this.isLoading = false;
+      }
+    });
   }
 
   loadInterns() {
-    this.studentCampaignService.getCompanyStudents().subscribe({
+    if (!this.selectedCampaignId) {
+      this.interns = [];
+      this.filterInterns();
+      this.isLoading = false;
+      return;
+    }
+
+    this.isLoading = true;
+    this.studentCampaignService.getCompanyStudents(this.selectedCampaignId).subscribe({
       next: (res) => {
         const data = Array.isArray(res) ? res : (res.data || res.payload || []);
         this.interns = data.map((s: any) => {
@@ -77,6 +115,12 @@ export class ManageInternsComponent implements OnInit {
           return mapped;
         });
         this.filterInterns();
+        this.isLoading = false;
+      },
+      error: () => {
+        this.interns = [];
+        this.filterInterns();
+        this.isLoading = false;
       }
     });
   }
@@ -161,6 +205,16 @@ export class ManageInternsComponent implements OnInit {
   onFilterChange() {
     this.currentPage = 1;
     this.filterInterns();
+  }
+
+  onCampaignChange() {
+    this.currentPage = 1;
+    this.searchTerm = '';
+    this.selectedDeclarationStatus = '';
+    this.selectedPlanStatus = '';
+    this.selectedLogStatus = '';
+    this.weeklyLogs = {};
+    this.loadInterns();
   }
 
   onPageChange(page: number) {

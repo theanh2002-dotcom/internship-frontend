@@ -62,8 +62,12 @@ export class StudentCampaignService {
     return this.apiService.patch<any>(`/base/student-campaigns/${id}/internship-plan/approve`);
   }
 
-  getCompanyStudents(): Observable<any> {
-    return this.apiService.get<any>('/base/student-campaigns/company-students');
+  getCompanyStudents(campaignId?: number | null): Observable<any> {
+    let params = new HttpParams();
+    if (campaignId) {
+      params = params.set('campaign_id', campaignId.toString());
+    }
+    return this.apiService.get<any>('/base/student-campaigns/company-students', params);
   }
 
   approvePlanByCompany(id: number): Observable<any> {
