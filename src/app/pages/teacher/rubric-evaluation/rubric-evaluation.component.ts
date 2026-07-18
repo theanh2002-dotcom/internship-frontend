@@ -129,10 +129,12 @@ export class RubricEvaluationComponent implements OnInit {
       next: (res) => {
         this.campaigns = res.data || [];
         this.refreshAvailableCampaigns();
+        this.filterStudents();
       },
       error: () => {
         this.campaigns = [];
         this.refreshAvailableCampaigns();
+        this.filterStudents();
       }
     });
   }
@@ -217,8 +219,12 @@ export class RubricEvaluationComponent implements OnInit {
   filterStudents(): void {
     let result = [...this.allStudents];
 
-    if (this.selectedCampaignId) {
-      result = result.filter(s => s.campaign_id === this.selectedCampaignId);
+    if (this.selectedCampaignId !== null) {
+      const campaignId = Number(this.selectedCampaignId);
+      result = result.filter(s => Number(s.campaign_id) === campaignId);
+    } else if (this.campaigns.length > 0) {
+      const activeCampaignIds = new Set(this.campaigns.map(c => Number(c.id)));
+      result = result.filter(s => activeCampaignIds.has(Number(s.campaign_id)));
     }
 
     if (this.searchTerm) {
@@ -258,19 +264,19 @@ export class RubricEvaluationComponent implements OnInit {
   private refreshAvailableCampaigns(): void {
     const assignedCampaignIds = new Set(
       this.allStudents
-        .map(s => s.campaign_id)
-        .filter((id): id is number => typeof id === 'number')
+        .map(s => Number(s.campaign_id))
+        .filter(id => Number.isFinite(id))
     );
 
     this.availableCampaigns = this.campaigns
-      .filter(c => c.status === 'ACTIVE' && assignedCampaignIds.has(c.id))
+      .filter(c => c.status === 'ACTIVE' && assignedCampaignIds.has(Number(c.id)))
       .sort((a, b) => {
         const aTime = a.start_date ? new Date(a.start_date).getTime() : 0;
         const bTime = b.start_date ? new Date(b.start_date).getTime() : 0;
         return bTime - aTime;
       });
 
-    if (this.selectedCampaignId && !assignedCampaignIds.has(this.selectedCampaignId)) {
+    if (this.selectedCampaignId !== null && !assignedCampaignIds.has(Number(this.selectedCampaignId))) {
       this.selectedCampaignId = null;
       this.onFilterChange();
     }

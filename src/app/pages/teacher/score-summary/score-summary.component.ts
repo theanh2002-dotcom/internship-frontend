@@ -4,6 +4,7 @@ import { EvaluationService } from '../../../core/services/evaluation.service';
 import { DepartmentCampaignService } from '../../../core/services/department-campaign.service';
 import { StudentCampaignResponse } from '../../../core/models/base.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { CampaignService } from '../../../core/services/campaign.service';
 import { firstValueFrom } from 'rxjs';
 
 interface StudentScore {
@@ -32,7 +33,7 @@ export class ScoreSummaryComponent implements OnInit {
   
   // Filters & Pagination
   campaigns: any[] = [];
-  selectedCampaignId: string = '';
+  selectedCampaignId: number | null = null;
   searchQuery: string = '';
   selectedStatus: string = '';
   
@@ -49,7 +50,8 @@ export class ScoreSummaryComponent implements OnInit {
     private studentCampaignService: StudentCampaignService,
     private evaluationService: EvaluationService,
     private departmentCampaignService: DepartmentCampaignService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private campaignService: CampaignService
   ) {}
 
   ngOnInit(): void {
@@ -58,9 +60,10 @@ export class ScoreSummaryComponent implements OnInit {
   }
 
   loadCampaigns(): void {
-    this.studentCampaignService.getMyCampaigns().subscribe({
+    this.campaignService.getCampaigns({ page: 1, limit: 100 }, 'ACTIVE').subscribe({
       next: (res) => {
-        this.campaigns = Array.isArray(res) ? res : (res.payload || res.data || []);
+        this.campaigns = res.data || [];
+        this.applyFilters();
       },
       error: (err) => {
         console.error('Lỗi tải danh sách đợt thực tập:', err);
@@ -142,9 +145,11 @@ export class ScoreSummaryComponent implements OnInit {
     let result = [...this.students];
 
     // 1. Lọc theo đợt thực tập
-    if (this.selectedCampaignId) {
-      const campId = parseInt(this.selectedCampaignId, 10);
-      result = result.filter(s => s.campaignId === campId);
+    if (this.selectedCampaignId !== null) {
+      result = result.filter(s => Number(s.campaignId) === Number(this.selectedCampaignId));
+    } else if (this.campaigns.length > 0) {
+      const activeCampaignIds = new Set(this.campaigns.map(c => Number(c.id)));
+      result = result.filter(s => activeCampaignIds.has(Number(s.campaignId)));
     }
 
     // 2. Tìm kiếm theo tên, mssv, lớp

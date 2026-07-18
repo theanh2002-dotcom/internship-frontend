@@ -27,7 +27,7 @@ export class ManageStudentsComponent implements OnInit {
 
   searchQuery = '';
   selectedStatus = '';
-  selectedCampaignId: number | '' = '';
+  selectedCampaignId: number | null = null;
   currentPage = 1;
   pageSize = 10;
   totalItems = 0;
@@ -67,9 +67,10 @@ export class ManageStudentsComponent implements OnInit {
   }
 
   loadCampaigns(): void {
-    this.campaignService.getCampaigns({ page: 1, limit: 100 }).subscribe({
+    this.campaignService.getCampaigns({ page: 1, limit: 100 }, 'ACTIVE').subscribe({
       next: (res) => {
         this.campaigns = res.data || [];
+        this.applyFilters();
       }
     });
   }
@@ -91,8 +92,11 @@ export class ManageStudentsComponent implements OnInit {
   applyFilters(): void {
     let result = [...this.students];
 
-    if (this.selectedCampaignId) {
-      result = result.filter(s => s.campaign_id === Number(this.selectedCampaignId));
+    if (this.selectedCampaignId !== null) {
+      result = result.filter(s => Number(s.campaign_id) === Number(this.selectedCampaignId));
+    } else if (this.campaigns.length > 0) {
+      const activeCampaignIds = new Set(this.campaigns.map(c => Number(c.id)));
+      result = result.filter(s => activeCampaignIds.has(Number(s.campaign_id)));
     }
 
     if (this.searchQuery) {
