@@ -575,7 +575,7 @@ export class RubricEvaluationComponent implements OnInit {
   isScoringLocked(): boolean {
     if (!this.isCampaignActive) return true;
     if (this.isStageManuallyLocked()) return true;
-    return false;
+    return this.selectedStage === 'STAGE_1' ? !this.isStage1Open : !this.isStage2Open;
   }
 
   isStageManuallyLocked(stage: 'STAGE_1' | 'STAGE_2' = this.selectedStage): boolean {
@@ -597,6 +597,15 @@ export class RubricEvaluationComponent implements OnInit {
 
     if (!this.selectedStudent || !this.isFullyScored()) {
       this.toastService.error('Vui lòng nhập điểm thang 10 cho tất cả CLO có trọng số ở chặng này.');
+      return;
+    }
+
+    if (this.selectedStage === 'STAGE_1' && !this.isStage1Open) {
+      this.toastService.error(`Chưa đến thời gian mở chấm Chặng 1. Chặng này bắt đầu từ ${this.midtermStartDateStr}.`);
+      return;
+    }
+    if (this.selectedStage === 'STAGE_2' && !this.isStage2Open) {
+      this.toastService.error(`Chưa đến thời gian mở chấm Chặng 2. Chặng này bắt đầu từ ${this.tttn06StartDateStr}.`);
       return;
     }
 
