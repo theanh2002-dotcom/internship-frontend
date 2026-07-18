@@ -307,12 +307,10 @@ export class StudentAssignmentComponent implements OnInit {
         const tenIdx = normalizedHeaderRow.findIndex((h: string) => h === 'ten');
         const companyIdx = normalizedHeaderRow.findIndex((h: string) => h === 'don vi thuc tap' || h === 'dv thuc tap' || h === 'dvtt');
 
-        // Format merge cell: "Họ và tên" merge 2 cột → dữ liệu nằm ở cột B (họ đệm) và C (tên)
-        // Format đơn giản: "Họ tên" hoặc "Họ và tên" 1 cột
+        // Mẫu chuẩn: B1 ghi "Họ và tên", C1 để trống; dữ liệu B là họ đệm, C là tên.
+        // Vẫn hỗ trợ format 1 cột "Họ và tên" để tránh lỗi với file cũ.
         const isMergedFormat = hoVaTenIdx >= 0 && (
-          // Kiểm tra nếu cột tiếp theo sau "Họ và tên" là trống (merge cell)
           headerRow[hoVaTenIdx + 1] === '' || headerRow[hoVaTenIdx + 1] === undefined ||
-          // Hoặc cột tiếp theo là "Lớp" nhưng cách 2 vị trí
           lopIdx === hoVaTenIdx + 2
         );
 
@@ -338,7 +336,7 @@ export class StudentAssignmentComponent implements OnInit {
               firstName = String(row[tenIdx] || '').trim();
               fullName = `${lastName} ${firstName}`.trim();
             } else if (isMergedFormat && hoVaTenIdx >= 0) {
-              // Format merge: họ đệm ở cột hoVaTenIdx, tên ở cột hoVaTenIdx + 1
+              // Họ đệm ở cột hoVaTenIdx, tên ở cột hoVaTenIdx + 1.
               lastName = String(row[hoVaTenIdx] || '').trim();
               firstName = String(row[hoVaTenIdx + 1] || '').trim();
               fullName = firstName ? `${lastName} ${firstName}` : lastName;
@@ -430,6 +428,8 @@ export class StudentAssignmentComponent implements OnInit {
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['C1'] = { t: 's', v: '' };
+    ws['!merges'] = [];
     
     // Đặt độ rộng cột
     ws['!cols'] = [
