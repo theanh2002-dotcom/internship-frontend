@@ -422,7 +422,7 @@ export class RubricEvaluationComponent implements OnInit {
 
   getStageTemplateSubtitle(): string {
     const weight = this.selectedStage === 'STAGE_1' ? this.departmentStage1Weight : this.departmentStage2Weight;
-    const evaluator = this.selectedStage === 'STAGE_1' ? 'GVHD + ĐVHD' : 'Tổ đánh giá TTTN';
+    const evaluator = this.selectedStage === 'STAGE_1' ? 'GVHD + ĐVHD' : 'GVHD + ĐVHD + Tổ đánh giá TTTN';
     return `Trọng số chặng ${this.selectedStage === 'STAGE_1' ? '1' : '2'}: ${weight}% tổng điểm học phần | Người đánh giá: ${evaluator}`;
   }
 
@@ -575,7 +575,7 @@ export class RubricEvaluationComponent implements OnInit {
   isScoringLocked(): boolean {
     if (!this.isCampaignActive) return true;
     if (this.isStageManuallyLocked()) return true;
-    return this.selectedStage === 'STAGE_1' ? !this.isStage1Open : !this.isStage2Open;
+    return false;
   }
 
   isStageManuallyLocked(stage: 'STAGE_1' | 'STAGE_2' = this.selectedStage): boolean {
@@ -597,15 +597,6 @@ export class RubricEvaluationComponent implements OnInit {
 
     if (!this.selectedStudent || !this.isFullyScored()) {
       this.toastService.error('Vui lòng nhập điểm thang 10 cho tất cả CLO có trọng số ở chặng này.');
-      return;
-    }
-
-    if (this.selectedStage === 'STAGE_1' && !this.isStage1Open) {
-      this.toastService.error('Chưa đến thời gian đánh giá Chặng 1.');
-      return;
-    }
-    if (this.selectedStage === 'STAGE_2' && !this.isStage2Open) {
-      this.toastService.error('Chưa đến thời gian đánh giá Chặng 2.');
       return;
     }
 
