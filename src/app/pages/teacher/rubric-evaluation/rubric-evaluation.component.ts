@@ -3,7 +3,7 @@ import { StudentCampaignService } from '../../../core/services/student-campaign.
 import { DepartmentCampaignService } from '../../../core/services/department-campaign.service';
 import { EvaluationService, EvaluationRequest } from '../../../core/services/evaluation.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { StudentCampaignResponse } from '../../../core/models/base.model';
+import { CampaignResponse, StudentCampaignResponse } from '../../../core/models/base.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { CampaignService } from '../../../core/services/campaign.service';
 
@@ -58,8 +58,11 @@ export class RubricEvaluationComponent implements OnInit {
 
   allStudents: StudentCampaignResponse[] = [];
   students: StudentCampaignResponse[] = [];
+  campaigns: CampaignResponse[] = [];
+  availableCampaigns: CampaignResponse[] = [];
   searchTerm = '';
   selectedGradingStatus = '';
+  selectedCampaignId: number | null = null;
   selectedStudent: StudentCampaignResponse | null = null;
 
   criteria: RubricCriterion[] = [];
@@ -116,7 +119,21 @@ export class RubricEvaluationComponent implements OnInit {
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
     this.isCompanySupervisor = currentUser?.role === 'COMPANY_SUPERVISOR';
+    this.loadCampaigns();
     this.loadEligibleStudents();
+  }
+
+  loadCampaigns(): void {
+    this.campaignService.getCampaigns({ page: 1, limit: 100 }).subscribe({
+      next: (res) => {
+        this.campaigns = res.data || [];
+        this.refreshAvailableCampaigns();
+      },
+      error: () => {
+        this.campaigns = [];
+        this.refreshAvailableCampaigns();
+      }
+    });
   }
 
   loadEligibleStudents(): void {
@@ -131,6 +148,7 @@ export class RubricEvaluationComponent implements OnInit {
         this.allStudents = all
           .filter((s: any) => s.status !== 'SUSPENDED')
           .map((s: any) => ({ ...s, gradingStatus: 'Đang tải...' }));
+        this.refreshAvailableCampaigns();
         this.filterStudents();
         this.isLoading = false;
         this.checkAllEvaluationsStatus();
@@ -197,6 +215,10 @@ export class RubricEvaluationComponent implements OnInit {
   filterStudents(): void {
     let result = [...this.allStudents];
 
+    if (this.selectedCampaignId) {
+      result = result.filter(s => s.campaign_id === this.selectedCampaignId);
+    }
+
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase().trim();
       result = result.filter(s =>
@@ -229,6 +251,27 @@ export class RubricEvaluationComponent implements OnInit {
   onFilterChange(): void {
     this.currentPage = 1;
     this.filterStudents();
+  }
+
+  private refreshAvailableCampaigns(): void {
+    const assignedCampaignIds = new Set(
+      this.allStudents
+        .map(s => s.campaign_id)
+        .filter((id): id is number => typeof id === 'number')
+    );
+
+    this.availableCampaigns = this.campaigns
+      .filter(c => assignedCampaignIds.has(c.id))
+      .sort((a, b) => {
+        const aTime = a.start_date ? new Date(a.start_date).getTime() : 0;
+        const bTime = b.start_date ? new Date(b.start_date).getTime() : 0;
+        return bTime - aTime;
+      });
+
+    if (this.selectedCampaignId && !assignedCampaignIds.has(this.selectedCampaignId)) {
+      this.selectedCampaignId = null;
+      this.onFilterChange();
+    }
   }
 
   onPageChange(page: number): void {
