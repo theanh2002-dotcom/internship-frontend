@@ -345,7 +345,7 @@ export class ScoreSummaryComponent implements OnInit {
     put(7, 2, 'GVHD:'); put(7, 3, student.gvhdName);
     put(7, 7, 'DVHD:'); put(7, 8, student.companyName);
     put(9, 2, 'STT'); put(9, 3, 'CLO'); put(9, 4, 'Mô tả năng lực'); put(9, 5, 'Đánh giá (Thang điểm 10)');
-    put(10, 5, 'Điểm DVHD'); put(10, 6, 'Điểm GVHD'); put(10, 7, 'TDS DVHD (%)'); put(10, 8, 'TDS GVHD (%)');
+    put(10, 5, 'Điểm DVHD'); put(10, 6, 'Điểm GVHD'); put(10, 7, 'TS DVHD (%)'); put(10, 8, 'TS GVHD (%)');
     put(9, 9, stage === 'STAGE_1' ? 'Điểm TB\nChặng 1' : 'Điểm TB\nChặng 2'); put(9, 10, 'Mức đạt'); put(9, 11, 'Ghi chú / Nhận xét');
 
     visibleClos.forEach((clo: any, index: number) => {
@@ -513,7 +513,7 @@ export class ScoreSummaryComponent implements OnInit {
     put(19, 2, 'Mức 3'); put(19, 3, '7.0 - 8.4'); put(19, 4, 'Đạt tốt');
     put(20, 2, 'Mức 4'); put(20, 3, '>=8.5'); put(20, 4, 'Xuất sắc');
     put(22, 2, 'BẢNG TRỌNG SỐ CLO THEO ĐÓNG GÓP VÀO ĐIỂM HỌC PHẦN (alpha_i)');
-    put(23, 2, 'CLO'); put(23, 3, 'Trọng số HP (alpha_i)'); put(23, 4, 'TDS ĐVHD'); put(23, 5, 'TDS GVHD'); put(23, 6, 'Ghi chú');
+    put(23, 2, 'CLO'); put(23, 3, 'Trọng số HP (alpha_i)'); put(23, 4, 'TS ĐVHD'); put(23, 5, 'TS GVHD'); put(23, 6, 'Ghi chú');
     clos.slice(0, 7).forEach((clo: any, index: number) => {
       const row = 24 + index;
       put(row, 2, clo.clo_code);
@@ -566,7 +566,7 @@ export class ScoreSummaryComponent implements OnInit {
     const averageLabel = stage === 'STAGE_1' ? 'Điểm TB Chặng 1' : 'Điểm TB Chặng 2';
     const rows: any[][] = [
       [title],
-      ['Mã SV', 'Họ và tên', 'STT', 'CLO', 'Mô tả năng lực', 'Điểm ĐVHD', 'Điểm GVHD', 'TDS ĐVHD (%)', 'TDS GVHD (%)', averageLabel, 'Mức đạt', 'Ghi chú/Nhận xét']
+      ['Mã SV', 'Họ và tên', 'STT', 'CLO', 'Mô tả năng lực', 'Điểm ĐVHD', 'Điểm GVHD', 'TS ĐVHD (%)', 'TS GVHD (%)', averageLabel, 'Mức đạt', 'Ghi chú/Nhận xét']
     ];
 
     details.forEach(detail => {
@@ -624,7 +624,7 @@ export class ScoreSummaryComponent implements OnInit {
   private buildRubricRows(details: any[]): any[][] {
     const rows: any[][] = [
       ['RUBRIC CLO'],
-      ['Mã SV', 'CLO', 'Mô tả năng lực', 'Alpha HP (%)', 'TS Chặng 1 (%)', 'TS Chặng 2 (%)', 'TDS ĐVHD (%)', 'TDS GVHD (%)', 'Mức điểm/Rubric']
+      ['Mã SV', 'CLO', 'Mô tả năng lực', 'Alpha HP (%)', 'TS Chặng 1 (%)', 'TS Chặng 2 (%)', 'TS ĐVHD (%)', 'TS GVHD (%)', 'Mức điểm/Rubric']
     ];
 
     details.forEach(detail => {
