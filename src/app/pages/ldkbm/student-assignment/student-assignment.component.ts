@@ -307,7 +307,7 @@ export class StudentAssignmentComponent implements OnInit {
         const tenIdx = normalizedHeaderRow.findIndex((h: string) => h === 'ten');
         const companyIdx = normalizedHeaderRow.findIndex((h: string) => h === 'don vi thuc tap' || h === 'dv thuc tap' || h === 'dvtt');
 
-        // Mẫu chuẩn: B1 ghi "Họ và tên", C1 để trống; dữ liệu B là họ đệm, C là tên.
+        // Mẫu chuẩn: B1:C1 gộp tiêu đề "Họ và tên"; dữ liệu B là họ đệm, C là tên.
         // Vẫn hỗ trợ format 1 cột "Họ và tên" để tránh lỗi với file cũ.
         const isMergedFormat = hoVaTenIdx >= 0 && (
           headerRow[hoVaTenIdx + 1] === '' || headerRow[hoVaTenIdx + 1] === undefined ||
@@ -352,7 +352,7 @@ export class StudentAssignmentComponent implements OnInit {
             companyName = companyIdx >= 0 ? String(row[companyIdx] || '').trim() : '';
           } else {
             // Fallback mẫu chuẩn: A=MSSV, B=Họ đệm, C=Tên, D=Lớp, E=Đơn vị thực tập.
-            // Header chỉ ghi "Họ và tên" ở cột B, cột C để trống như file mẫu.
+            // Header gộp B1:C1 là "Họ và tên" như file mẫu.
             studentCode = String(row[0] || '').trim();
             if (row.length >= 5 && String(row[4] || '').trim()) {
               lastName = String(row[1] || '').trim();
@@ -416,11 +416,11 @@ export class StudentAssignmentComponent implements OnInit {
   downloadTemplate(): void {
     const rows: any[][] = [
       ['MSSV', 'Họ và tên', '', 'Lớp', 'Đơn vị thực tập'],
-      ['1501665', 'Lại Thế', 'Anh', '65PM4', ''],
-      ['0002267', 'Mai Văn', 'Cường', '67CNPM', ''],
-      ['85365', 'Vũ Huy', 'Hoàng', '65PM4', ''],
-      ['113465', 'Lê Ngọc', 'Lâm', '65PM4', ''],
-      ['119365', 'Vũ Ngọc Hoài', 'Linh', '65PM3', ''],
+      ['1501665', 'Lại Thế', 'Anh', '65PM4', 'sdc'],
+      ['0002267', 'Mai Văn', 'Cường', '67CNPM', 'sdc'],
+      ['85365', 'Vũ Huy', 'Hoàng', '65PM4', 'sc'],
+      ['113465', 'Lê Ngọc', 'Lâm', '65PM4', 'scdc'],
+      ['119365', 'Vũ Ngọc Hoài', 'Linh', '65PM3', 'sdc'],
       ['0197766', 'Nguyễn Hoàng', 'Nam', '66CNPM', ''],
       ['142165', 'Nguyễn Phương', 'Nam', '65PM6', ''],
       ['154765', 'Đỗ Khoa Hải', 'Phong', '65PM6', ''],
@@ -428,8 +428,9 @@ export class StudentAssignmentComponent implements OnInit {
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['C1'] = { t: 's', v: '' };
-    ws['!merges'] = [];
+    ws['!merges'] = [
+      { s: { r: 0, c: 1 }, e: { r: 0, c: 2 } }
+    ];
     
     // Đặt độ rộng cột
     ws['!cols'] = [
