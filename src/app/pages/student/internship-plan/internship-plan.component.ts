@@ -65,22 +65,26 @@ export class InternshipPlanComponent implements OnInit {
 
   updateStatus() {
     if (!this.campaign) return;
-    
-    const advancedStatuses = ['IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
-    if (advancedStatuses.includes(this.campaign.status)) {
+
+    const plans = this.campaign.internship_plans || [];
+    const hasPlans = plans.length > 0;
+    const allApproved = hasPlans && plans.every((plan: any) =>
+      plan.gvhd_status === 'APPROVED' && plan.company_status === 'APPROVED'
+    );
+    const hasAnyApproved = plans.some((plan: any) =>
+      plan.gvhd_status === 'APPROVED' || plan.company_status === 'APPROVED'
+    );
+
+    if (allApproved) {
       this.status.label = 'Đã duyệt';
       this.status.message = 'Kế hoạch đã được GVHD và ĐVHD phê duyệt';
       this.isLocked = true;
       this.canAccess = true;
-    } else if (this.campaign.status === 'PLAN_SUBMITTED') {
+    } else if (hasPlans) {
       this.status.label = 'Chờ duyệt';
-      this.status.message = 'Đang chờ GVHD và ĐVHD duyệt';
-      this.isLocked = true;
-      this.canAccess = true;
-    } else if (this.campaign.status === 'PLAN_APPROVED') {
       let detailMsg = 'Đã được duyệt 1 phía, chờ phía còn lại';
-      if (this.campaign.internship_plans && this.campaign.internship_plans.length > 0) {
-        const firstPlan: any = this.campaign.internship_plans[0];
+      if (hasAnyApproved) {
+        const firstPlan: any = plans[0];
         const gvhdApproved = firstPlan.gvhd_status === 'APPROVED';
         const companyApproved = firstPlan.company_status === 'APPROVED';
         
@@ -89,12 +93,13 @@ export class InternshipPlanComponent implements OnInit {
         } else if (!gvhdApproved && companyApproved) {
           detailMsg = 'Đã được ĐVHD duyệt, Đang chờ GVHD duyệt';
         }
+      } else {
+        detailMsg = 'Đang chờ GVHD và ĐVHD duyệt';
       }
-      this.status.label = 'Chờ duyệt';
       this.status.message = detailMsg;
       this.isLocked = true;
       this.canAccess = true;
-    } else if (this.campaign.status === 'COMPANY_APPROVED') {
+    } else if (this.campaign.company_info?.company_status === 'APPROVED') {
       this.status.label = 'Chưa nộp';
       this.status.message = 'Vui lòng nộp kế hoạch thực tập';
       this.isLocked = false;

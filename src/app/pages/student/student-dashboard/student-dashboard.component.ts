@@ -90,7 +90,7 @@ export class StudentDashboardComponent implements OnInit {
           this.studentName = campaign.full_name;
           this.studentId = campaign.student_code;
 
-          this.updateWorkflowStatus(campaign.status);
+          this.updateWorkflowStatus(campaign.status, campaign, this.logs);
 
           // Fetch final result
           this.finalResultService.getMyFinalResult().subscribe({
@@ -210,11 +210,13 @@ export class StudentDashboardComponent implements OnInit {
           this.weeklyLogService.findByStudentCampaign(campaign.id).subscribe({
             next: (logRes) => {
               this.logs = Array.isArray(logRes) ? logRes : (logRes.data || logRes.payload || []);
+              this.updateWorkflowStatus(campaign.status, campaign, this.logs);
               this.generateUpcomingTasks(campaign, this.logs);
               this.isLoading = false;
             },
             error: () => {
               this.logs = [];
+              this.updateWorkflowStatus(campaign.status, campaign, []);
               this.generateUpcomingTasks(campaign, []);
               this.isLoading = false;
             }
@@ -231,10 +233,12 @@ export class StudentDashboardComponent implements OnInit {
     });
   }
 
-  updateWorkflowStatus(status: string) {
+  updateWorkflowStatus(status: string, campaign?: any, logs: any[] = this.logs) {
     // TTTN-01: Kê khai ĐVTT
-    const tttn01Done = ['COMPANY_APPROVED', 'PLAN_SUBMITTED', 'PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
-    if (tttn01Done.includes(status)) {
+    const tttn01Approved = campaign
+      ? campaign.company_info?.company_status === 'APPROVED'
+      : ['COMPANY_APPROVED', 'PLAN_SUBMITTED', 'PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'].includes(status);
+    if (tttn01Approved) {
       this.workflowStatus.tttn01 = { status: 'APPROVED', label: 'Đã duyệt', icon: 'check_circle' };
     } else if (status === 'COMPANY_DECLARED') {
       this.workflowStatus.tttn01 = { status: 'PENDING', label: 'Chờ duyệt', icon: 'hourglass_top' };
@@ -243,23 +247,27 @@ export class StudentDashboardComponent implements OnInit {
     }
 
     // TTTN-02: Kế hoạch TT
-    const tttn02Done = ['PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
-    if (tttn02Done.includes(status)) {
+    const plans = campaign?.internship_plans || [];
+    const hasPlan = plans.length > 0;
+    const planApproved = hasPlan && plans.every((plan: any) =>
+      plan.gvhd_status === 'APPROVED' && plan.company_status === 'APPROVED'
+    );
+    if (planApproved) {
       this.workflowStatus.tttn02 = { status: 'APPROVED', label: 'Đã duyệt', icon: 'check_circle' };
-    } else if (status === 'PLAN_SUBMITTED') {
+    } else if (hasPlan) {
       this.workflowStatus.tttn02 = { status: 'PENDING', label: 'Chờ duyệt', icon: 'hourglass_top' };
-    } else if (status === 'COMPANY_APPROVED') {
+    } else if (tttn01Approved) {
       this.workflowStatus.tttn02 = { status: 'NOT_STARTED', label: 'Cần nộp', icon: 'edit_document' };
     } else {
       this.workflowStatus.tttn02 = { status: 'LOCKED', label: 'Chưa mở', icon: 'lock' };
     }
 
     // TTTN-03: Nhật ký TT
-    const tttn03Done = ['STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
-    if (tttn03Done.includes(status)) {
-      this.workflowStatus.tttn03 = { status: 'APPROVED', label: 'Hoàn thành', icon: 'check_circle' };
-    } else if (status === 'IN_PROGRESS' || status === 'PLAN_APPROVED') {
-      this.workflowStatus.tttn03 = { status: 'PENDING', label: 'Đang ghi', icon: 'menu_book' };
+    const logsApproved = logs.length >= this.totalWeeks && logs.every((log: any) => log.supervisor_status === 'APPROVED');
+    if (logsApproved) {
+      this.workflowStatus.tttn03 = { status: 'APPROVED', label: 'Đã duyệt', icon: 'check_circle' };
+    } else if (planApproved) {
+      this.workflowStatus.tttn03 = { status: 'PENDING', label: logs.length > 0 ? 'Chờ xác nhận' : 'Đang ghi', icon: 'menu_book' };
     } else {
       this.workflowStatus.tttn03 = { status: 'LOCKED', label: 'Chưa mở', icon: 'lock' };
     }
@@ -268,7 +276,7 @@ export class StudentDashboardComponent implements OnInit {
     const tttn06Done = ['REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
     if (tttn06Done.includes(status)) {
       this.workflowStatus.tttn06 = { status: 'APPROVED', label: 'Đã nộp', icon: 'check_circle' };
-    } else if (status === 'STAGE1_EVALUATED') {
+    } else if (logsApproved) {
       this.workflowStatus.tttn06 = { status: 'NOT_STARTED', label: 'Cần nộp', icon: 'description' };
     } else {
       this.workflowStatus.tttn06 = { status: 'LOCKED', label: 'Chưa mở', icon: 'lock' };
@@ -288,10 +296,16 @@ export class StudentDashboardComponent implements OnInit {
   generateUpcomingTasks(campaign: any, logs: any[]) {
     this.upcomingTasks = [];
     const status = campaign.status;
+    const tttn01Approved = campaign.company_info?.company_status === 'APPROVED';
+    const plans = campaign.internship_plans || [];
+    const hasPlan = plans.length > 0;
+    const planApproved = hasPlan && plans.every((plan: any) =>
+      plan.gvhd_status === 'APPROVED' && plan.company_status === 'APPROVED'
+    );
+    const logsApproved = logs.length >= this.totalWeeks && logs.every((log: any) => log.supervisor_status === 'APPROVED');
 
     // 1. TTTN-01: Company declaration
-    const tttn01Done = ['COMPANY_APPROVED', 'PLAN_SUBMITTED', 'PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
-    if (!tttn01Done.includes(status) && status !== 'COMPANY_DECLARED') {
+    if (!tttn01Approved && status !== 'COMPANY_DECLARED') {
       this.upcomingTasks.push({
         title: 'Kê khai thông tin đơn vị thực tập (TTTN-01)',
         deadline: 'Tuần 1',
@@ -307,16 +321,15 @@ export class StudentDashboardComponent implements OnInit {
     }
 
     // 2. TTTN-02: Internship plan
-    const tttn02Done = ['PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
-    if (!tttn02Done.includes(status)) {
-      if (status === 'COMPANY_APPROVED') {
+    if (!planApproved) {
+      if (tttn01Approved && !hasPlan) {
         this.upcomingTasks.push({
           title: 'Nộp Đề cương kế hoạch thực tập (TTTN-02)',
           deadline: 'Tuần 2',
           type: 'warning',
           route: '/student/internship-report'
         });
-      } else if (status === 'PLAN_SUBMITTED') {
+      } else if (hasPlan) {
         this.upcomingTasks.push({
           title: 'Đợi Giảng viên phê duyệt kế hoạch thực tập (TTTN-02)',
           deadline: 'Chờ duyệt',
@@ -326,9 +339,9 @@ export class StudentDashboardComponent implements OnInit {
     }
 
     // 3. TTTN-03: Weekly logs
-    if (tttn02Done.includes(status)) {
-      const currentWeekLog = logs.find((l: any) => l.weekNumber === this.currentWeek);
-      const isLogDone = currentWeekLog && (currentWeekLog.status === 'SUBMITTED' || currentWeekLog.status === 'APPROVED');
+    if (planApproved && !logsApproved) {
+      const currentWeekLog = logs.find((l: any) => (l.weekNumber ?? l.week_number) === this.currentWeek);
+      const isLogDone = currentWeekLog && currentWeekLog.supervisor_status === 'APPROVED';
       
       if (!isLogDone && this.currentWeek <= this.totalWeeks) {
         this.upcomingTasks.push({
@@ -365,7 +378,7 @@ export class StudentDashboardComponent implements OnInit {
     // 5. TTTN-06: Final report
     const tttn06Done = ['REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
     if (!tttn06Done.includes(status)) {
-      if (status === 'STAGE1_EVALUATED') {
+      if (logsApproved) {
         this.upcomingTasks.push({
           title: 'Nộp Báo cáo thực tập tốt nghiệp (TTTN-06)',
           deadline: 'Tuần 8',

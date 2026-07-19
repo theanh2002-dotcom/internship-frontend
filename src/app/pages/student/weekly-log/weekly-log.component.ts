@@ -81,9 +81,11 @@ export class WeeklyLogComponent implements OnInit {
             this.companyInfo.supervisor = this.campaign!.company_info.supervisor_name;
           }
 
-          // Status Gate check: TTTN-03 chỉ mở khi TTTN-02 đã được CẢ 2 bên duyệt (IN_PROGRESS)
-          const allowedStatuses = ['PLAN_APPROVED', 'IN_PROGRESS', 'STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
-          this.canAccess = allowedStatuses.includes(this.campaign!.status);
+          // TTTN-03 chỉ mở khi TTTN-02 có dữ liệu thật và được cả GVHD/ĐVHD duyệt.
+          const plans = this.campaign!.internship_plans || [];
+          this.canAccess = plans.length > 0 && plans.every((plan: any) =>
+            plan.gvhd_status === 'APPROVED' && plan.company_status === 'APPROVED'
+          );
 
           if (this.canAccess) {
             this.loadLogs();

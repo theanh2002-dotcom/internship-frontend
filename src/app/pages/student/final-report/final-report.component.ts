@@ -7,6 +7,7 @@ import { FinalReportRequest, ReportItem } from '../../../core/models/request.mod
 import { FinalReportResponse, StudentCampaignResponse } from '../../../core/models/base.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
+import { WeeklyLogService } from '../../../core/services/weekly-log.service';
 
 interface UploadingFile {
   name: string;
@@ -34,7 +35,8 @@ export class FinalReportComponent implements OnInit {
   constructor(private toastService: ToastService, private studentCampaignService: StudentCampaignService,
     private fileService: FileService,
     private finalReportService: FinalReportService,
-    private authService: AuthService) {}
+    private authService: AuthService,
+    private weeklyLogService: WeeklyLogService) {}
 
   ngOnInit(): void {
     this.loadMyCampaign();
@@ -44,22 +46,44 @@ export class FinalReportComponent implements OnInit {
     this.isLoading = true;
     this.studentCampaignService.getMyCampaigns().subscribe({
       next: (res) => {
-        const campaigns = Array.isArray(res) ? res : [];
+        const campaigns = Array.isArray(res) ? res : (res.data || res.payload || []);
         if (campaigns.length > 0) {
           this.studentCampaign = campaigns[0];
-          // Status Gate check
-          const allowedStatuses = ['STAGE1_EVALUATED', 'REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
-          this.canAccess = allowedStatuses.includes(this.studentCampaign!.status);
-          if (this.canAccess) {
-            this.loadFinalReports();
-          } else {
+          const plans = this.studentCampaign!.internship_plans || [];
+          const planApproved = plans.length > 0 && plans.every((plan: any) =>
+            plan.gvhd_status === 'APPROVED' && plan.company_status === 'APPROVED'
+          );
+          if (!planApproved) {
+            this.canAccess = false;
             this.isLoading = false;
+            return;
           }
+          this.loadAccessAndReports();
         } else {
           this.isLoading = false;
         }
       },
       error: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadAccessAndReports(): void {
+    if (!this.studentCampaign) return;
+
+    this.weeklyLogService.findByStudentCampaign(this.studentCampaign.id).subscribe({
+      next: (res) => {
+        const logs = Array.isArray(res) ? res : (res.data || res.payload || []);
+        this.canAccess = logs.length >= 8 && logs.every((log: any) => log.supervisor_status === 'APPROVED');
+        if (this.canAccess) {
+          this.loadFinalReports();
+        } else {
+          this.isLoading = false;
+        }
+      },
+      error: () => {
+        this.canAccess = false;
         this.isLoading = false;
       }
     });

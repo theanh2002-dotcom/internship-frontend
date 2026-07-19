@@ -54,6 +54,10 @@
           <span class="material-symbols-outlined mb-1 text-[20px]">history_edu</span>
           <span class="text-xs font-bold whitespace-nowrap">TTTN-03</span>
           <span class="text-[10px] mt-0.5 opacity-90 whitespace-nowrap">Nhật ký TT</span>
+          <span *ngIf="isUnlocked('TTTN-03')" class="text-[9px] mt-1 font-semibold px-2 py-0.5 rounded-full"
+                [ngClass]="getTttn03Status() === 'Đã duyệt' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'">
+            {{ getTttn03Status() }}
+          </span>
         </button>
 
         <!-- Divider -->
