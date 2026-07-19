@@ -19,6 +19,10 @@ export interface FinalResultResponse {
   is_approved: boolean;
   stage1_locked?: boolean;
   stage2_locked?: boolean;
+  stage1_gvhd_locked?: boolean;
+  stage1_company_locked?: boolean;
+  stage2_gvhd_locked?: boolean;
+  stage2_company_locked?: boolean;
   status: string;
 }
 
@@ -33,8 +37,15 @@ export class FinalResultService {
     return this.apiService.patch<any>(`/base/final-results/${studentCampaignId}/approve`, {});
   }
 
-  lockFinalResultStage(studentCampaignId: number, stage: 'STAGE_1' | 'STAGE_2'): Observable<any> {
-    return this.apiService.patch<any>(`/base/evaluations/final-result/${studentCampaignId}/lock?stage=${stage}`, {});
+  lockFinalResultStage(
+    studentCampaignId: number,
+    stage: 'STAGE_1' | 'STAGE_2',
+    evaluatorType: 'GVHD' | 'COMPANY_SUPERVISOR'
+  ): Observable<any> {
+    return this.apiService.patch<any>(
+      `/base/evaluations/final-result/${studentCampaignId}/lock?stage=${stage}&evaluator_type=${evaluatorType}`,
+      {}
+    );
   }
 
   getFinalResultsByCampaign(departmentCampaignId: number): Observable<FinalResultResponse[]> {

@@ -433,7 +433,7 @@ export class RubricEvaluationComponent implements OnInit {
     if (!this.selectedStudent) return;
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) return;
-    const evaluatorType = currentUser.role === 'COMPANY_SUPERVISOR' ? 'COMPANY_SUPERVISOR' : 'GVHD';
+    const evaluatorType = this.getCurrentEvaluatorType();
 
     this.evaluationService.findEvaluations(this.selectedStudent.id).subscribe({
       next: (res) => {
@@ -652,9 +652,16 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   isStageManuallyLocked(stage: 'STAGE_1' | 'STAGE_2' = this.selectedStage): boolean {
-    return stage === 'STAGE_1'
-      ? Boolean(this.finalResult?.stage1_locked)
-      : Boolean(this.finalResult?.stage2_locked);
+    if (!this.finalResult) return false;
+    const evaluatorType = this.getCurrentEvaluatorType();
+    if (stage === 'STAGE_1') {
+      return evaluatorType === 'COMPANY_SUPERVISOR'
+        ? Boolean(this.finalResult.stage1_company_locked)
+        : Boolean(this.finalResult.stage1_gvhd_locked);
+    }
+    return evaluatorType === 'COMPANY_SUPERVISOR'
+      ? Boolean(this.finalResult.stage2_company_locked)
+      : Boolean(this.finalResult.stage2_gvhd_locked);
   }
 
   get canLockCurrentStage(): boolean {
@@ -684,7 +691,7 @@ export class RubricEvaluationComponent implements OnInit {
 
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) return;
-    const evaluatorType = currentUser.role === 'COMPANY_SUPERVISOR' ? 'COMPANY_SUPERVISOR' : 'GVHD';
+    const evaluatorType = this.getCurrentEvaluatorType();
 
     this.isSaving = true;
     const payload: EvaluationRequest = {
@@ -728,7 +735,11 @@ export class RubricEvaluationComponent implements OnInit {
     if (!ok) return;
 
     this.isSaving = true;
-    this.evaluationService.lockFinalResultStage(this.selectedStudent.id, this.selectedStage).subscribe({
+    this.evaluationService.lockFinalResultStage(
+      this.selectedStudent.id,
+      this.selectedStage,
+      this.getCurrentEvaluatorType()
+    ).subscribe({
       next: (res) => {
         this.finalResult = this.unwrapResponse(res);
         this.isSaving = false;
@@ -739,6 +750,11 @@ export class RubricEvaluationComponent implements OnInit {
         this.toastService.error(err?.error?.message || 'Không thể khóa điểm chặng.');
       }
     });
+  }
+
+  private getCurrentEvaluatorType(): 'GVHD' | 'COMPANY_SUPERVISOR' {
+    const currentUser = this.authService.getCurrentUser();
+    return currentUser?.role === 'COMPANY_SUPERVISOR' ? 'COMPANY_SUPERVISOR' : 'GVHD';
   }
 
   loadFinalResult(): void {
