@@ -125,7 +125,7 @@
                 </ul>
                 <div class="mt-4 p-3 bg-slate-50 rounded border border-slate-200 flex items-start gap-2">
                     <span class="material-symbols-outlined text-orange-500 text-[20px] mt-0.5">warning</span>
-                    <p class="text-sm font-medium text-slate-600">Trạng thái: <strong>{{ studentCampaign.status === 'COMPLETED' ? 'Đã Nộp' : 'Chưa Nộp' }}</strong></p>
+                    <p class="text-sm font-medium text-slate-600">Trạng thái: <strong>{{ getReportStatusLabel() }}</strong></p>
                 </div>
             </div>
 
@@ -143,11 +143,11 @@
 
                 <div class="pt-4 border-t border-slate-200 flex flex-col gap-3">
                     <button class="w-full bg-[#00429D] text-white py-3 rounded-lg text-base font-semibold transition-colors hover:bg-blue-800 flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" 
-                            [disabled]="!isAgreed || isSaving || attachedFiles.length === 0"
+                            [disabled]="!isAgreed || isSaving || !hasPendingFiles()"
                             (click)="submitReport()">
                         <span *ngIf="isSaving" class="material-symbols-outlined animate-spin">progress_activity</span>
                         <span *ngIf="!isSaving" class="material-symbols-outlined">send</span>
-                        Nộp báo cáo và Hoàn thành
+                        {{ hasSubmittedReport() ? 'Nộp bổ sung báo cáo' : 'Nộp báo cáo và Hoàn thành' }}
                     </button>
                 </div>
             </div>

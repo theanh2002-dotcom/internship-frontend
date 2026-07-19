@@ -94,7 +94,7 @@ export class FinalReportComponent implements OnInit {
     
     this.finalReportService.getFinalReports(this.studentCampaign.id).subscribe({
       next: (res) => {
-        this.attachedFiles = res;
+        this.attachedFiles = this.unwrapList(res);
         this.isLoading = false;
       },
       error: () => {
@@ -181,12 +181,13 @@ export class FinalReportComponent implements OnInit {
 
   submitReport(): void {
     if (!this.studentCampaign) return;
-    if (this.attachedFiles.length === 0) {
+    const pendingFiles = this.getPendingFiles();
+    if (pendingFiles.length === 0) {
       this.showError('Vui lòng tải lên ít nhất một file báo cáo trước khi nộp.');
       return;
     }
 
-    const reports: ReportItem[] = this.attachedFiles.map(f => ({
+    const reports: ReportItem[] = pendingFiles.map(f => ({
       file_name: f.file_name,
       file_url: f.file_url,
       file_size: f.file_size,
@@ -200,8 +201,14 @@ export class FinalReportComponent implements OnInit {
 
     this.isSaving = true;
     this.finalReportService.submitFinalReports(request).subscribe({
-      next: () => {
+      next: (res) => {
         this.isSaving = false;
+        this.attachedFiles = [
+          ...this.attachedFiles.filter(file => file.id > 0),
+          ...this.unwrapList(res)
+        ];
+        this.studentCampaign!.status = 'REPORT_SUBMITTED';
+        this.isAgreed = false;
         this.showSuccess('Đã nộp báo cáo tổng kết thành công!');
         this.loadFinalReports();
       },
@@ -210,6 +217,28 @@ export class FinalReportComponent implements OnInit {
         this.showError('Lỗi khi nộp báo cáo: ' + (err.error?.message || err.message));
       }
     });
+  }
+
+  hasSubmittedReport(): boolean {
+    const submittedStatuses = ['REPORT_SUBMITTED', 'STAGE2_EVALUATED', 'COMPLETED'];
+    return submittedStatuses.includes(this.studentCampaign?.status || '')
+      || this.attachedFiles.some(file => file.id > 0);
+  }
+
+  hasPendingFiles(): boolean {
+    return this.getPendingFiles().length > 0;
+  }
+
+  getReportStatusLabel(): string {
+    return this.hasSubmittedReport() ? 'Đã nộp' : 'Chưa nộp';
+  }
+
+  private getPendingFiles(): FinalReportResponse[] {
+    return this.attachedFiles.filter(file => !file.id || file.id <= 0);
+  }
+
+  private unwrapList(value: any): FinalReportResponse[] {
+    return Array.isArray(value) ? value : (value?.data || value?.payload || []);
   }
 
   getFileIcon(fileName: string): string {
