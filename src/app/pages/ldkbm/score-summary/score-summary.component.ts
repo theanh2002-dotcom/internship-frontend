@@ -5,7 +5,6 @@ import { CampaignService } from '../../../core/services/campaign.service';
 import { CampaignResponse } from '../../../core/models/base.model';
 import { DepartmentCampaignService } from '../../../core/services/department-campaign.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { EvaluationService } from '../../../core/services/evaluation.service';
 import * as XLSX from 'xlsx';
 
 @Component({
@@ -38,8 +37,7 @@ export class LdkbmScoreSummaryComponent implements OnInit {
     private departmentService: DepartmentService,
     private campaignService: CampaignService,
     private departmentCampaignService: DepartmentCampaignService,
-    private authService: AuthService,
-    private evaluationService: EvaluationService
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -169,46 +167,6 @@ export class LdkbmScoreSummaryComponent implements OnInit {
     this.currentPage = page;
   }
 
-  calculateScore(studentCampaignId: number): void {
-    this.loading = true;
-    this.error = null;
-    this.evaluationService.calculateFinalResult(studentCampaignId).subscribe({
-      next: () => {
-        this.showSuccess('Tính điểm cho sinh viên thành công!');
-        this.loadFinalResults();
-      },
-      error: (err) => {
-        this.error = err.error?.message || 'Có lỗi xảy ra khi tính điểm sinh viên.';
-        this.loading = false;
-      }
-    });
-  }
-
-  calculateAll(): void {
-    const studentsToCalc = this.results;
-    if (studentsToCalc.length === 0) {
-      alert('Không có sinh viên nào cần tính điểm.');
-      return;
-    }
-    if (confirm(`Bạn có chắc muốn tính toán lại điểm cho ${studentsToCalc.length} sinh viên?`)) {
-      this.loading = true;
-      let completedCount = 0;
-      studentsToCalc.forEach(s => {
-        this.evaluationService.calculateFinalResult(s.student_campaign_id).subscribe({
-          next: () => {},
-          error: () => {},
-          complete: () => {
-            completedCount++;
-            if (completedCount === studentsToCalc.length) {
-              this.showSuccess('Tính toán điểm toàn bộ hoàn tất!');
-              this.loadFinalResults();
-            }
-          }
-        });
-      });
-    }
-  }
-
   exportToExcel(): void {
     const dataToExport = this.filteredResults.map((r, index) => ({
       'STT': index + 1,
@@ -219,7 +177,7 @@ export class LdkbmScoreSummaryComponent implements OnInit {
       'Điểm Chặng 2': r.stage_2_score !== null && r.stage_2_score !== undefined ? r.stage_2_score : '-',
       'Điểm Tổng Kết': r.final_hp_score !== null && r.final_hp_score !== undefined ? r.final_hp_score : '-',
       'Xếp Loại': r.grade_level || 'Chưa xếp loại',
-      'Trạng Thái': r.final_hp_score !== null ? 'Đã có kết quả' : 'Chưa tính điểm'
+      'Trạng Thái': r.final_hp_score !== null ? 'Đã có kết quả' : 'Chưa có điểm'
     }));
 
     const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataToExport);
