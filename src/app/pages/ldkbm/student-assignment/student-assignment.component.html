@@ -113,11 +113,11 @@
             <span *ngIf="!student.gvhd_name" class="text-[13px] text-slate-400 italic">Chưa phân công</span>
           </td>
           <td class="py-3 px-4">
-            <div *ngIf="student.company_info?.supervisor_email" class="flex flex-col text-[12px]">
-              <span class="font-medium text-slate-700" title="Tên người hướng dẫn">{{ student.company_info?.supervisor_name }}</span>
-              <span class="text-slate-500" title="Tài khoản (Email)">TK: {{ student.company_info?.supervisor_email }}</span>
+            <div *ngIf="student.company_info?.company_name" class="flex flex-col text-[12px]">
+              <span class="font-medium text-slate-700" title="Đơn vị thực tập">{{ student.company_info?.company_name }}</span>
+              <span *ngIf="student.company_info?.supervisor_email" class="text-slate-500" title="Tài khoản (Email)">TK: {{ student.company_info?.supervisor_email }}</span>
             </div>
-            <span *ngIf="!student.company_info?.supervisor_email" class="text-[13px] text-slate-400 italic">Chưa khai báo</span>
+            <span *ngIf="!student.company_info?.company_name" class="text-[13px] text-slate-400 italic">Chưa khai báo</span>
           </td>
           <td class="py-3 px-4">
             <span class="px-2 py-1 rounded-full text-[11px] font-bold border"
