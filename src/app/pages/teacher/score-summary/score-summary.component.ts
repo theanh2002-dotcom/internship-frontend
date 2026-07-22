@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { EvaluationService } from '../../../core/services/evaluation.service';
 import { DepartmentCampaignService } from '../../../core/services/department-campaign.service';
-import { StudentCampaignResponse } from '../../../core/models/base.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { CampaignService } from '../../../core/services/campaign.service';
 import { firstValueFrom } from 'rxjs';
+import { FinalResultResponse, FinalResultService } from '../../../core/services/final-result.service';
 
 interface StudentScore {
   id: number;
@@ -49,8 +48,8 @@ export class ScoreSummaryComponent implements OnInit {
   private xlsx: any = null;
 
   constructor(
-    private studentCampaignService: StudentCampaignService,
     private evaluationService: EvaluationService,
+    private finalResultService: FinalResultService,
     private departmentCampaignService: DepartmentCampaignService,
     private toastService: ToastService,
     private campaignService: CampaignService
@@ -75,10 +74,12 @@ export class ScoreSummaryComponent implements OnInit {
 
   loadData(): void {
     this.isLoading = true;
-    this.studentCampaignService.getMyAssignedStudents().subscribe({
+    this.finalResultService.getMyStudentFinalResults(this.selectedCampaignId).subscribe({
       next: (res) => {
-        const studentCampaigns = Array.isArray(res) ? res : (res.data || res.payload || []);
-        this.processStudents(studentCampaigns);
+        const finalResults = Array.isArray(res) ? res : [];
+        this.processStudents(finalResults);
+        this.isLoading = false;
+        this.applyFilters();
       },
       error: () => {
         this.isLoading = false;
@@ -86,71 +87,29 @@ export class ScoreSummaryComponent implements OnInit {
     });
   }
 
-  processStudents(campaigns: StudentCampaignResponse[]): void {
-    let completedCount = 0;
-    this.students = campaigns.map(sc => {
-      let firstName = sc.first_name;
-      let lastName = sc.last_name;
-      if (!firstName || !lastName) {
-        const parts = this.splitFullName(sc.full_name);
-        firstName = parts.firstName;
-        lastName = parts.lastName;
-      }
+  processStudents(results: FinalResultResponse[]): void {
+    this.students = results.map(result => {
+      const parts = this.splitFullName(result.full_name || '');
+      const stage1Score = this.toNullableScore(result.stage1_score ?? result.stage_1_score);
+      const stage2Score = this.toNullableScore(result.stage2_score ?? result.stage_2_score);
+      const totalScore = this.toNullableScore(result.final_hp_score);
+
       return {
-      id: sc.id,
-      mssv: sc.student_code,
-      name: sc.full_name,
-      lastName: lastName || '',
-      firstName: firstName || '',
-      class: sc.class_name || 'N/A',
-      companyName: sc.company_info?.company_name || 'N/A',
-      gvhdName: sc.gvhd_name || 'N/A',
-      stage1Score: null,
-      stage2Score: null,
-      totalScore: null,
-      status: 'Chưa có kết quả',
-      campaignId: sc.campaign_id,
-      departmentId: sc.department_id
-    };
-    });
-
-    if (this.students.length === 0) {
-      this.isLoading = false;
-      this.applyFilters();
-      return;
-    }
-
-    // Apply initial filters
-    this.applyFilters();
-
-    // Lấy điểm cho từng sinh viên
-    this.students.forEach(s => {
-      this.evaluationService.getFinalResult((s as any).id).subscribe({
-        next: (scoreRes) => {
-          if (!scoreRes) return;
-          const finalData = scoreRes.stage1_score !== undefined ? scoreRes : (scoreRes.data || scoreRes.payload);
-          if (finalData) {
-            s.stage1Score = finalData.stage1_score;
-            s.stage2Score = finalData.stage2_score;
-            s.totalScore = finalData.final_hp_score;
-            
-            if (finalData.grade_level) {
-               s.status = finalData.grade_level !== 'F' ? 'Đạt' : 'Không đạt';
-            }
-          }
-          this.applyFilters();
-        },
-        error: () => {
-          // Chưa có điểm
-        },
-        complete: () => {
-          completedCount++;
-          if (completedCount === this.students.length) {
-            this.isLoading = false;
-            this.applyFilters();
-          }
-        }
-      });
+        id: result.student_campaign_id,
+        mssv: result.student_code,
+        name: result.full_name,
+        lastName: parts.lastName,
+        firstName: parts.firstName,
+        class: result.class_name || 'N/A',
+        companyName: result.company_name || 'N/A',
+        gvhdName: result.gvhd_name || 'N/A',
+        stage1Score,
+        stage2Score,
+        totalScore,
+        status: this.getResultStatus(result.grade_level, totalScore),
+        campaignId: result.campaign_id || 0,
+        departmentId: result.department_id || 0
+      };
     });
   }
 
@@ -203,6 +162,11 @@ export class ScoreSummaryComponent implements OnInit {
     this.applyFilters();
   }
 
+  onCampaignChange(): void {
+    this.currentPage = 1;
+    this.loadData();
+  }
+
   onPageChange(page: number): void {
     this.currentPage = page;
     this.paginate();
@@ -220,6 +184,16 @@ export class ScoreSummaryComponent implements OnInit {
       case 'Chưa có kết quả': return 'bg-slate-100 text-slate-600 border-slate-200';
       default: return '';
     }
+  }
+
+  private getResultStatus(gradeLevel: string | null | undefined, totalScore: number | null): string {
+    if (gradeLevel) {
+      return gradeLevel !== 'F' ? 'Đạt' : 'Không đạt';
+    }
+    if (totalScore === null) {
+      return 'Chưa có kết quả';
+    }
+    return totalScore >= 4 ? 'Đạt' : 'Không đạt';
   }
 
   async exportExcel(): Promise<void> {

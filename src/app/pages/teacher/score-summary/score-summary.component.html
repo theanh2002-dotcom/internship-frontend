@@ -49,7 +49,7 @@
             <!-- Campaign Selector -->
             <div class="w-full min-w-0">
                 <select [(ngModel)]="selectedCampaignId" 
-                        (change)="onFilterChange()" 
+                        (change)="onCampaignChange()" 
                         class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
                     <option [ngValue]="null">— Tất cả đợt thực tập —</option>
                     <option *ngFor="let camp of campaigns" [ngValue]="camp.id">

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
 import { BaseResponse } from '../models/base.model';
+import { HttpParams } from '@angular/common/http';
 
 export interface FinalResultResponse {
   id?: number;
@@ -9,6 +10,10 @@ export interface FinalResultResponse {
   student_code: string;
   full_name: string;
   class_name: string;
+  campaign_id?: number;
+  department_id?: number;
+  company_name?: string;
+  gvhd_name?: string;
   stage_1_score?: number;
   stage_2_score?: number;
   stage1_score?: number;
@@ -50,6 +55,14 @@ export class FinalResultService {
 
   getFinalResultsByCampaign(departmentCampaignId: number): Observable<FinalResultResponse[]> {
     return this.apiService.get<FinalResultResponse[]>(`/base/final-results?department_campaign_id=${departmentCampaignId}`);
+  }
+
+  getMyStudentFinalResults(campaignId?: number | null): Observable<FinalResultResponse[]> {
+    let params = new HttpParams();
+    if (campaignId) {
+      params = params.set('campaign_id', campaignId.toString());
+    }
+    return this.apiService.get<FinalResultResponse[]>('/base/final-results/my-students', params);
   }
 
   getMyFinalResult(): Observable<FinalResultResponse> {
