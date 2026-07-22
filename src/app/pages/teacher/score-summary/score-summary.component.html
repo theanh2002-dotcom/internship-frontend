@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="w-full min-w-0 max-w-7xl mx-auto space-y-6">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div>
@@ -78,13 +78,13 @@
     </div>
 
     <!-- Data Grid (Excel-like Table) -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full min-w-0">
         <div *ngIf="isLoading" class="p-12 text-center text-gray-500">
             <span class="material-symbols-outlined animate-spin text-4xl mb-4 text-[#00429D]">autorenew</span>
             <p class="font-medium text-slate-600">Đang tổng hợp điểm từ hệ thống...</p>
         </div>
 
-        <div *ngIf="!isLoading" class="overflow-x-auto relative">
+        <div *ngIf="!isLoading" class="overflow-x-auto relative w-full">
             <table class="w-full text-left text-sm whitespace-nowrap">
                 <!-- Table Header -->
                 <thead class="bg-slate-50 text-slate-700 uppercase text-xs font-semibold border-b border-slate-200">
