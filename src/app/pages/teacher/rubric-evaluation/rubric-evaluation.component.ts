@@ -484,6 +484,7 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   getStageLabel(): string {
+    if (this.activeTab === 'SUMMARY') return 'Tổng hợp điểm';
     return this.selectedStage === 'STAGE_1' ? 'Chặng 1 (Giữa kỳ)' : 'Chặng 2 (Cuối kỳ)';
   }
 
