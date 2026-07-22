@@ -1,12 +1,12 @@
 <div class="w-full max-w-full min-w-0 max-w-7xl mx-auto space-y-6 overflow-hidden">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-slate-900">Bảng Tổng hợp Điểm Thực tập (TTTN-07)</h2>
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 min-w-0">
+        <div class="min-w-0">
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">Bảng Tổng hợp Điểm Thực tập (TTTN-07)</h2>
             <p class="text-slate-600 mt-1">Danh sách tổng hợp điểm các hội đồng và kết quả cuối cùng của Sinh viên.</p>
         </div>
-        <div class="flex gap-3">
-            <button (click)="exportExcel()" class="flex items-center gap-2 bg-[#00429D] text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors font-medium shadow-sm">
+        <div class="flex gap-3 shrink-0">
+            <button (click)="exportExcel()" class="flex items-center gap-2 bg-[#00429D] text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors font-medium shadow-sm">
                 <span class="material-symbols-outlined text-[20px]">download</span>
                 Xuất Excel
             </button>
@@ -14,7 +14,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <p class="text-sm text-slate-500 font-medium">Tổng Sinh viên</p>
             <p class="text-3xl font-bold text-slate-900 mt-2">{{ totalStudents }}</p>
@@ -34,10 +34,10 @@
     </div>
 
     <!-- Filters Header -->
-    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50">
-        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+    <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-slate-50">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 w-full lg:flex-1 min-w-0">
             <!-- Search Query -->
-            <div class="relative w-full md:w-64">
+            <div class="relative w-full min-w-0">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
                 <input [(ngModel)]="searchQuery" 
                        (input)="onFilterChange()" 
@@ -47,7 +47,7 @@
             </div>
 
             <!-- Campaign Selector -->
-            <div class="w-full md:w-64">
+            <div class="w-full min-w-0">
                 <select [(ngModel)]="selectedCampaignId" 
                         (change)="onFilterChange()" 
                         class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
@@ -59,7 +59,7 @@
             </div>
 
             <!-- Status Selector -->
-            <div class="w-full md:w-48">
+            <div class="w-full min-w-0">
                 <select [(ngModel)]="selectedStatus" 
                         (change)="onFilterChange()" 
                         class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
@@ -71,7 +71,7 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto justify-end">
+        <div class="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full lg:w-auto lg:justify-end whitespace-nowrap">
             <span class="material-symbols-outlined text-[18px] text-slate-400">groups</span>
             Tổng cộng: <span class="font-bold text-[#00429D]">{{ totalItems }}</span> sinh viên
         </div>
@@ -84,21 +84,32 @@
             <p class="font-medium text-slate-600">Đang tổng hợp điểm từ hệ thống...</p>
         </div>
 
-        <div *ngIf="!isLoading" class="overflow-x-auto relative w-full">
-            <table class="w-full text-left text-sm whitespace-nowrap">
+        <div *ngIf="!isLoading" class="relative w-full overflow-hidden">
+            <table class="w-full table-fixed text-left text-xs sm:text-sm">
+                <colgroup>
+                    <col class="w-[7%]">
+                    <col class="w-[12%]">
+                    <col class="w-[16%]">
+                    <col class="w-[10%]">
+                    <col class="w-[10%]">
+                    <col class="w-[13%]">
+                    <col class="w-[13%]">
+                    <col class="w-[10%]">
+                    <col class="w-[9%]">
+                </colgroup>
                 <!-- Table Header -->
                 <thead class="bg-slate-50 text-slate-700 uppercase text-xs font-semibold border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-4 border-r border-slate-200 w-16 text-center">STT</th>
-                        <th class="px-6 py-4 border-r border-slate-200 text-center">Mã SV</th>
-                        <th colspan="2" class="px-6 py-4 border-r border-slate-200 bg-slate-50 text-center w-72 min-w-[250px]">
+                        <th class="px-2 py-3 border-r border-slate-200 text-center">STT</th>
+                        <th class="px-2 py-3 border-r border-slate-200 text-center">Mã SV</th>
+                        <th colspan="2" class="px-2 py-3 border-r border-slate-200 bg-slate-50 text-center">
                             Họ và tên
                         </th>
-                        <th class="px-6 py-4 border-r border-slate-200 text-center">Lớp</th>
-                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-blue-50/50">Điểm Chặng 1<br/><span class="text-[10px] font-normal text-slate-500">(GVHD & Doanh nghiệp)</span></th>
-                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-purple-50/50">Điểm Chặng 2<br/><span class="text-[10px] font-normal text-slate-500">(Hội đồng bảo vệ)</span></th>
-                        <th class="px-6 py-4 border-r border-slate-200 text-center bg-orange-50/50">Tổng điểm HP<br/><span class="text-[10px] font-normal text-slate-500">(Hệ số 10)</span></th>
-                        <th class="px-6 py-4 text-center">Kết quả</th>
+                        <th class="px-2 py-3 border-r border-slate-200 text-center">Lớp</th>
+                        <th class="px-2 py-3 border-r border-slate-200 text-center bg-blue-50/50 leading-tight">Điểm Chặng 1<br/><span class="text-[10px] font-normal normal-case text-slate-500">(GVHD & DN)</span></th>
+                        <th class="px-2 py-3 border-r border-slate-200 text-center bg-purple-50/50 leading-tight">Điểm Chặng 2<br/><span class="text-[10px] font-normal normal-case text-slate-500">(Hội đồng)</span></th>
+                        <th class="px-2 py-3 border-r border-slate-200 text-center bg-orange-50/50 leading-tight">Tổng điểm HP<br/><span class="text-[10px] font-normal normal-case text-slate-500">(Hệ số 10)</span></th>
+                        <th class="px-2 py-3 text-center">Kết quả</th>
                     </tr>
                 </thead>
                 <!-- Table Body -->
@@ -109,37 +120,37 @@
                         </td>
                     </tr>
                     <tr *ngFor="let student of paginatedStudents; let i = index" class="hover:bg-slate-50 transition-colors group">
-                        <td class="px-6 py-3 border-r border-slate-200 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
-                        <td class="px-6 py-3 border-r border-slate-200 font-medium text-center">{{ student.mssv }}</td>
-                        <td class="px-6 py-3 border-r border-slate-200 bg-white group-hover:bg-slate-50 transition-colors font-semibold text-[#00429D]">
+                        <td class="px-2 py-3 border-r border-slate-200 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 font-medium text-center break-words">{{ student.mssv }}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 bg-white group-hover:bg-slate-50 transition-colors font-semibold text-[#00429D] break-words">
                             {{ student.lastName }}
                         </td>
-                        <td class="px-6 py-3 border-r border-slate-200 bg-white group-hover:bg-slate-50 transition-colors font-semibold text-[#00429D]">
+                        <td class="px-2 py-3 border-r border-slate-200 bg-white group-hover:bg-slate-50 transition-colors font-semibold text-[#00429D] break-words">
                             {{ student.firstName }}
                         </td>
-                        <td class="px-6 py-3 border-r border-slate-200 text-slate-600 text-center">{{ student.class }}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 text-slate-600 text-center break-words">{{ student.class }}</td>
                         
                         <!-- Scores -->
-                        <td class="px-6 py-3 border-r border-slate-200 text-center font-medium">
+                        <td class="px-2 py-3 border-r border-slate-200 text-center font-medium">
                             <span *ngIf="student.stage1Score !== null">{{ student.stage1Score | number:'1.1-1' }}</span>
                             <span *ngIf="student.stage1Score === null" class="text-slate-300">-</span>
                         </td>
-                        <td class="px-6 py-3 border-r border-slate-200 text-center font-medium">
+                        <td class="px-2 py-3 border-r border-slate-200 text-center font-medium">
                             <span *ngIf="student.stage2Score !== null">{{ student.stage2Score | number:'1.1-1' }}</span>
                             <span *ngIf="student.stage2Score === null" class="text-slate-300">-</span>
                         </td>
                         
                         <!-- Final Score -->
-                        <td class="px-6 py-3 border-r border-slate-200 text-center">
-                            <span *ngIf="student.totalScore !== null" class="font-bold text-lg" [ngClass]="{'text-green-600': student.totalScore >= 5, 'text-red-600': student.totalScore < 5}">
+                        <td class="px-2 py-3 border-r border-slate-200 text-center">
+                            <span *ngIf="student.totalScore !== null" class="font-bold text-base sm:text-lg" [ngClass]="{'text-green-600': student.totalScore >= 5, 'text-red-600': student.totalScore < 5}">
                                 {{ student.totalScore | number:'1.1-1' }}
                             </span>
                             <span *ngIf="student.totalScore === null" class="text-slate-300">-</span>
                         </td>
                         
                         <!-- Status Badge -->
-                        <td class="px-6 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border" [ngClass]="getStatusClass(student.status)">
+                        <td class="px-2 py-3 text-center">
+                            <span class="inline-flex max-w-full items-center justify-center px-2 py-1 rounded-full text-[11px] sm:text-xs font-medium border leading-tight break-words" [ngClass]="getStatusClass(student.status)">
                                 {{ student.status }}
                             </span>
                         </td>
