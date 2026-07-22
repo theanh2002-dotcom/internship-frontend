@@ -79,18 +79,42 @@ export class CompanyRubricEvaluationComponent implements OnInit {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) return;
 
-    this.allStudents.forEach(student => {
-      this.evaluationService.findEvaluations(student.id).subscribe({
-        next: (res) => {
-          const evals = Array.isArray(res) ? res : (res.data || res.payload || []);
-          const myEval = evals.find((e: any) => e.evaluator_type === 'COMPANY_SUPERVISOR' && e.evaluator_id === currentUser.userId);
+    const studentIds = this.allStudents
+      .map(student => Number(student.id))
+      .filter(id => Number.isFinite(id));
+
+    this.evaluationService.findEvaluationsByStudents(studentIds).subscribe({
+      next: (res) => {
+        const evaluations = Array.isArray(res) ? res : (res.data || res.payload || []);
+        const evaluationsByStudent = this.groupEvaluationsByStudent(evaluations);
+
+        this.allStudents.forEach(student => {
+          const evals = evaluationsByStudent.get(Number(student.id)) || [];
+          const myEval = evals.find((e: any) =>
+            e.evaluator_type === 'COMPANY_SUPERVISOR' && e.evaluator_id === currentUser.userId
+          );
           (student as any).gradingStatus = myEval ? 'Đã chấm' : 'Chưa chấm';
-        },
-        error: () => {
-          (student as any).gradingStatus = 'Lỗi trạng thái';
-        }
-      });
+        });
+
+        this.filterStudents();
+      },
+      error: () => {
+        this.allStudents.forEach(student => (student as any).gradingStatus = 'Lỗi trạng thái');
+        this.filterStudents();
+      }
     });
+  }
+
+  private groupEvaluationsByStudent(evaluations: any[]): Map<number, any[]> {
+    const grouped = new Map<number, any[]>();
+    evaluations.forEach((evaluation: any) => {
+      const studentCampaignId = Number(evaluation.student_campaign_id);
+      if (!Number.isFinite(studentCampaignId)) return;
+      const current = grouped.get(studentCampaignId) || [];
+      current.push(evaluation);
+      grouped.set(studentCampaignId, current);
+    });
+    return grouped;
   }
 
   filterStudents(): void {

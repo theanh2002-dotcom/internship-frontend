@@ -168,23 +168,39 @@ export class RubricEvaluationComponent implements OnInit {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser || this.allStudents.length === 0) return;
 
-    let completedCount = 0;
+    const studentIds = this.allStudents
+      .map(student => Number(student.id))
+      .filter(id => Number.isFinite(id));
 
-    this.allStudents.forEach(student => {
-      this.evaluationService.findEvaluations(student.id).subscribe({
-        next: (res) => {
-          const evals = Array.isArray(res) ? res : (res.data || res.payload || []);
+    this.evaluationService.findEvaluationsByStudents(studentIds).subscribe({
+      next: (res) => {
+        const evaluations = Array.isArray(res) ? res : (res.data || res.payload || []);
+        const evaluationsByStudent = this.groupEvaluationsByStudent(evaluations);
+
+        this.allStudents.forEach(student => {
+          const evals = evaluationsByStudent.get(Number(student.id)) || [];
           (student as any).gradingStatus = this.resolveGradingStatus(evals, currentUser);
-          completedCount++;
-          completedCount === this.allStudents.length ? this.filterStudents() : this.paginate();
-        },
-        error: () => {
-          (student as any).gradingStatus = 'Lỗi trạng thái';
-          completedCount++;
-          completedCount === this.allStudents.length ? this.filterStudents() : this.paginate();
-        }
-      });
+        });
+
+        this.filterStudents();
+      },
+      error: () => {
+        this.allStudents.forEach(student => (student as any).gradingStatus = 'Lỗi trạng thái');
+        this.filterStudents();
+      }
     });
+  }
+
+  private groupEvaluationsByStudent(evaluations: any[]): Map<number, any[]> {
+    const grouped = new Map<number, any[]>();
+    evaluations.forEach((evaluation: any) => {
+      const studentCampaignId = Number(evaluation.student_campaign_id);
+      if (!Number.isFinite(studentCampaignId)) return;
+      const current = grouped.get(studentCampaignId) || [];
+      current.push(evaluation);
+      grouped.set(studentCampaignId, current);
+    });
+    return grouped;
   }
 
   private resolveGradingStatus(evaluations: any[], currentUser: any): string {

@@ -31,6 +31,10 @@ export class EvaluationService {
     return this.apiService.get<any>(`/base/evaluations?student_campaign_id=${studentCampaignId}`);
   }
 
+  findEvaluationsByStudents(studentCampaignIds: number[]): Observable<any> {
+    return this.apiService.post<any>('/base/evaluations/statuses', studentCampaignIds);
+  }
+
   getFinalResult(studentCampaignId: number): Observable<any> {
     return this.apiService.get<any>(`/base/evaluations/final-result/${studentCampaignId}`);
   }
