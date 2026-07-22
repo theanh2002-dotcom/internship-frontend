@@ -173,15 +173,15 @@
                 <p class="text-xs text-gray-400">{{ member.email }}</p>
               </div>
               <span 
-                [class.bg-indigo-50]="member.role === 'PRESIDENT'"
-                [class.text-indigo-700]="member.role === 'PRESIDENT'"
-                [class.border-indigo-100]="member.role === 'PRESIDENT'"
-                [class.bg-emerald-50]="member.role === 'SECRETARY'"
-                [class.text-emerald-700]="member.role === 'SECRETARY'"
-                [class.border-emerald-100]="member.role === 'SECRETARY'"
-                [class.bg-slate-50]="member.role !== 'PRESIDENT' && member.role !== 'SECRETARY'"
-                [class.text-slate-700]="member.role !== 'PRESIDENT' && member.role !== 'SECRETARY'"
-                [class.border-slate-100]="member.role !== 'PRESIDENT' && member.role !== 'SECRETARY'"
+                [class.bg-indigo-50]="member.role === 'GVHD'"
+                [class.text-indigo-700]="member.role === 'GVHD'"
+                [class.border-indigo-100]="member.role === 'GVHD'"
+                [class.bg-emerald-50]="member.role === 'COMPANY_SUPERVISOR'"
+                [class.text-emerald-700]="member.role === 'COMPANY_SUPERVISOR'"
+                [class.border-emerald-100]="member.role === 'COMPANY_SUPERVISOR'"
+                [class.bg-slate-50]="member.role === 'COMMITTEE_MEMBER'"
+                [class.text-slate-700]="member.role === 'COMMITTEE_MEMBER'"
+                [class.border-slate-100]="member.role === 'COMMITTEE_MEMBER'"
                 class="px-2 py-0.5 text-xs font-semibold border rounded-full">
                 {{ getRoleLabel(member.role) }}
               </span>
@@ -277,18 +277,25 @@
             <select 
               [(ngModel)]="selectedTeacherId"
               class="flex-grow bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option [value]="null" disabled selected>-- Chọn Giảng viên --</option>
-              <option *ngFor="let teacher of teachers" [value]="teacher.id">
-                {{ teacher.full_name }} ({{ teacher.email }})
-              </option>
+              <option [value]="null" disabled selected>-- Chọn Người đánh giá --</option>
+              <optgroup label="Giảng viên (Bộ môn)">
+                <option *ngFor="let teacher of teachers" [value]="teacher.id">
+                  {{ teacher.full_name }} ({{ teacher.email }})
+                </option>
+              </optgroup>
+              <optgroup label="Doanh nghiệp">
+                <option *ngFor="let mentor of companyMentors" [value]="mentor.id">
+                  {{ mentor.full_name }} ({{ mentor.email }})
+                </option>
+              </optgroup>
             </select>
             
             <select 
               [(ngModel)]="selectedMemberRole"
               class="w-32 bg-white border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="PRESIDENT">Chủ tịch</option>
-              <option value="SECRETARY">Thư ký</option>
-              <option value="MEMBER">Ủy viên</option>
+              <option value="COMPANY_SUPERVISOR">ĐVHD</option>
+              <option value="GVHD">GVHD</option>
+              <option value="COMMITTEE_MEMBER">Ủy viên</option>
             </select>
             
             <button 
@@ -311,7 +318,17 @@
                 <p class="text-xs text-gray-400">{{ m.email }}</p>
               </div>
               <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                <span 
+                  [class.bg-indigo-50]="m.role === 'GVHD'"
+                  [class.text-indigo-700]="m.role === 'GVHD'"
+                  [class.border-indigo-100]="m.role === 'GVHD'"
+                  [class.bg-emerald-50]="m.role === 'COMPANY_SUPERVISOR'"
+                  [class.text-emerald-700]="m.role === 'COMPANY_SUPERVISOR'"
+                  [class.border-emerald-100]="m.role === 'COMPANY_SUPERVISOR'"
+                  [class.bg-slate-50]="m.role === 'COMMITTEE_MEMBER'"
+                  [class.text-slate-700]="m.role === 'COMMITTEE_MEMBER'"
+                  [class.border-slate-100]="m.role === 'COMMITTEE_MEMBER'"
+                  class="px-2 py-0.5 text-xs font-bold rounded-full border">
                   {{ getRoleLabel(m.role) }}
                 </span>
                 <button 

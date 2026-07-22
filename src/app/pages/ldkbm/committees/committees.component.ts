@@ -17,6 +17,8 @@ export class CommitteesComponent implements OnInit {
   committees: CommitteeResponse[] = [];
   campaigns: CampaignResponse[] = [];
   teachers: UserResponse[] = [];
+  companyMentors: UserResponse[] = [];
+  availableMembers: UserResponse[] = [];
   allStudents: StudentCampaignResponse[] = [];
   filteredStudents: StudentCampaignResponse[] = [];
 
@@ -51,7 +53,7 @@ export class CommitteesComponent implements OnInit {
   formRoom: string = '';
   committeeMembers: { user_id: number; full_name: string; role: string; email: string }[] = [];
   selectedTeacherId: number | null = null;
-  selectedMemberRole: string = 'MEMBER';
+  selectedMemberRole: string = 'COMMITTEE_MEMBER';
 
   // Assign Student selections
   tempAssignedStudentIds: Set<number> = new Set<number>();
@@ -111,7 +113,7 @@ export class CommitteesComponent implements OnInit {
         this.departmentCampaignId = res.id;
         if (this.departmentCampaignId) {
           this.loadCommittees();
-          this.loadTeachers();
+          this.loadTeachersAndMentors();
           this.loadStudents();
         } else {
           this.error = 'Không tìm thấy đợt thực tập của bộ môn.';
@@ -139,13 +141,24 @@ export class CommitteesComponent implements OnInit {
     });
   }
 
-  loadTeachers(): void {
+  loadTeachersAndMentors(): void {
     if (!this.departmentId) return;
     this.userService.getUsers({ page: 1, limit: 1000 }, 'GVHD', this.departmentId).subscribe({
       next: (res) => {
         this.teachers = res.data || [];
+        this.updateAvailableMembers();
       }
     });
+    this.userService.getUsers({ page: 1, limit: 1000 }, 'COMPANY_SUPERVISOR').subscribe({
+      next: (res) => {
+        this.companyMentors = res.data || [];
+        this.updateAvailableMembers();
+      }
+    });
+  }
+
+  updateAvailableMembers(): void {
+    this.availableMembers = [...this.teachers, ...this.companyMentors];
   }
 
   loadStudents(): void {
@@ -184,7 +197,7 @@ export class CommitteesComponent implements OnInit {
     this.formRoom = '';
     this.committeeMembers = [];
     this.selectedTeacherId = null;
-    this.selectedMemberRole = 'MEMBER';
+    this.selectedMemberRole = 'COMMITTEE_MEMBER';
     this.isCreateModalOpen = true;
   }
 
@@ -211,7 +224,7 @@ export class CommitteesComponent implements OnInit {
     
     // Map members response back to form format
     this.committeeMembers = (committee.members || []).map(m => {
-      const t = this.teachers.find(teacher => teacher.id === m.user_id);
+      const t = this.availableMembers.find(teacher => teacher.id === m.user_id);
       return {
         user_id: m.user_id,
         full_name: m.full_name || t?.full_name || `ID: ${m.user_id}`,
@@ -221,7 +234,7 @@ export class CommitteesComponent implements OnInit {
     });
     
     this.selectedTeacherId = null;
-    this.selectedMemberRole = 'MEMBER';
+    this.selectedMemberRole = 'COMMITTEE_MEMBER';
     this.isCreateModalOpen = true;
   }
 
@@ -231,17 +244,17 @@ export class CommitteesComponent implements OnInit {
 
   addMember(): void {
     if (!this.selectedTeacherId) {
-      this.showError('Vui lòng chọn Giảng viên trước.');
+      this.showError('Vui lòng chọn Người đánh giá trước.');
       return;
     }
     
     const exists = this.committeeMembers.some(m => Number(m.user_id) === Number(this.selectedTeacherId));
     if (exists) {
-      this.showError('Giảng viên này đã được thêm vào hội đồng.');
+      this.showError('Thành viên này đã được thêm vào tổ đánh giá.');
       return;
     }
     
-    const teacher = this.teachers.find(t => Number(t.id) === Number(this.selectedTeacherId));
+    const teacher = this.availableMembers.find(t => Number(t.id) === Number(this.selectedTeacherId));
     if (!teacher) return;
     
     this.committeeMembers.push({
@@ -253,7 +266,7 @@ export class CommitteesComponent implements OnInit {
     
     // Reset selection fields
     this.selectedTeacherId = null;
-    this.selectedMemberRole = 'MEMBER';
+    this.selectedMemberRole = 'COMMITTEE_MEMBER';
   }
 
   removeMember(userId: number): void {
@@ -433,9 +446,9 @@ export class CommitteesComponent implements OnInit {
   // --- MEMBER ROLE FORMATTER ---
   getRoleLabel(role: string): string {
     switch (role) {
-      case 'PRESIDENT': return 'Chủ tịch';
-      case 'SECRETARY': return 'Thư ký';
-      case 'MEMBER': return 'Ủy viên';
+      case 'COMPANY_SUPERVISOR': return 'Doanh nghiệp (ĐVHD)';
+      case 'GVHD': return 'GV Hướng dẫn (GVHD)';
+      case 'COMMITTEE_MEMBER': return 'Ủy viên (UV)';
       default: return role;
     }
   }
