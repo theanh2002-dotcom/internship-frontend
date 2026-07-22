@@ -11,6 +11,8 @@ interface StudentScore {
   id: number;
   mssv: string;
   name: string;
+  lastName: string;
+  firstName: string;
   class: string;
   companyName: string;
   gvhdName: string;
@@ -86,10 +88,20 @@ export class ScoreSummaryComponent implements OnInit {
 
   processStudents(campaigns: StudentCampaignResponse[]): void {
     let completedCount = 0;
-    this.students = campaigns.map(sc => ({
+    this.students = campaigns.map(sc => {
+      let firstName = sc.first_name;
+      let lastName = sc.last_name;
+      if (!firstName || !lastName) {
+        const parts = this.splitFullName(sc.full_name);
+        firstName = parts.firstName;
+        lastName = parts.lastName;
+      }
+      return {
       id: sc.id,
       mssv: sc.student_code,
       name: sc.full_name,
+      lastName: lastName || '',
+      firstName: firstName || '',
       class: sc.class_name || 'N/A',
       companyName: sc.company_info?.company_name || 'N/A',
       gvhdName: sc.gvhd_name || 'N/A',
@@ -99,7 +111,8 @@ export class ScoreSummaryComponent implements OnInit {
       status: 'Chưa có kết quả',
       campaignId: sc.campaign_id,
       departmentId: sc.department_id
-    }));
+    };
+    });
 
     if (this.students.length === 0) {
       this.isLoading = false;
@@ -779,6 +792,17 @@ export class ScoreSummaryComponent implements OnInit {
   private formatStageScoreForSummary(score: number | null, weight: number): string | number {
     if (weight <= 0) return 'N/A';
     return score === null ? 'N/A' : this.roundScore(score);
+  }
+
+  private splitFullName(fullName: string | undefined | null): { lastName: string; firstName: string } {
+    const normalized = (fullName || '').trim().replace(/\s+/g, ' ');
+    if (!normalized) return { lastName: '', firstName: '' };
+    const lastSpace = normalized.lastIndexOf(' ');
+    if (lastSpace < 0) return { lastName: '', firstName: normalized };
+    return {
+      lastName: normalized.slice(0, lastSpace).trim(),
+      firstName: normalized.slice(lastSpace + 1).trim()
+    };
   }
 
   private getFinalRankLabel(score: number | null): string {

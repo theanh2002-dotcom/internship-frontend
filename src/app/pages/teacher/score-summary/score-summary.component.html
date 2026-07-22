@@ -91,8 +91,7 @@
                     <tr>
                         <th class="px-6 py-4 border-r border-slate-200 w-16 text-center">STT</th>
                         <th class="px-6 py-4 border-r border-slate-200">Mã SV</th>
-                        <!-- Sticky Column: Name -->
-                        <th class="px-6 py-4 border-r border-slate-200 sticky left-0 bg-slate-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] z-10 w-64 min-w-[250px]">
+                        <th colspan="2" class="px-6 py-4 border-r border-slate-200 bg-slate-50 text-left w-72 min-w-[250px]">
                             Họ và tên
                         </th>
                         <th class="px-6 py-4 border-r border-slate-200">Lớp</th>
@@ -105,16 +104,18 @@
                 <!-- Table Body -->
                 <tbody class="divide-y divide-slate-200 text-slate-800">
                     <tr *ngIf="paginatedStudents.length === 0">
-                        <td colspan="8" class="py-8 text-center text-slate-500 font-medium">
+                        <td colspan="9" class="py-8 text-center text-slate-500 font-medium">
                             Không tìm thấy sinh viên nào khớp bộ lọc.
                         </td>
                     </tr>
                     <tr *ngFor="let student of paginatedStudents; let i = index" class="hover:bg-slate-50 transition-colors group">
                         <td class="px-6 py-3 border-r border-slate-200 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
                         <td class="px-6 py-3 border-r border-slate-200 font-medium">{{ student.mssv }}</td>
-                        <!-- Sticky Column: Name -->
-                        <td class="px-6 py-3 border-r border-slate-200 sticky left-0 bg-white group-hover:bg-slate-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] z-10 transition-colors font-semibold text-[#00429D]">
-                            {{ student.name }}
+                        <td class="px-6 py-3 border-r border-slate-200 bg-white group-hover:bg-slate-50 transition-colors font-semibold text-[#00429D]">
+                            {{ student.lastName }}
+                        </td>
+                        <td class="px-6 py-3 border-r border-slate-200 bg-white group-hover:bg-slate-50 transition-colors font-semibold text-[#00429D]">
+                            {{ student.firstName }}
                         </td>
                         <td class="px-6 py-3 border-r border-slate-200 text-slate-600">{{ student.class }}</td>
                         
