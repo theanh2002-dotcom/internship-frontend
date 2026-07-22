@@ -87,7 +87,8 @@
   --space-stack-dense: 0.5rem;
 }
 
-body {
+html, body {
+    overflow-x: hidden;
   margin: 0;
   font-family: var(--font-body);
   background-color: var(--color-background);
