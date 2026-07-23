@@ -340,7 +340,7 @@ export class CampaignManagementComponent implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    return status === 'ACTIVE' ? 'Đang hoạt động' : 'Ngừng hoạt động';
+    return status === 'ACTIVE' ? 'Đang hoạt động' : 'Kết thúc';
   }
 
   getSemesterLabel(semester: number | null): string {
