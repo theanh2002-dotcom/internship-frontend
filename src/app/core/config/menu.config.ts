@@ -33,6 +33,7 @@ export const teacherMenu: MenuItem[] = [
   { title: 'Quản lý Sinh viên', icon: 'groups', route: '/teacher/students' },
   { title: 'Yêu cầu Phê duyệt', icon: 'fact_check', route: '/teacher/approval-requests' },
   { title: 'Chấm điểm Rubric', icon: 'assignment_turned_in', route: '/teacher/rubric-evaluation' },
+  { title: 'Chấm điểm hội đồng', icon: 'groups', route: '/teacher/committee-evaluation' },
   { title: 'Bảng tổng hợp điểm', icon: 'table_view', route: '/teacher/score-summary' },
 ];
 

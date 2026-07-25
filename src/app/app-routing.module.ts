@@ -22,6 +22,7 @@ import { LdkbmLayoutComponent } from './layout/ldkbm-layout/ldkbm-layout.compone
 import { StudentLayoutComponent } from './layout/student-layout/student-layout.component';
 import { TeacherLayoutComponent } from './layout/teacher-layout/teacher-layout.component';
 import { RubricEvaluationComponent } from './pages/teacher/rubric-evaluation/rubric-evaluation.component';
+import { CommitteeEvaluationComponent } from './pages/teacher/committee-evaluation/committee-evaluation.component';
 import { ScoreSummaryComponent } from './pages/teacher/score-summary/score-summary.component';
 import { TeacherDashboardComponent } from './pages/teacher/teacher-dashboard/teacher-dashboard.component';
 import { ManageStudentsComponent } from './pages/teacher/manage-students/manage-students.component';
@@ -92,6 +93,7 @@ const routes: Routes = [
       { path: 'students', component: ManageStudentsComponent },
       { path: 'approval-requests', component: ApprovalRequestsComponent },
       { path: 'rubric-evaluation', component: RubricEvaluationComponent },
+      { path: 'committee-evaluation', component: CommitteeEvaluationComponent },
       { path: 'score-summary', component: ScoreSummaryComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
