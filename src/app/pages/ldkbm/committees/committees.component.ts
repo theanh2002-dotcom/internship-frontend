@@ -161,6 +161,11 @@ export class CommitteesComponent implements OnInit {
     this.availableMembers = [...this.teachers, ...this.companyMentors];
   }
 
+  refreshCommitteeData(): void {
+    this.loadCommittees();
+    this.loadStudents();
+  }
+
   loadStudents(): void {
     if (!this.selectedCampaignId || !this.departmentId) return;
     this.studentCampaignService.findByCampaignAndDepartment(this.selectedCampaignId, this.departmentId, { page: 1, limit: 1000 }).subscribe({
@@ -247,6 +252,11 @@ export class CommitteesComponent implements OnInit {
       this.showError('Vui lòng chọn Người đánh giá trước.');
       return;
     }
+
+    if (this.selectedMemberRole === 'GVHD' && this.hasSelectedGvhd()) {
+      this.showError('Mỗi hội đồng chỉ được phép có đúng 01 GVHD.');
+      return;
+    }
     
     const exists = this.committeeMembers.some(m => Number(m.user_id) === Number(this.selectedTeacherId));
     if (exists) {
@@ -273,6 +283,14 @@ export class CommitteesComponent implements OnInit {
     this.committeeMembers = this.committeeMembers.filter(m => m.user_id !== userId);
   }
 
+  get selectedGvhdCount(): number {
+    return this.committeeMembers.filter(m => m.role === 'GVHD').length;
+  }
+
+  hasSelectedGvhd(): boolean {
+    return this.selectedGvhdCount > 0;
+  }
+
   saveCommittee(): void {
     if (!this.formName.trim()) {
       this.showError('Tên hội đồng không được để trống.');
@@ -284,6 +302,10 @@ export class CommitteesComponent implements OnInit {
     }
     if (!this.departmentCampaignId) {
       this.showError('Không tìm thấy đợt thực tập hợp lệ.');
+      return;
+    }
+    if (this.selectedGvhdCount !== 1) {
+      this.showError('Hội đồng phải có đúng 01 GVHD.');
       return;
     }
 
@@ -310,7 +332,7 @@ export class CommitteesComponent implements OnInit {
         next: () => {
           this.closeCreateModal();
           this.showSuccess('Cập nhật hội đồng thành công.');
-          this.loadCommittees();
+          this.refreshCommitteeData();
         },
         error: (err) => {
           this.showError(err.error?.message || err.message || 'Lỗi khi cập nhật hội đồng.');
@@ -322,7 +344,7 @@ export class CommitteesComponent implements OnInit {
         next: () => {
           this.closeCreateModal();
           this.showSuccess('Tạo hội đồng thành công.');
-          this.loadCommittees();
+          this.refreshCommitteeData();
         },
         error: (err) => {
           this.showError(err.error?.message || err.message || 'Lỗi khi tạo hội đồng.');

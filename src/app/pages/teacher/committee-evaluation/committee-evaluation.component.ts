@@ -4,9 +4,10 @@ import { CampaignService } from '../../../core/services/campaign.service';
 import { CommitteeResponse, CommitteeService } from '../../../core/services/committee.service';
 import { DepartmentCampaignService } from '../../../core/services/department-campaign.service';
 import { EvaluationRequest, EvaluationService } from '../../../core/services/evaluation.service';
-import { StudentCampaignResponse } from '../../../core/models/base.model';
+import { CampaignResponse, StudentCampaignResponse } from '../../../core/models/base.model';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { forkJoin } from 'rxjs';
 
 interface CommitteeCriterion {
   id: string;
@@ -35,6 +36,8 @@ export class CommitteeEvaluationComponent implements OnInit {
   isDetailLoading = false;
 
   committees: CommitteeResponse[] = [];
+  campaigns: CampaignResponse[] = [];
+  selectedCampaignId: number | null = null;
   selectedCommitteeId: number | null = null;
   selectedCommittee: CommitteeResponse | null = null;
 
@@ -71,13 +74,17 @@ export class CommitteeEvaluationComponent implements OnInit {
 
   loadData(): void {
     this.isLoading = true;
-    this.committeeService.getMyCommittees().subscribe({
-      next: (committees) => {
+    forkJoin({
+      committees: this.committeeService.getMyCommittees(),
+      campaigns: this.campaignService.getCampaigns({ page: 1, limit: 1000 })
+    }).subscribe({
+      next: ({ committees, campaigns }) => {
         this.committees = committees || [];
-        if (this.committees.length > 0 && this.selectedCommitteeId === null) {
-          this.selectedCommitteeId = this.committees[0].id;
-          this.selectedCommittee = this.committees[0];
-        }
+        this.campaigns = campaigns.data || [];
+        const firstCampaignId = this.committees
+          .map(committee => committee.campaign_id)
+          .find((campaignId): campaignId is number => campaignId !== undefined && campaignId !== null);
+        this.selectedCampaignId = firstCampaignId || null;
         this.loadStudents();
       },
       error: () => {
@@ -106,17 +113,41 @@ export class CommitteeEvaluationComponent implements OnInit {
   }
 
   onCommitteeChange(): void {
-    this.selectedCommittee = this.committees.find(c => Number(c.id) === Number(this.selectedCommitteeId)) || null;
+    this.selectedCommittee = this.filteredCommittees.find(c => Number(c.id) === Number(this.selectedCommitteeId)) || null;
     this.currentPage = 1;
     this.selectedStudent = null;
     this.applyFilters();
   }
 
-  applyFilters(): void {
-    let result = [...this.allStudents];
-    if (this.selectedCommitteeId !== null) {
-      result = result.filter(student => Number(student.committee_id) === Number(this.selectedCommitteeId));
+  onCampaignChange(): void {
+    this.selectedCommitteeId = null;
+    this.selectedCommittee = null;
+    this.currentPage = 1;
+    this.selectedStudent = null;
+    this.searchTerm = '';
+    this.applyFilters();
+  }
+
+  get filteredCommittees(): CommitteeResponse[] {
+    if (this.selectedCampaignId === null) {
+      return [];
     }
+    return this.committees.filter(committee => Number(committee.campaign_id) === Number(this.selectedCampaignId));
+  }
+
+  get selectedCampaign(): CampaignResponse | null {
+    return this.campaigns.find(campaign => Number(campaign.id) === Number(this.selectedCampaignId)) || null;
+  }
+
+  applyFilters(): void {
+    if (this.selectedCommitteeId === null) {
+      this.students = [];
+      this.paginatedStudents = [];
+      return;
+    }
+
+    let result = [...this.allStudents];
+    result = result.filter(student => Number(student.committee_id) === Number(this.selectedCommitteeId));
 
     const term = this.searchTerm.trim().toLowerCase();
     if (term) {

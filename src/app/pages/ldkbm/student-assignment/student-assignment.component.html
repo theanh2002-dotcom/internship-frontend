@@ -230,11 +230,11 @@
            [showFooter]="false"
            (close)="closeAutoAssignModal()">
   <div class="space-y-5">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <label class="border rounded-lg p-3 cursor-pointer transition-colors"
              [ngClass]="autoAssignScope === 'UNASSIGNED' ? 'border-[#00429D] bg-blue-50' : 'border-slate-200 hover:border-slate-300'">
         <input type="radio" class="sr-only" name="autoAssignScope" value="UNASSIGNED" [(ngModel)]="autoAssignScope" (ngModelChange)="onAutoAssignScopeChange()">
-        <span class="block text-[13px] font-semibold text-slate-800">SV chưa có GVHD</span>
+        <span class="block text-[13px] font-semibold text-slate-800">Tất cả SV trong đợt chưa có GVHD</span>
         <span class="block text-[12px] text-slate-500 mt-1">Không ghi đè phân công cũ.</span>
       </label>
       <label class="border rounded-lg p-3 cursor-pointer transition-colors"
@@ -242,12 +242,6 @@
         <input type="radio" class="sr-only" name="autoAssignScope" value="SELECTED" [(ngModel)]="autoAssignScope" (ngModelChange)="onAutoAssignScopeChange()">
         <span class="block text-[13px] font-semibold text-slate-800">SV đang chọn</span>
         <span class="block text-[12px] text-slate-500 mt-1">{{ selectedStudentIds.size }} sinh viên.</span>
-      </label>
-      <label class="border rounded-lg p-3 cursor-pointer transition-colors"
-             [ngClass]="autoAssignScope === 'ALL' ? 'border-[#00429D] bg-blue-50' : 'border-slate-200 hover:border-slate-300'">
-        <input type="radio" class="sr-only" name="autoAssignScope" value="ALL" [(ngModel)]="autoAssignScope" (ngModelChange)="onAutoAssignScopeChange()">
-        <span class="block text-[13px] font-semibold text-slate-800">Tất cả SV trong đợt</span>
-        <span class="block text-[12px] text-slate-500 mt-1">Có thể ghi đè GVHD cũ.</span>
       </label>
     </div>
 

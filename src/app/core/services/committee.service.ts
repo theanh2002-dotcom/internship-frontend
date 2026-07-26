@@ -27,6 +27,8 @@ export interface CommitteeMemberResponse {
 export interface CommitteeResponse {
   id: number;
   department_campaign_id: number;
+  campaign_id?: number;
+  department_id?: number;
   name: string;
   evaluation_date?: string;
   room?: string;

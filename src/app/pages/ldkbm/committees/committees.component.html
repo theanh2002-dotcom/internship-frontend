@@ -294,20 +294,27 @@
               [(ngModel)]="selectedMemberRole"
               class="shrink-0 w-full sm:w-28 bg-white border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="COMPANY_SUPERVISOR">ĐVHD</option>
-              <option value="GVHD">GVHD</option>
+              <option value="GVHD" [disabled]="hasSelectedGvhd()">GVHD</option>
               <option value="COMMITTEE_MEMBER">Ủy viên</option>
             </select>
             
             <button 
               (click)="addMember()"
-              class="shrink-0 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition">
+              [disabled]="selectedMemberRole === 'GVHD' && hasSelectedGvhd()"
+              class="shrink-0 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition disabled:opacity-50 disabled:cursor-not-allowed">
               Thêm
             </button>
           </div>
+          <p class="mt-2 text-xs text-gray-500">
+            Mỗi hội đồng chỉ được chọn đúng 01 GVHD. Khi lưu, sinh viên của GVHD trong đợt này sẽ được tự động gán vào hội đồng.
+          </p>
         </div>
 
         <div class="space-y-2">
           <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Danh sách thành viên đã chọn</label>
+          <p *ngIf="selectedGvhdCount !== 1 && committeeMembers.length > 0" class="text-xs text-red-600">
+            Hội đồng phải có đúng 01 GVHD.
+          </p>
           <div *ngIf="committeeMembers.length === 0" class="text-center py-4 bg-gray-50 rounded-lg border text-gray-400 text-xs italic">
             Chưa có thành viên nào được thêm.
           </div>

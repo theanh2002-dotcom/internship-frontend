@@ -55,7 +55,7 @@ export class StudentAssignmentComponent implements OnInit {
   selectedTeacherIds = new Set<number>();
   teacherSearchQuery = '';
 
-  autoAssignScope: 'UNASSIGNED' | 'SELECTED' | 'ALL' = 'UNASSIGNED';
+  autoAssignScope: 'UNASSIGNED' | 'SELECTED' = 'UNASSIGNED';
   autoOverwriteExisting = false;
   autoSelectedTeacherIds = new Set<number>();
   autoSurplusTeacherIds = new Set<number>();
@@ -560,7 +560,7 @@ export class StudentAssignmentComponent implements OnInit {
   onAutoAssignScopeChange(): void {
     this.autoPreview = null;
     this.autoSurplusTeacherIds.clear();
-    this.autoOverwriteExisting = this.autoAssignScope === 'ALL';
+    this.autoOverwriteExisting = false;
   }
 
   get autoFilteredTeachers(): UserResponse[] {
