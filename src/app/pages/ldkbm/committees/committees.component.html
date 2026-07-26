@@ -273,10 +273,10 @@
 
         <div class="border-t pt-4">
           <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Thêm thành viên hội đồng</label>
-          <div class="flex gap-2">
+          <div class="flex flex-col sm:flex-row gap-2">
             <select 
               [(ngModel)]="selectedTeacherId"
-              class="flex-grow bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="flex-1 min-w-0 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option [value]="null" disabled selected>-- Chọn Người đánh giá --</option>
               <optgroup label="Giảng viên (Bộ môn)">
                 <option *ngFor="let teacher of teachers" [value]="teacher.id">
@@ -292,7 +292,7 @@
             
             <select 
               [(ngModel)]="selectedMemberRole"
-              class="w-32 bg-white border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="shrink-0 w-full sm:w-28 bg-white border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="COMPANY_SUPERVISOR">ĐVHD</option>
               <option value="GVHD">GVHD</option>
               <option value="COMMITTEE_MEMBER">Ủy viên</option>
@@ -300,7 +300,7 @@
             
             <button 
               (click)="addMember()"
-              class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition">
+              class="shrink-0 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition">
               Thêm
             </button>
           </div>
@@ -409,6 +409,7 @@
               <thead>
                 <tr class="bg-gray-100 text-gray-700 uppercase tracking-wider text-[10px] font-bold">
                   <th class="p-2.5 border-b text-center w-12">Chọn</th>
+                  <th class="p-2.5 border-b text-center w-12">STT</th>
                   <th class="p-2.5 border-b">Họ và tên</th>
                   <th class="p-2.5 border-b text-center">MSSV</th>
                   <th class="p-2.5 border-b text-center">Lớp</th>
@@ -416,7 +417,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <tr *ngFor="let student of filteredStudents" class="hover:bg-gray-50/80 transition duration-150" [ngClass]="{'bg-blue-50/40': isStudentSelected(student.id)}">
+                <tr *ngFor="let student of filteredStudents; let i = index" class="hover:bg-gray-50/80 transition duration-150" [ngClass]="{'bg-blue-50/40': isStudentSelected(student.id)}">
                   <td class="p-2.5 text-center">
                     <input 
                       type="checkbox" 
@@ -424,6 +425,7 @@
                       (change)="toggleStudentSelection(student.id, $event)"
                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer">
                   </td>
+                  <td class="p-2.5 text-center text-gray-500">{{ i + 1 }}</td>
                   <td class="p-2.5 font-bold text-gray-850">{{ student.full_name }}</td>
                   <td class="p-2.5 text-center text-gray-600">{{ student.student_code }}</td>
                   <td class="p-2.5 text-center text-gray-600 font-medium">{{ student.class_name }}</td>

@@ -1,6 +1,6 @@
 import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
-import { CampaignService, CampaignRequest } from '../../../core/services/campaign.service';
+import { CampaignService, CampaignRequest, CampaignTimelinePreviewResponse } from '../../../core/services/campaign.service';
 import { CampaignResponse, PaginationRequest } from '../../../core/models/base.model';
 import { DepartmentService } from '../../../core/services/department.service';
 
@@ -66,6 +66,10 @@ export class CampaignManagementComponent implements OnInit {
   formMidtermDeadline = '';
   formTttn06StartDate = '';
   formTttn06Deadline = '';
+  formAutoGenerateTimeline = true;
+  isTimelinePreviewLoading = false;
+  private timelineEditedManually = false;
+  private isApplyingTimelinePreview = false;
 
   // Dropdown options
   academicYears: string[] = [];
@@ -194,6 +198,8 @@ export class CampaignManagementComponent implements OnInit {
   openEditModal(campaign: CampaignResponse): void {
     this.isEditMode = true;
     this.editingId = campaign.id;
+    this.formAutoGenerateTimeline = false;
+    this.timelineEditedManually = true;
     this.formCode = campaign.code || '';
     this.formName = campaign.name || '';
     this.formAcademicYear = campaign.academic_year || '';
@@ -242,6 +248,85 @@ export class CampaignManagementComponent implements OnInit {
     this.formMidtermDeadline = '';
     this.formTttn06StartDate = '';
     this.formTttn06Deadline = '';
+    this.formAutoGenerateTimeline = true;
+    this.timelineEditedManually = false;
+    this.isTimelinePreviewLoading = false;
+  }
+
+  onCampaignDateChange(): void {
+    if (this.formAutoGenerateTimeline && !this.timelineEditedManually) {
+      this.fillTimelineFromDates(false);
+    }
+  }
+
+  onAutoGenerateTimelineChange(): void {
+    if (this.formAutoGenerateTimeline) {
+      this.timelineEditedManually = false;
+      this.fillTimelineFromDates(true);
+    }
+  }
+
+  markTimelineEdited(): void {
+    if (this.isApplyingTimelinePreview) {
+      return;
+    }
+    this.timelineEditedManually = true;
+    this.formAutoGenerateTimeline = false;
+  }
+
+  fillTimelineFromDates(showError: boolean = true): void {
+    if (!this.formStartDate || !this.formEndDate) {
+      if (showError) {
+        this.toastService.error('Vui lòng chọn ngày bắt đầu và ngày kết thúc trước');
+      }
+      return;
+    }
+    if (this.formStartDate >= this.formEndDate) {
+      if (showError) {
+        this.toastService.error('Ngày kết thúc phải sau ngày bắt đầu');
+      }
+      return;
+    }
+
+    this.isTimelinePreviewLoading = true;
+    this.campaignService.previewTimeline({
+      start_date: this.formStartDate + 'T00:00:00',
+      end_date: this.formEndDate + 'T23:59:59',
+      week_count: 8
+    }).subscribe({
+      next: (timeline) => {
+        this.applyTimelinePreview(timeline);
+        this.isTimelinePreviewLoading = false;
+        if (showError) {
+          this.toastService.success('Đã tự động chia timeline theo 8 tuần');
+        }
+      },
+      error: (err) => {
+        this.isTimelinePreviewLoading = false;
+        if (showError) {
+          this.toastService.error(err?.message || 'Không thể tự động chia timeline');
+        }
+      }
+    });
+  }
+
+  private applyTimelinePreview(timeline: CampaignTimelinePreviewResponse): void {
+    this.isApplyingTimelinePreview = true;
+    this.formTttn01StartDate = this.toDateInput(timeline.tttn01_start_date);
+    this.formTttn01Deadline = this.toDateInput(timeline.tttn01_deadline);
+    this.formTttn02StartDate = this.toDateInput(timeline.tttn02_start_date);
+    this.formTttn02Deadline = this.toDateInput(timeline.tttn02_deadline);
+    this.formTttn03StartDate = this.toDateInput(timeline.tttn03_start_date);
+    this.formTttn03Deadline = this.toDateInput(timeline.tttn03_deadline);
+    this.formMidtermStartDate = this.toDateInput(timeline.midterm_start_date);
+    this.formMidtermDeadline = this.toDateInput(timeline.midterm_deadline);
+    this.formTttn06StartDate = this.toDateInput(timeline.tttn06_start_date);
+    this.formTttn06Deadline = this.toDateInput(timeline.tttn06_deadline);
+    this.isApplyingTimelinePreview = false;
+  }
+
+  private toDateInput(value?: string | null): string {
+    return value ? value.substring(0, 10) : '';
   }
 
   saveCampaign(): void {
@@ -536,9 +621,6 @@ export class CampaignManagementComponent implements OnInit {
     if (confirm('Hệ thống sẽ tự động khởi tạo 4 nhóm lộ trình chuẩn (Đại học Đại trà, Đại học CLC, Cao đẳng Đại trà, Cao đẳng CLC) với các mốc thời gian lấy từ Đợt thực tập này. Bạn có muốn tiếp tục?')) {
       this.isLoading = true;
       
-      const startDate = this.selectedCampaign.start_date ? this.selectedCampaign.start_date.substring(0, 10) : '';
-      const endDate = this.selectedCampaign.end_date ? this.selectedCampaign.end_date.substring(0, 10) : '';
-
       const templates = [
         { code: 'K-A', name: 'Đại học Đại trà', regex: '^D(?!.*CLC).*' },
         { code: 'K-CLC', name: 'Đại học Chất lượng cao', regex: '^D.*CLC.*' },
@@ -558,20 +640,7 @@ export class CampaignManagementComponent implements OnInit {
         const payload = {
           code: t.code,
           name: t.name,
-          student_filter_regex: t.regex,
-          start_date: startDate ? startDate + ' 00:00:00' : undefined,
-          end_date: endDate ? endDate + ' 23:59:59' : undefined,
-          tttn01_start_date: startDate ? startDate + ' 00:00:00' : undefined,
-          tttn01_deadline: endDate ? endDate + ' 23:59:59' : undefined,
-          tttn02_start_date: startDate ? startDate + ' 00:00:00' : undefined,
-          tttn02_deadline: endDate ? endDate + ' 23:59:59' : undefined,
-          tttn03_start_date: startDate ? startDate + ' 00:00:00' : undefined,
-          tttn03_deadline: endDate ? endDate + ' 23:59:59' : undefined,
-          midterm_start_date: startDate ? startDate + ' 00:00:00' : undefined,
-          midterm_deadline: endDate ? endDate + ' 23:59:59' : undefined,
-          tttn06_start_date: startDate ? startDate + ' 00:00:00' : undefined,
-          tttn06_deadline: endDate ? endDate + ' 23:59:59' : undefined,
-          grade_deadline: endDate ? endDate + ' 23:59:59' : undefined
+          student_filter_regex: t.regex
         };
 
         this.campaignService.createGroup(this.selectedCampaign!.id, payload).subscribe({

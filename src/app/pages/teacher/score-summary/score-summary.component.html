@@ -162,7 +162,8 @@
         <div *ngIf="!isLoading && paginatedStudents.length > 0" class="border-t border-slate-200 bg-slate-50">
             <app-pagination [currentPage]="currentPage" 
                             [totalItems]="totalItems" 
-                            [pageSize]="pageSize" 
+                            [pageSize]="pageSize"
+                            itemLabel="sinh viên"
                             (pageChange)="onPageChange($event)">
             </app-pagination>
         </div>

@@ -37,6 +37,7 @@ export class ManageStudentsComponent implements OnInit {
   paginatedStudents: StudentCampaignResponse[] = [];
 
   columns = [
+    { key: 'STT', label: 'STT', width: '64px', align: 'center' },
     { key: 'student_code', label: 'Mã SV', width: '120px' },
     { key: 'full_name', label: 'Họ và tên' },
     { key: 'first_name', label: 'Tên', width: '110px' },

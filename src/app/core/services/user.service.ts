@@ -55,4 +55,8 @@ export class UserService {
   toggleStatus(id: number): Observable<any> {
     return this.apiService.patch<any>(`/base/users/${id}/toggle`);
   }
+
+  delete(id: number): Observable<any> {
+    return this.apiService.delete<any>(`/base/users/${id}`);
+  }
 }

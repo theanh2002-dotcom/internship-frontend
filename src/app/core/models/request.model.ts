@@ -41,6 +41,54 @@ export interface AssignRequest {
   assignments: AssignItem[];
 }
 
+export interface AutoAssignRequest {
+  campaign_id: number;
+  department_id: number;
+  student_campaign_ids?: number[];
+  teacher_ids: number[];
+  surplus_teacher_ids?: number[];
+  overwrite_existing?: boolean;
+}
+
+export interface AutoAssignTeacherSummary {
+  teacher_id: number;
+  teacher_name: string;
+  teacher_email: string;
+  current_count: number;
+  assigned_count: number;
+  final_count: number;
+  receives_surplus: boolean;
+}
+
+export interface AutoAssignItem {
+  student_campaign_id: number;
+  student_code: string;
+  student_name: string;
+  class_name: string;
+  teacher_id: number;
+  teacher_name: string;
+  teacher_email: string;
+  surplus_assignment: boolean;
+}
+
+export interface AutoAssignPreviewResponse {
+  total_students: number;
+  total_teachers: number;
+  base_students_per_teacher: number;
+  surplus_students: number;
+  requires_surplus_selection: boolean;
+  overwrite_existing: boolean;
+  teacher_summaries: AutoAssignTeacherSummary[];
+  assignments: AutoAssignItem[];
+}
+
+export interface AssignmentStatsResponse {
+  teacher_id: number;
+  teacher_name: string;
+  teacher_email: string;
+  assigned_count: number;
+}
+
 export interface CompanyInfoRequest {
   company_name: string;
   tax_code: string;

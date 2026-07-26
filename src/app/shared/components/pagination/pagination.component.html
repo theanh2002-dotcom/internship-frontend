@@ -1,8 +1,8 @@
-<div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-white">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-t border-slate-200 bg-white">
   <span class="font-label-md text-[13px] text-slate-500">
-    Hiển thị {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalItems) }} trên tổng số {{ totalItems }} đợt
+    Hiển thị {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalItems) }} trên tổng số {{ totalItems }} {{ itemLabel }}
   </span>
-  <div class="flex items-center gap-1">
+  <div class="flex items-center justify-center sm:justify-end gap-1">
     <button class="p-1 rounded text-slate-400 hover:bg-slate-100 disabled:opacity-50" 
             [disabled]="currentPage === 1" 
             (click)="onPageChange(currentPage - 1)">

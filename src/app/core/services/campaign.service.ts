@@ -29,6 +29,28 @@ export interface CampaignRequest {
   department_ids?: number[];
 }
 
+export interface CampaignTimelinePreviewRequest {
+  start_date: string;
+  end_date: string;
+  week_count?: number;
+}
+
+export interface CampaignTimelinePreviewResponse {
+  week_count: number;
+  start_date: string;
+  end_date: string;
+  tttn01_start_date: string;
+  tttn01_deadline: string;
+  tttn02_start_date: string;
+  tttn02_deadline: string;
+  tttn03_start_date: string;
+  tttn03_deadline: string;
+  midterm_start_date: string;
+  midterm_deadline: string;
+  tttn06_start_date: string;
+  tttn06_deadline: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -71,6 +93,10 @@ export class CampaignService {
    */
   create(request: CampaignRequest): Observable<CampaignResponse> {
     return this.apiService.post<CampaignResponse>('/base/campaigns', request);
+  }
+
+  previewTimeline(request: CampaignTimelinePreviewRequest): Observable<CampaignTimelinePreviewResponse> {
+    return this.apiService.post<CampaignTimelinePreviewResponse>('/base/campaigns/timeline-preview', request);
   }
 
   /**

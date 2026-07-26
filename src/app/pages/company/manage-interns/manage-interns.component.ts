@@ -35,6 +35,7 @@ export class ManageInternsComponent implements OnInit {
   paginatedInterns: any[] = [];
 
   columns = [
+    { key: 'STT', label: 'STT', width: '64px', align: 'center' },
     { key: 'student', label: 'Sinh viên' },
     { key: 'firstName', label: 'Tên', width: '110px' },
     { key: 'currentWeek', label: 'Tuần hiện tại', align: 'center', width: '130px' },

@@ -7,7 +7,10 @@ import {
   ImportStudentRequest, 
   StudentItem, 
   AssignRequest, 
-  AssignItem 
+  AssignItem,
+  AssignmentStatsResponse,
+  AutoAssignPreviewResponse,
+  AutoAssignRequest
 } from '../../../core/models/request.model';
 import { CampaignResponse, PaginationRequest, UserResponse } from '../../../core/models/base.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -36,6 +39,8 @@ export class StudentAssignmentComponent implements OnInit {
   // Modals
   isManualModalOpen = false;
   isAssignModalOpen = false;
+  isAutoAssignModalOpen = false;
+  isStatsModalOpen = false;
   isDeleteConfirmOpen = false;
   studentPendingDelete: any | null = null;
 
@@ -49,6 +54,18 @@ export class StudentAssignmentComponent implements OnInit {
   teachers: UserResponse[] = [];
   selectedTeacherIds = new Set<number>();
   teacherSearchQuery = '';
+
+  autoAssignScope: 'UNASSIGNED' | 'SELECTED' | 'ALL' = 'UNASSIGNED';
+  autoOverwriteExisting = false;
+  autoSelectedTeacherIds = new Set<number>();
+  autoSurplusTeacherIds = new Set<number>();
+  autoTeacherSearchQuery = '';
+  autoPreview: AutoAssignPreviewResponse | null = null;
+  isAutoPreviewLoading = false;
+  isAutoApplying = false;
+
+  assignmentStats: AssignmentStatsResponse[] = [];
+  isStatsLoading = false;
 
   @ViewChild('fileInput') fileInput!: ElementRef;
 
@@ -83,7 +100,7 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   loadTeachers(): void {
-    this.userService.getUsers({ page: 1, limit: 1000 }, 'GVHD').subscribe({
+    this.userService.getUsers({ page: 1, limit: 1000 }, 'GVHD', this.departmentId || undefined).subscribe({
       next: (res) => {
         this.teachers = res.data || [];
       }
@@ -515,6 +532,196 @@ export class StudentAssignmentComponent implements OnInit {
     this.selectedTeacherIds.clear();
     this.teacherSearchQuery = '';
     this.isAssignModalOpen = true;
+  }
+
+  openAutoAssignModal(): void {
+    if (!this.selectedCampaignId || !this.departmentId) {
+      this.showError('Vui lòng chọn đợt thực tập và kiểm tra khoa/bộ môn trước.');
+      return;
+    }
+    this.autoAssignScope = this.selectedStudentIds.size > 0 ? 'SELECTED' : 'UNASSIGNED';
+    this.autoOverwriteExisting = false;
+    this.autoSelectedTeacherIds.clear();
+    this.autoSurplusTeacherIds.clear();
+    this.autoTeacherSearchQuery = '';
+    this.autoPreview = null;
+    this.isAutoAssignModalOpen = true;
+  }
+
+  closeAutoAssignModal(): void {
+    this.isAutoAssignModalOpen = false;
+    this.autoTeacherSearchQuery = '';
+    this.autoPreview = null;
+    this.autoSurplusTeacherIds.clear();
+    this.isAutoPreviewLoading = false;
+    this.isAutoApplying = false;
+  }
+
+  onAutoAssignScopeChange(): void {
+    this.autoPreview = null;
+    this.autoSurplusTeacherIds.clear();
+    this.autoOverwriteExisting = this.autoAssignScope === 'ALL';
+  }
+
+  get autoFilteredTeachers(): UserResponse[] {
+    const query = this.autoTeacherSearchQuery.trim().toLowerCase();
+    if (!query) {
+      return this.teachers;
+    }
+    return this.teachers.filter(teacher => {
+      const fullName = (teacher.full_name || '').toLowerCase();
+      const email = (teacher.email || '').toLowerCase();
+      return fullName.includes(query) || email.includes(query);
+    });
+  }
+
+  toggleAutoTeacherSelection(teacherId: number): void {
+    if (this.autoSelectedTeacherIds.has(teacherId)) {
+      this.autoSelectedTeacherIds.delete(teacherId);
+      this.autoSurplusTeacherIds.delete(teacherId);
+    } else {
+      this.autoSelectedTeacherIds.add(teacherId);
+    }
+    this.autoPreview = null;
+  }
+
+  toggleAutoSurplusTeacher(teacherId: number): void {
+    if (this.autoSurplusTeacherIds.has(teacherId)) {
+      this.autoSurplusTeacherIds.delete(teacherId);
+      return;
+    }
+
+    if (this.autoSurplusTeacherIds.size >= this.autoSurplusRequired) {
+      this.showError(`Chỉ được chọn đúng ${this.autoSurplusRequired} giảng viên nhận thêm sinh viên.`);
+      return;
+    }
+    this.autoSurplusTeacherIds.add(teacherId);
+  }
+
+  get autoSurplusRequired(): number {
+    return this.autoPreview?.surplus_students || 0;
+  }
+
+  get selectedAutoTeachers(): UserResponse[] {
+    return this.teachers.filter(teacher => this.autoSelectedTeacherIds.has(teacher.id));
+  }
+
+  get canPreviewAutoAssignment(): boolean {
+    if (!this.selectedCampaignId || !this.departmentId || this.autoSelectedTeacherIds.size === 0) {
+      return false;
+    }
+    if (this.autoAssignScope === 'SELECTED' && this.selectedStudentIds.size === 0) {
+      return false;
+    }
+    if (this.autoPreview?.requires_surplus_selection) {
+      return this.autoSurplusTeacherIds.size === this.autoSurplusRequired;
+    }
+    return true;
+  }
+
+  get canApplyAutoAssignment(): boolean {
+    return !!this.autoPreview
+      && !this.autoPreview.requires_surplus_selection
+      && (this.autoPreview.assignments?.length || 0) > 0
+      && !this.isAutoApplying
+      && !this.isAutoPreviewLoading;
+  }
+
+  calculateAutoAssignment(): void {
+    if (this.autoSelectedTeacherIds.size === 0) {
+      this.showError('Vui lòng chọn ít nhất 1 giảng viên để phân công tự động.');
+      return;
+    }
+    if (this.autoAssignScope === 'SELECTED' && this.selectedStudentIds.size === 0) {
+      this.showError('Vui lòng chọn sinh viên trước khi dùng phạm vi sinh viên đang chọn.');
+      return;
+    }
+    if (this.autoPreview?.requires_surplus_selection && this.autoSurplusTeacherIds.size !== this.autoSurplusRequired) {
+      this.showError(`Cần chọn đúng ${this.autoSurplusRequired} giảng viên nhận thêm sinh viên.`);
+      return;
+    }
+
+    this.isAutoPreviewLoading = true;
+    this.studentCampaignService.previewAutoAssign(this.buildAutoAssignRequest()).subscribe({
+      next: (res) => {
+        this.autoPreview = res;
+        if (!res.requires_surplus_selection) {
+          this.autoSurplusTeacherIds.clear();
+          (res.teacher_summaries || [])
+            .filter(item => item.receives_surplus)
+            .forEach(item => this.autoSurplusTeacherIds.add(item.teacher_id));
+        }
+        this.isAutoPreviewLoading = false;
+      },
+      error: (err) => {
+        this.showError(err.message || 'Lỗi khi tính phân công tự động');
+        this.isAutoPreviewLoading = false;
+      }
+    });
+  }
+
+  applyAutoAssignment(): void {
+    if (!this.canApplyAutoAssignment) {
+      this.showError('Vui lòng xem phân bổ hợp lệ trước khi áp dụng.');
+      return;
+    }
+
+    this.isAutoApplying = true;
+    this.studentCampaignService.applyAutoAssign(this.buildAutoAssignRequest()).subscribe({
+      next: () => {
+        this.showSuccess('Đã phân công tự động GVHD thành công.');
+        this.closeAutoAssignModal();
+        this.selectedStudentIds.clear();
+        this.loadStudents();
+      },
+      error: (err) => {
+        this.showError(err.message || 'Lỗi khi áp dụng phân công tự động');
+        this.isAutoApplying = false;
+      }
+    });
+  }
+
+  private buildAutoAssignRequest(): AutoAssignRequest {
+    const request: AutoAssignRequest = {
+      campaign_id: this.selectedCampaignId!,
+      department_id: this.departmentId!,
+      teacher_ids: Array.from(this.autoSelectedTeacherIds),
+      surplus_teacher_ids: Array.from(this.autoSurplusTeacherIds),
+      overwrite_existing: this.autoOverwriteExisting
+    };
+
+    if (this.autoAssignScope === 'SELECTED') {
+      request.student_campaign_ids = Array.from(this.selectedStudentIds);
+    }
+
+    return request;
+  }
+
+  openAssignmentStats(): void {
+    if (!this.selectedCampaignId || !this.departmentId) {
+      this.showError('Vui lòng chọn đợt thực tập và kiểm tra khoa/bộ môn trước.');
+      return;
+    }
+
+    this.isStatsModalOpen = true;
+    this.isStatsLoading = true;
+    this.assignmentStats = [];
+    this.studentCampaignService.getAssignmentStats(this.selectedCampaignId, this.departmentId).subscribe({
+      next: (res) => {
+        this.assignmentStats = res || [];
+        this.isStatsLoading = false;
+      },
+      error: (err) => {
+        this.showError(err.message || 'Lỗi tải thống kê phân công GVHD');
+        this.isStatsLoading = false;
+      }
+    });
+  }
+
+  closeAssignmentStats(): void {
+    this.isStatsModalOpen = false;
+    this.assignmentStats = [];
+    this.isStatsLoading = false;
   }
 
   get selectedStudentsForAssignment(): any[] {

@@ -24,13 +24,13 @@
 <!-- Data Table Section (Same as Admin Table style) -->
 <section *ngIf="!isLoading && students.length > 0" class="flex flex-col bg-white border border-slate-200 rounded-lg shadow-sm">
   <!-- Filters Header -->
-  <div class="px-5 py-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50 rounded-t-lg">
-    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-      <div class="relative w-full md:w-64">
+  <div class="px-5 py-4 border-b border-slate-200 flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-slate-50 rounded-t-lg">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 w-full xl:flex-1 xl:max-w-[980px]">
+      <div class="relative w-full">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
         <input [(ngModel)]="searchQuery" (input)="onFilterChange()" class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] transition-shadow" placeholder="Tìm kiếm tên, mã SV, lớp..." type="text"/>
       </div>
-      <div class="w-full md:w-64">
+      <div class="w-full">
         <select [(ngModel)]="selectedCampaignId" (change)="onFilterChange()" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
           <option [ngValue]="null">— Tất cả đợt thực tập —</option>
           <option *ngFor="let camp of campaigns" [ngValue]="camp.id">
@@ -38,14 +38,14 @@
           </option>
         </select>
       </div>
-      <div class="w-full md:w-56">
+      <div class="w-full">
         <select [(ngModel)]="selectedStatus" (change)="onFilterChange()" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
           <option value="">— Tất cả trạng thái —</option>
           <option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</option>
         </select>
       </div>
     </div>
-    <div class="flex items-center gap-4 w-full md:w-auto">
+    <div class="flex items-center gap-4 w-full xl:w-auto xl:justify-end">
       <div class="flex items-center gap-2 text-sm text-slate-500">
         <span class="material-symbols-outlined text-[18px]">info</span>
         Tổng: <span class="font-bold text-slate-700">{{ totalItems }}</span> sinh viên
@@ -64,6 +64,11 @@
              [data]="paginatedStudents" 
              [columns]="columns">
              
+    <!-- student_code template -->
+    <ng-template appTableCell="STT" let-sv let-i="index">
+      <span class="text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</span>
+    </ng-template>
+
     <!-- student_code template -->
     <ng-template appTableCell="student_code" let-sv>
       <span class="font-medium text-[#002d70]">{{ sv.student_code }}</span>
@@ -120,7 +125,8 @@
   <app-pagination *ngIf="paginatedStudents.length > 0" 
                   [currentPage]="currentPage" 
                   [totalItems]="totalItems" 
-                  [pageSize]="pageSize" 
+                  [pageSize]="pageSize"
+                  itemLabel="sinh viên"
                   (pageChange)="onPageChange($event)">
   </app-pagination>
 </section>

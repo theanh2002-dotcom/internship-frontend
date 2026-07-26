@@ -4,6 +4,9 @@ import { Observable } from 'rxjs';
 import { BasePagination, PaginationRequest } from '../models/base.model';
 import { 
   AssignRequest, 
+  AssignmentStatsResponse,
+  AutoAssignPreviewResponse,
+  AutoAssignRequest,
   CompanyInfoRequest, 
   ImportStudentRequest, 
   InternshipPlanRequest 
@@ -44,6 +47,22 @@ export class StudentCampaignService {
 
   assignGvhd(request: AssignRequest): Observable<any> {
     return this.apiService.post<any>('/base/student-campaigns/assign', request);
+  }
+
+  getAssignmentStats(campaignId: number, departmentId: number): Observable<AssignmentStatsResponse[]> {
+    const params = new HttpParams()
+      .set('campaign_id', campaignId.toString())
+      .set('department_id', departmentId.toString());
+
+    return this.apiService.get<AssignmentStatsResponse[]>('/base/student-campaigns/assignment-stats', params);
+  }
+
+  previewAutoAssign(request: AutoAssignRequest): Observable<AutoAssignPreviewResponse> {
+    return this.apiService.post<AutoAssignPreviewResponse>('/base/student-campaigns/auto-assign/preview', request);
+  }
+
+  applyAutoAssign(request: AutoAssignRequest): Observable<AutoAssignPreviewResponse> {
+    return this.apiService.post<AutoAssignPreviewResponse>('/base/student-campaigns/auto-assign/apply', request);
   }
 
   submitCompanyInfo(id: number, request: CompanyInfoRequest): Observable<any> {

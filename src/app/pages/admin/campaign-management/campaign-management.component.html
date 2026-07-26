@@ -68,6 +68,7 @@
 <table class="w-full text-left border-collapse">
 <thead class="bg-[#f3f3fb] border-b border-slate-200">
 <tr>
+<th class="py-3 px-4 text-center font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider w-16">STT</th>
 <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Mã đợt</th>
 <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Tên đợt thực tập</th>
 <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Thời gian</th>
@@ -79,7 +80,8 @@
 </tr>
 </thead>
 <tbody class="font-body-md text-[14px] text-slate-800">
-<tr *ngFor="let campaign of campaigns" class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
+<tr *ngFor="let campaign of campaigns; let i = index" class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
+<td class="py-3 px-4 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
 <td class="py-3 px-4">
   <span class="font-data-mono text-[13px] font-bold text-[#00429D]">{{ campaign.code || '#' + campaign.id }}</span>
 </td>
@@ -135,7 +137,7 @@
 </div>
 
 <!-- Pagination Component -->
-<app-pagination *ngIf="campaigns.length > 0" [currentPage]="currentPage" [totalItems]="totalItems" [pageSize]="pageSize" (pageChange)="onPageChange($event)"></app-pagination>
+<app-pagination *ngIf="campaigns.length > 0" [currentPage]="currentPage" [totalItems]="totalItems" [pageSize]="pageSize" itemLabel="đợt" (pageChange)="onPageChange($event)"></app-pagination>
 </section>
 
 <!-- Modal Component -->
@@ -181,13 +183,15 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="flex flex-col gap-1.5">
         <label class="font-label-md text-[13px] text-slate-600">Ngày bắt đầu <span class="text-red-500">*</span></label>
-        <input [(ngModel)]="formStartDate" 
+        <input [(ngModel)]="formStartDate"
+               (ngModelChange)="onCampaignDateChange()"
                class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
                type="date"/>
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="font-label-md text-[13px] text-slate-600">Ngày kết thúc <span class="text-red-500">*</span></label>
-        <input [(ngModel)]="formEndDate" 
+        <input [(ngModel)]="formEndDate"
+               (ngModelChange)="onCampaignDateChange()"
                class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]" 
                type="date"/>
       </div>
@@ -201,7 +205,25 @@
         <span class="material-symbols-outlined text-[18px] text-[#00429D]">schedule</span>
         Cấu hình Timeline các chặng nộp báo cáo (Tùy chọn)
       </h3>
-      <p class="text-[11px] text-slate-500 mb-3">Nếu bỏ trống, hệ thống sẽ tự động tính toán hạn nộp tương đối theo ngày bắt đầu/kết thúc đợt thực tập.</p>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+        <p class="text-[11px] text-slate-500">Nếu bỏ trống, hệ thống sẽ tự động tính toán hạn nộp tương đối theo ngày bắt đầu/kết thúc đợt thực tập.</p>
+        <div class="flex items-center gap-2">
+          <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer">
+            <input type="checkbox"
+                   [(ngModel)]="formAutoGenerateTimeline"
+                   (ngModelChange)="onAutoGenerateTimelineChange()"
+                   class="h-3.5 w-3.5 rounded border-slate-300 text-[#00429D] focus:ring-[#00429D]"/>
+            Tự chia 8 tuần
+          </label>
+          <button type="button"
+                  class="inline-flex items-center gap-1 rounded border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-[#00429D] hover:bg-blue-100 disabled:opacity-60"
+                  [disabled]="isTimelinePreviewLoading"
+                  (click)="fillTimelineFromDates(true)">
+            <span class="material-symbols-outlined text-[14px]">{{ isTimelinePreviewLoading ? 'hourglass_empty' : 'auto_fix_high' }}</span>
+            Điền mốc
+          </button>
+        </div>
+      </div>
       
       <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
         <!-- Chặng 1: TTTN-01 -->
@@ -210,11 +232,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Ngày mở nhận đăng ký</label>
-              <input [(ngModel)]="formTttn01StartDate" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formTttn01StartDate" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Hạn chót nộp TTTN-01</label>
-              <input [(ngModel)]="formTttn01Deadline" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formTttn01Deadline" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
           </div>
         </div>
@@ -225,11 +247,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Ngày mở nộp kế hoạch</label>
-              <input [(ngModel)]="formTttn02StartDate" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formTttn02StartDate" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Hạn chót nộp TTTN-02</label>
-              <input [(ngModel)]="formTttn02Deadline" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formTttn02Deadline" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
           </div>
         </div>
@@ -240,11 +262,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Ngày mở nộp nhật ký</label>
-              <input [(ngModel)]="formTttn03StartDate" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formTttn03StartDate" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Hạn chót nộp nhật ký</label>
-              <input [(ngModel)]="formTttn03Deadline" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formTttn03Deadline" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
           </div>
         </div>
@@ -255,11 +277,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Ngày mở đánh giá</label>
-              <input [(ngModel)]="formMidtermStartDate" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formMidtermStartDate" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Hạn chót đánh giá giữa kỳ</label>
-              <input [(ngModel)]="formMidtermDeadline" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formMidtermDeadline" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
           </div>
         </div>
@@ -270,11 +292,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Ngày mở nộp báo cáo</label>
-              <input [(ngModel)]="formTttn06StartDate" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formTttn06StartDate" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-[11px] text-slate-500">Hạn chót nộp báo cáo cuối kỳ</label>
-              <input [(ngModel)]="formTttn06Deadline" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
+              <input [(ngModel)]="formTttn06Deadline" (ngModelChange)="markTimelineEdited()" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00429D]" type="date"/>
             </div>
           </div>
         </div>

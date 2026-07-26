@@ -162,6 +162,7 @@
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+            <th class="px-6 py-3 text-center w-16">STT</th>
             <th class="px-6 py-3">Sinh viên</th>
             <th class="px-6 py-3">GVHD</th>
             <th class="px-6 py-3">Đơn vị thực tập</th>
@@ -170,7 +171,8 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 text-sm">
-          <tr *ngFor="let student of pagedStudents" class="hover:bg-slate-50 transition-colors">
+          <tr *ngFor="let student of pagedStudents; let i = index" class="hover:bg-slate-50 transition-colors">
+            <td class="px-6 py-4 text-center text-slate-500">{{ (tableCurrentPage - 1) * tablePageSize + i + 1 }}</td>
             <!-- Student details -->
             <td class="px-6 py-4">
               <div class="font-medium text-slate-800">{{ student.full_name }}</div>

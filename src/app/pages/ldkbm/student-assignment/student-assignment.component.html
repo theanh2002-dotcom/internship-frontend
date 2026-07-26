@@ -43,10 +43,19 @@
   <div class="px-5 py-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50 rounded-t-lg">
     <div class="flex items-center gap-3 w-full md:w-auto">
       <span class="text-[14px] font-medium text-slate-600 whitespace-nowrap">Đã chọn <strong class="text-[#00429D]">{{ selectedStudentIds.size }}</strong> sinh viên</span>
-      <button class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 text-slate-700 font-medium text-[13px] rounded hover:border-[#00429D] hover:text-[#00429D] transition-colors shadow-sm disabled:opacity-50 whitespace-nowrap"
+      <button class="flex items-center gap-1.5 px-3 py-1.5 font-medium text-[13px] rounded transition-colors shadow-sm disabled:opacity-50 whitespace-nowrap border"
+              [ngClass]="{
+                'bg-[#00429D] border-[#00429D] text-white hover:bg-blue-800 hover:border-blue-800': selectedStudentIds.size > 0,
+                'bg-white border-slate-300 text-slate-700 hover:border-[#00429D] hover:text-[#00429D]': selectedStudentIds.size === 0
+              }"
               [disabled]="selectedStudentIds.size === 0" (click)="openAssignModal()">
         <span class="material-symbols-outlined text-[16px]">assignment_ind</span>
         Phân công GVHD
+      </button>
+      <button class="flex items-center gap-1.5 px-3 py-1.5 font-medium text-[13px] rounded transition-colors shadow-sm whitespace-nowrap border bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400"
+              (click)="openAutoAssignModal()">
+        <span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+        Phân công tự động
       </button>
     </div>
     
@@ -62,9 +71,13 @@
       
       <div class="hidden md:block w-px h-6 bg-slate-300 mx-1"></div>
 
-      <div class="flex items-center justify-end gap-2 text-[13px] text-slate-500 whitespace-nowrap">
+      <button type="button"
+              (click)="openAssignmentStats()"
+              class="flex items-center justify-end gap-2 text-[13px] text-slate-500 whitespace-nowrap rounded px-2 py-1 hover:bg-blue-50 hover:text-[#00429D] transition-colors"
+              title="Xem thống kê sinh viên theo GVHD">
+        <span class="material-symbols-outlined text-[18px]">info</span>
         Tổng: <strong class="text-slate-800">{{ totalItems }}</strong> SV
-      </div>
+      </button>
     </div>
   </div>
 
@@ -86,6 +99,7 @@
           <th class="py-3 px-4 w-12 text-center">
             <input type="checkbox" [checked]="isAllSelected()" (change)="toggleAll($event)" class="rounded border-slate-300 text-[#00429D] focus:ring-[#00429D] w-4 h-4">
           </th>
+          <th class="py-3 px-4 text-center font-label-md text-[13px] font-medium text-slate-500 uppercase w-16">STT</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Mã SV</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Họ và tên</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase">Tên</th>
@@ -97,10 +111,11 @@
         </tr>
       </thead>
       <tbody class="font-body-md text-[14px] text-slate-800">
-        <tr *ngFor="let student of students" class="border-b border-slate-100 hover:bg-slate-50 transition-colors bg-white">
+        <tr *ngFor="let student of students; let i = index" class="border-b border-slate-100 hover:bg-slate-50 transition-colors bg-white">
           <td class="py-3 px-4 text-center">
             <input type="checkbox" [checked]="selectedStudentIds.has(student.id)" (change)="toggleStudent(student.id, $event)" class="rounded border-slate-300 text-[#00429D] focus:ring-[#00429D] w-4 h-4">
           </td>
+          <td class="py-3 px-4 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
           <td class="py-3 px-4 font-medium text-slate-700">{{ student.student_code }}</td>
           <td class="py-3 px-4 font-bold text-[#002d70]">{{ student.full_name }}</td>
           <td class="py-3 px-4 font-semibold text-slate-700">{{ getStudentFirstName(student) || '—' }}</td>
@@ -147,7 +162,7 @@
     </table>
   </div>
   
-  <app-pagination *ngIf="students.length > 0" [currentPage]="currentPage" [totalItems]="totalItems" [pageSize]="pageSize" (pageChange)="onPageChange($event)"></app-pagination>
+  <app-pagination *ngIf="students.length > 0" [currentPage]="currentPage" [totalItems]="totalItems" [pageSize]="pageSize" itemLabel="sinh viên" (pageChange)="onPageChange($event)"></app-pagination>
 </section>
 
 <!-- Modal Thêm Thủ công -->
@@ -202,9 +217,232 @@
       </p>
     </div>
 
-    <p class="text-xs text-slate-500">
-      Lưu ý: LĐKBM chỉ được xóa sinh viên trước thời gian bắt đầu của đợt thực tập.
-    </p>
+    <div class="rounded border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      <span class="font-semibold">Lưu ý:</span>
+      Chỉ được xóa sinh viên trước thời gian bắt đầu của đợt thực tập.
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Phân công tự động GVHD -->
+<app-modal [isOpen]="isAutoAssignModalOpen"
+           title="Phân công tự động GVHD"
+           [showFooter]="false"
+           (close)="closeAutoAssignModal()">
+  <div class="space-y-5">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <label class="border rounded-lg p-3 cursor-pointer transition-colors"
+             [ngClass]="autoAssignScope === 'UNASSIGNED' ? 'border-[#00429D] bg-blue-50' : 'border-slate-200 hover:border-slate-300'">
+        <input type="radio" class="sr-only" name="autoAssignScope" value="UNASSIGNED" [(ngModel)]="autoAssignScope" (ngModelChange)="onAutoAssignScopeChange()">
+        <span class="block text-[13px] font-semibold text-slate-800">SV chưa có GVHD</span>
+        <span class="block text-[12px] text-slate-500 mt-1">Không ghi đè phân công cũ.</span>
+      </label>
+      <label class="border rounded-lg p-3 cursor-pointer transition-colors"
+             [ngClass]="autoAssignScope === 'SELECTED' ? 'border-[#00429D] bg-blue-50' : 'border-slate-200 hover:border-slate-300'">
+        <input type="radio" class="sr-only" name="autoAssignScope" value="SELECTED" [(ngModel)]="autoAssignScope" (ngModelChange)="onAutoAssignScopeChange()">
+        <span class="block text-[13px] font-semibold text-slate-800">SV đang chọn</span>
+        <span class="block text-[12px] text-slate-500 mt-1">{{ selectedStudentIds.size }} sinh viên.</span>
+      </label>
+      <label class="border rounded-lg p-3 cursor-pointer transition-colors"
+             [ngClass]="autoAssignScope === 'ALL' ? 'border-[#00429D] bg-blue-50' : 'border-slate-200 hover:border-slate-300'">
+        <input type="radio" class="sr-only" name="autoAssignScope" value="ALL" [(ngModel)]="autoAssignScope" (ngModelChange)="onAutoAssignScopeChange()">
+        <span class="block text-[13px] font-semibold text-slate-800">Tất cả SV trong đợt</span>
+        <span class="block text-[12px] text-slate-500 mt-1">Có thể ghi đè GVHD cũ.</span>
+      </label>
+    </div>
+
+    <label *ngIf="autoAssignScope !== 'UNASSIGNED'" class="flex items-start gap-2 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
+      <input type="checkbox" [(ngModel)]="autoOverwriteExisting" class="mt-0.5 rounded border-amber-300 text-[#00429D] focus:ring-[#00429D]">
+      <span>Ghi đè GVHD đã phân công trước đó trong phạm vi đã chọn.</span>
+    </label>
+
+    <div class="space-y-2">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <label class="font-label-md text-[13px] text-slate-600">Chọn GVHD tham gia phân công <span class="text-red-500">*</span></label>
+        <span class="text-[12px] text-slate-500">Đã chọn {{ autoSelectedTeacherIds.size }} GVHD</span>
+      </div>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+        <input
+          type="text"
+          [(ngModel)]="autoTeacherSearchQuery"
+          placeholder="Tìm giảng viên theo tên hoặc email..."
+          class="w-full pl-9 pr-3 py-2 text-[13px] border border-slate-300 rounded focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
+        >
+      </div>
+
+      <div class="border border-slate-300 rounded max-h-[210px] overflow-y-auto">
+        <label *ngFor="let t of autoFilteredTeachers" class="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 transition-colors">
+          <input
+            type="checkbox"
+            [checked]="autoSelectedTeacherIds.has(t.id)"
+            (change)="toggleAutoTeacherSelection(t.id)"
+            class="w-4 h-4 text-[#00429D] rounded border-slate-300 focus:ring-[#00429D] cursor-pointer"
+          >
+          <div class="flex flex-col min-w-0">
+            <span class="text-[14px] font-medium text-slate-700 truncate">{{ t.full_name }}</span>
+            <span class="text-[12px] text-slate-500 truncate">{{ t.email }}</span>
+          </div>
+        </label>
+
+        <div *ngIf="teachers.length === 0" class="p-4 text-center text-slate-500 text-[13px]">
+          Chưa có giảng viên nào trong khoa/bộ môn hiện tại.
+        </div>
+        <div *ngIf="teachers.length > 0 && autoFilteredTeachers.length === 0" class="p-4 text-center text-slate-500 text-[13px]">
+          Không tìm thấy giảng viên phù hợp.
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="autoPreview" class="rounded-lg border border-slate-200 overflow-hidden">
+      <div class="grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-200 bg-slate-50">
+        <div class="p-3">
+          <p class="text-[12px] text-slate-500">Sinh viên</p>
+          <p class="text-[18px] font-bold text-slate-800">{{ autoPreview.total_students }}</p>
+        </div>
+        <div class="p-3">
+          <p class="text-[12px] text-slate-500">GVHD</p>
+          <p class="text-[18px] font-bold text-slate-800">{{ autoPreview.total_teachers }}</p>
+        </div>
+        <div class="p-3">
+          <p class="text-[12px] text-slate-500">Mỗi GVHD</p>
+          <p class="text-[18px] font-bold text-slate-800">{{ autoPreview.base_students_per_teacher }}</p>
+        </div>
+        <div class="p-3">
+          <p class="text-[12px] text-slate-500">Phần dư</p>
+          <p class="text-[18px] font-bold" [ngClass]="autoPreview.surplus_students > 0 ? 'text-amber-700' : 'text-emerald-700'">{{ autoPreview.surplus_students }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="autoPreview.requires_surplus_selection" class="p-4 space-y-3 border-t border-slate-200 bg-amber-50">
+        <p class="text-[13px] text-amber-800">
+          Cần chọn đúng <strong>{{ autoSurplusRequired }}</strong> giảng viên nhận thêm 1 sinh viên.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <label *ngFor="let t of selectedAutoTeachers" class="flex items-center justify-between gap-3 px-3 py-2 bg-white border rounded cursor-pointer hover:border-amber-300"
+                 [ngClass]="autoSurplusTeacherIds.has(t.id) ? 'border-amber-500' : 'border-amber-100'">
+            <span class="text-[13px] font-medium text-slate-700 truncate">{{ t.full_name }}</span>
+            <input type="checkbox"
+                   [checked]="autoSurplusTeacherIds.has(t.id)"
+                   (change)="toggleAutoSurplusTeacher(t.id)"
+                   class="w-4 h-4 text-[#00429D] rounded border-slate-300 focus:ring-[#00429D] cursor-pointer">
+          </label>
+        </div>
+        <p class="text-[12px] text-amber-700">Đã chọn {{ autoSurplusTeacherIds.size }}/{{ autoSurplusRequired }} GVHD nhận phần dư.</p>
+      </div>
+
+      <div *ngIf="autoPreview.teacher_summaries?.length && !autoPreview.requires_surplus_selection" class="border-t border-slate-200 overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-slate-50 text-[12px] uppercase text-slate-500">
+            <tr>
+              <th class="px-3 py-2">GVHD</th>
+              <th class="px-3 py-2 text-center">Đang có</th>
+              <th class="px-3 py-2 text-center">Phân thêm</th>
+              <th class="px-3 py-2 text-center">Sau phân công</th>
+            </tr>
+          </thead>
+          <tbody class="text-[13px] text-slate-700">
+            <tr *ngFor="let t of autoPreview.teacher_summaries" class="border-t border-slate-100">
+              <td class="px-3 py-2 font-medium">
+                {{ t.teacher_name }}
+                <span *ngIf="t.receives_surplus" class="ml-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[11px]">+ dư</span>
+              </td>
+              <td class="px-3 py-2 text-center">{{ t.current_count }}</td>
+              <td class="px-3 py-2 text-center">{{ t.assigned_count }}</td>
+              <td class="px-3 py-2 text-center font-semibold text-[#00429D]">{{ t.final_count }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="autoPreview.assignments?.length" class="border-t border-slate-200 overflow-x-auto max-h-[260px]">
+        <table class="w-full text-left">
+          <thead class="sticky top-0 bg-[#f3f3fb] text-[12px] uppercase text-slate-500">
+            <tr>
+              <th class="px-3 py-2 text-center w-14">STT</th>
+              <th class="px-3 py-2">Mã SV</th>
+              <th class="px-3 py-2">Sinh viên</th>
+              <th class="px-3 py-2">Lớp</th>
+              <th class="px-3 py-2">GVHD</th>
+            </tr>
+          </thead>
+          <tbody class="text-[13px] text-slate-700">
+            <tr *ngFor="let item of autoPreview.assignments; let i = index" class="border-t border-slate-100">
+              <td class="px-3 py-2 text-center text-slate-500">{{ i + 1 }}</td>
+              <td class="px-3 py-2 font-mono">{{ item.student_code }}</td>
+              <td class="px-3 py-2 font-medium text-slate-800">{{ item.student_name }}</td>
+              <td class="px-3 py-2">{{ item.class_name || '—' }}</td>
+              <td class="px-3 py-2">
+                {{ item.teacher_name }}
+                <span *ngIf="item.surplus_assignment" class="ml-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[11px]">phần dư</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-2 border-t border-slate-200">
+      <button class="px-4 py-2 border border-slate-300 text-slate-700 font-label-md text-[13px] rounded hover:bg-slate-100 transition-colors"
+              (click)="closeAutoAssignModal()">
+        Hủy bỏ
+      </button>
+      <button class="px-4 py-2 border border-[#00429D] text-[#00429D] font-label-md text-[13px] rounded hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              [disabled]="!canPreviewAutoAssignment || isAutoPreviewLoading || isAutoApplying"
+              (click)="calculateAutoAssignment()">
+        {{ isAutoPreviewLoading ? 'Đang tính...' : (autoPreview?.requires_surplus_selection ? 'Xem phân bổ' : 'Tính phân bổ') }}
+      </button>
+      <button class="px-5 py-2 bg-[#00429D] text-white font-label-md text-[13px] rounded hover:bg-blue-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              [disabled]="!canApplyAutoAssignment"
+              (click)="applyAutoAssignment()">
+        {{ isAutoApplying ? 'Đang áp dụng...' : 'Áp dụng phân công' }}
+      </button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal thống kê phân công GVHD -->
+<app-modal [isOpen]="isStatsModalOpen"
+           title="Thống kê phân công GVHD"
+           [showFooter]="false"
+           (close)="closeAssignmentStats()">
+  <div class="space-y-4">
+    <div *ngIf="isStatsLoading" class="flex items-center justify-center py-10 text-slate-500">
+      <span class="material-symbols-outlined animate-spin text-[28px] text-[#00429D] mr-2">progress_activity</span>
+      Đang tải thống kê...
+    </div>
+
+    <div *ngIf="!isStatsLoading && assignmentStats.length === 0" class="py-10 text-center text-[13px] text-slate-500">
+      Chưa có GVHD nào trong khoa/bộ môn hiện tại.
+    </div>
+
+    <div *ngIf="!isStatsLoading && assignmentStats.length > 0" class="border border-slate-200 rounded-lg overflow-hidden">
+      <table class="w-full text-left">
+        <thead class="bg-[#f3f3fb] text-[12px] uppercase text-slate-500">
+          <tr>
+            <th class="px-3 py-2 text-center w-14">STT</th>
+            <th class="px-3 py-2">GVHD</th>
+            <th class="px-3 py-2">Email</th>
+            <th class="px-3 py-2 text-center">Số SV được phân</th>
+          </tr>
+        </thead>
+        <tbody class="text-[13px] text-slate-700">
+          <tr *ngFor="let item of assignmentStats; let i = index" class="border-t border-slate-100">
+            <td class="px-3 py-2 text-center text-slate-500">{{ i + 1 }}</td>
+            <td class="px-3 py-2 font-medium text-slate-800">{{ item.teacher_name }}</td>
+            <td class="px-3 py-2 text-slate-500">{{ item.teacher_email }}</td>
+            <td class="px-3 py-2 text-center font-semibold text-[#00429D]">{{ item.assigned_count }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex justify-end pt-2 border-t border-slate-200">
+      <button class="px-4 py-2 border border-slate-300 text-slate-700 font-label-md text-[13px] rounded hover:bg-slate-100 transition-colors"
+              (click)="closeAssignmentStats()">
+        Đóng
+      </button>
+    </div>
   </div>
 </app-modal>
 

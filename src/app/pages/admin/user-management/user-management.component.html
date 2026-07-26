@@ -59,6 +59,7 @@
     <table class="w-full text-left border-collapse">
       <thead class="bg-[#f3f3fb] border-b border-slate-200">
         <tr>
+          <th class="py-3 px-4 text-center font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider w-16">STT</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Họ và tên / Email</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Vai trò (Role)</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Khoa / Bộ môn</th>
@@ -67,7 +68,8 @@
         </tr>
       </thead>
       <tbody class="font-body-md text-[14px] text-slate-800">
-        <tr *ngFor="let user of users" class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
+        <tr *ngFor="let user of users; let i = index" class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
+          <td class="py-3 px-4 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
           <td class="py-3 px-4">
             <div class="font-bold text-[#002d70]">{{ user.full_name }}</div>
             <div class="text-[13px] text-slate-500 mt-0.5 flex items-center gap-1">
@@ -107,6 +109,11 @@
                       (click)="toggleStatus(user)">
                 <span class="material-symbols-outlined text-[18px]">{{ user.status === 'ACTIVE' ? 'lock' : 'lock_open' }}</span>
               </button>
+              <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title="Xóa tài khoản"
+                      (click)="openDeleteConfirm(user)">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
             </div>
           </td>
         </tr>
@@ -114,7 +121,7 @@
     </table>
   </div>
 
-  <app-pagination *ngIf="users.length > 0" [currentPage]="currentPage" [totalItems]="totalItems" [pageSize]="pageSize" (pageChange)="onPageChange($event)"></app-pagination>
+  <app-pagination *ngIf="users.length > 0" [currentPage]="currentPage" [totalItems]="totalItems" [pageSize]="pageSize" itemLabel="tài khoản" (pageChange)="onPageChange($event)"></app-pagination>
 </section>
 
 <!-- Modal Component -->
@@ -177,5 +184,34 @@
         </select>
       </div>
     </div>
+  </div>
+</app-modal>
+
+<app-modal [isOpen]="isDeleteConfirmOpen"
+           title="Xác nhận xóa tài khoản"
+           saveText="Xóa tài khoản"
+           cancelText="Hủy bỏ"
+           (close)="closeDeleteConfirm()"
+           (save)="confirmDeleteUser()">
+  <div class="space-y-4">
+    <div class="flex items-start gap-3 rounded-lg border border-red-100 bg-red-50 p-4">
+      <span class="material-symbols-outlined text-red-600 text-[24px]">warning</span>
+      <div>
+        <p class="text-sm font-semibold text-red-700">Thao tác này sẽ xóa tài khoản khỏi hệ thống.</p>
+        <p class="mt-1 text-sm text-red-600">Hệ thống sẽ tự chặn nếu tài khoản đã phát sinh dữ liệu không được phép xóa.</p>
+      </div>
+    </div>
+
+    <div *ngIf="deletingUser" class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+      <div class="font-bold text-[#002d70]">{{ deletingUser.full_name }}</div>
+      <div class="mt-1 text-slate-500">{{ deletingUser.email }}</div>
+      <div class="mt-2">
+        Vai trò: <span class="font-semibold">{{ getRoleLabel(deletingUser.role) }}</span>
+      </div>
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Điều kiện xóa: GVHD/DVHD chưa có điểm đánh giá; sinh viên chưa thuộc bất kỳ đợt thực tập nào.
+    </p>
   </div>
 </app-modal>

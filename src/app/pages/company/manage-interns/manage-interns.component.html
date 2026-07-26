@@ -84,7 +84,11 @@
   <app-table *ngIf="paginatedInterns.length > 0" 
              [data]="paginatedInterns" 
              [columns]="columns">
-             
+              
+    <ng-template appTableCell="STT" let-intern let-i="index">
+      <span class="text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</span>
+    </ng-template>
+
     <!-- student template -->
     <ng-template appTableCell="student" let-intern>
       <div class="font-semibold text-slate-800">{{ intern.studentName }}</div>
@@ -159,7 +163,8 @@
   <app-pagination *ngIf="paginatedInterns.length > 0" 
                   [currentPage]="currentPage" 
                   [totalItems]="totalItems" 
-                  [pageSize]="pageSize" 
+                  [pageSize]="pageSize"
+                  itemLabel="sinh viên"
                   (pageChange)="onPageChange($event)">
   </app-pagination>
 </section>

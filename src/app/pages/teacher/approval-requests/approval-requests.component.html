@@ -18,6 +18,7 @@
   <table *ngIf="!isLoading" class="w-full text-left border-collapse">
     <thead>
       <tr class="bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200 uppercase tracking-wider">
+        <th class="py-3 px-4 text-center w-16">STT</th>
         <th class="py-3 px-4">Sinh viên</th>
         <th class="py-3 px-4">Loại Yêu Cầu</th>
         <th class="py-3 px-4">Chi tiết (ĐVHD)</th>
@@ -28,11 +29,12 @@
     </thead>
     <tbody class="text-sm text-gray-900">
       <tr *ngIf="requests.length === 0">
-        <td colspan="6" class="py-8 text-center text-gray-500">
+        <td colspan="7" class="py-8 text-center text-gray-500">
           Không có yêu cầu nào đang chờ phê duyệt.
         </td>
       </tr>
-      <tr *ngFor="let req of requests" class="border-b border-gray-200 hover:bg-gray-50">
+      <tr *ngFor="let req of requests; let i = index" class="border-b border-gray-200 hover:bg-gray-50">
+        <td class="py-3 px-4 text-center text-gray-500">{{ i + 1 }}</td>
         <td class="py-3 px-4">
           <div class="font-medium text-gray-900">{{ req.full_name }}</div>
           <div class="text-gray-500 font-mono text-xs">{{ req.student_code }}</div>

@@ -11,7 +11,9 @@ import { UserResponse, PaginationRequest, DepartmentResponse } from '../../../co
 })
 export class UserManagementComponent implements OnInit {
   isModalOpen = false;
+  isDeleteConfirmOpen = false;
   isLoading = false;
+  isDeleting = false;
     currentPage = 1;
   pageSize = 10;
   totalItems = 0;
@@ -21,6 +23,7 @@ export class UserManagementComponent implements OnInit {
 
   isEditMode = false;
   editingId: number | null = null;
+  deletingUser: UserResponse | null = null;
   
   formEmail = '';
   formPassword = '';
@@ -219,6 +222,39 @@ export class UserManagementComponent implements OnInit {
       },
       error: (err) => {
         this.toastService.error(err?.message || 'Đổi trạng thái thất bại');
+      }
+    });
+  }
+
+  openDeleteConfirm(user: UserResponse): void {
+    this.deletingUser = user;
+    this.isDeleteConfirmOpen = true;
+  }
+
+  closeDeleteConfirm(): void {
+    if (this.isDeleting) {
+      return;
+    }
+    this.isDeleteConfirmOpen = false;
+    this.deletingUser = null;
+  }
+
+  confirmDeleteUser(): void {
+    if (!this.deletingUser) {
+      return;
+    }
+    this.isDeleting = true;
+    this.userService.delete(this.deletingUser.id).subscribe({
+      next: () => {
+        this.toastService.success('Xóa tài khoản thành công');
+        this.isDeleting = false;
+        this.isDeleteConfirmOpen = false;
+        this.deletingUser = null;
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.toastService.error(err?.message || 'Xóa tài khoản thất bại');
+        this.isDeleting = false;
       }
     });
   }
