@@ -41,6 +41,10 @@ export class StudentCampaignService {
     return this.apiService.get<any>('/base/student-campaigns/my-students');
   }
 
+  getMyGuidedStudents(): Observable<any> {
+    return this.apiService.get<any>('/base/student-campaigns/my-guided-students');
+  }
+
   importStudents(request: ImportStudentRequest): Observable<any> {
     return this.apiService.post<any>('/base/student-campaigns/import', request);
   }

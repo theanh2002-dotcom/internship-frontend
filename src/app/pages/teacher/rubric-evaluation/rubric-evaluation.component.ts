@@ -150,7 +150,7 @@ export class RubricEvaluationComponent implements OnInit {
     this.isLoading = true;
     const source$ = this.isCompanySupervisor
       ? this.studentCampaignService.getCompanyStudents()
-      : this.studentCampaignService.getMyAssignedStudents();
+      : this.studentCampaignService.getMyGuidedStudents();
 
     source$.subscribe({
       next: (res) => {

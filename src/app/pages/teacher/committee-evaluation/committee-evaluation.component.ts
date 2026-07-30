@@ -5,9 +5,7 @@ import { CommitteeResponse, CommitteeService } from '../../../core/services/comm
 import { DepartmentCampaignService } from '../../../core/services/department-campaign.service';
 import { EvaluationRequest, EvaluationService } from '../../../core/services/evaluation.service';
 import { CampaignResponse, StudentCampaignResponse } from '../../../core/models/base.model';
-import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { forkJoin } from 'rxjs';
 
 interface CommitteeCriterion {
   id: string;
@@ -55,7 +53,7 @@ export class CommitteeEvaluationComponent implements OnInit {
   stage2StartDateStr = '';
 
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 5;
   paginatedStudents: StudentCampaignResponse[] = [];
 
   constructor(
@@ -64,7 +62,6 @@ export class CommitteeEvaluationComponent implements OnInit {
     private committeeService: CommitteeService,
     private departmentCampaignService: DepartmentCampaignService,
     private evaluationService: EvaluationService,
-    private studentCampaignService: StudentCampaignService,
     private toastService: ToastService
   ) {}
 
@@ -74,50 +71,22 @@ export class CommitteeEvaluationComponent implements OnInit {
 
   loadData(): void {
     this.isLoading = true;
-    forkJoin({
-      committees: this.committeeService.getMyCommittees(),
-      campaigns: this.campaignService.getCampaigns({ page: 1, limit: 1000 })
-    }).subscribe({
-      next: ({ committees, campaigns }) => {
-        const currentUserId = this.getCurrentUserId();
-        this.committees = (committees || []).filter(committee =>
-          (committee.members || []).some(member =>
-            Number(member.user_id) === currentUserId && this.isCommitteeScoringMemberRole(member.role)
-          )
-        );
-        this.campaigns = campaigns.data || [];
+    this.committeeService.getCommitteeGradingPageData().subscribe({
+      next: (data) => {
+        this.committees = data.committees || [];
+        this.campaigns = data.campaigns || [];
+        this.allStudents = (data.students || [])
+          .sort((a: StudentCampaignResponse, b: StudentCampaignResponse) => this.compareStudentsByName(a, b));
         const firstCampaignId = this.committees
           .map(committee => committee.campaign_id)
           .find((campaignId): campaignId is number => campaignId !== undefined && campaignId !== null);
         this.selectedCampaignId = firstCampaignId || null;
-        this.loadStudents();
-      },
-      error: () => {
-        this.isLoading = false;
-        this.toastService.error('Không thể tải danh sách hội đồng.');
-      }
-    });
-  }
-
-  loadStudents(): void {
-    this.studentCampaignService.getMyAssignedStudents().subscribe({
-      next: (res) => {
-        const data = Array.isArray(res) ? res : (res.data || res.payload || []);
-        const committeeIds = new Set(this.committees.map(c => Number(c.id)));
-        const currentUserId = this.getCurrentUserId();
-        this.allStudents = data
-          .filter((student: StudentCampaignResponse) =>
-            student.committee_id &&
-            committeeIds.has(Number(student.committee_id)) &&
-            !(student.gvhd_ids || []).map(Number).includes(currentUserId)
-          )
-          .sort((a: StudentCampaignResponse, b: StudentCampaignResponse) => this.compareStudentsByName(a, b));
         this.applyFilters();
         this.isLoading = false;
       },
       error: () => {
         this.isLoading = false;
-        this.toastService.error('Không thể tải danh sách sinh viên hội đồng.');
+        this.toastService.error('Không thể tải dữ liệu chấm hội đồng.');
       }
     });
   }
@@ -227,20 +196,29 @@ export class CommitteeEvaluationComponent implements OnInit {
   }
 
   loadCampaignInfo(campaignId: number): void {
+    const cachedCampaign = this.campaigns.find(campaign => Number(campaign.id) === Number(campaignId));
+    if (cachedCampaign) {
+      this.applyCampaignInfo(cachedCampaign);
+      return;
+    }
+
     this.campaignService.getById(campaignId).subscribe({
       next: (res) => {
-        const campaign = this.unwrap(res);
-        this.campaign = campaign;
-        const activeSource = this.selectedStudent?.group_config || campaign;
-        const endDate = activeSource.end_date || campaign.end_date;
-        const tttn06Start = activeSource.tttn06_start_date
-          ? new Date(activeSource.tttn06_start_date)
-          : new Date(new Date(endDate).getTime() - 7 * 24 * 60 * 60 * 1000);
-        this.stage2StartDateStr = tttn06Start.toLocaleDateString('vi-VN');
-        this.isStage2Open = new Date() >= tttn06Start && campaign.status === 'ACTIVE';
+        this.applyCampaignInfo(this.unwrap(res));
       },
       error: () => this.toastService.error('Không thể tải thông tin đợt thực tập.')
     });
+  }
+
+  private applyCampaignInfo(campaign: any): void {
+    this.campaign = campaign;
+    const activeSource = this.selectedStudent?.group_config || campaign;
+    const endDate = activeSource.end_date || campaign.end_date;
+    const tttn06Start = activeSource.tttn06_start_date
+      ? new Date(activeSource.tttn06_start_date)
+      : new Date(new Date(endDate).getTime() - 7 * 24 * 60 * 60 * 1000);
+    this.stage2StartDateStr = tttn06Start.toLocaleDateString('vi-VN');
+    this.isStage2Open = new Date() >= tttn06Start && campaign.status === 'ACTIVE';
   }
 
   loadEvaluations(): void {
@@ -355,16 +333,6 @@ export class CommitteeEvaluationComponent implements OnInit {
       .filter(member => member.role === 'GVHD' || this.isCommitteeScoringMemberRole(member.role));
   }
 
-  getCommitteeProgressText(criterion: CommitteeCriterion): string {
-    const memberScores = this.getMemberScores(criterion);
-    if (memberScores.length === 0) return 'Chưa có thành viên chấm';
-    const completed = memberScores
-      .map(item => item.isCurrentUser ? this.toNullableScore(criterion.selectedScore) : item.score)
-      .filter(value => value !== null)
-      .length;
-    return `${completed}/${memberScores.length} thành viên đã chấm`;
-  }
-
   getAverageScoreText(): string {
     const values = this.criteria
       .map(criterion => this.getCommitteeAverageScore(criterion))
@@ -423,11 +391,6 @@ export class CommitteeEvaluationComponent implements OnInit {
   private roundTo(value: number, digits: number): number {
     const factor = Math.pow(10, digits);
     return Math.round(value * factor) / factor;
-  }
-
-  private getCurrentUserId(): number {
-    const currentUser: any = this.authService.getCurrentUser();
-    return Number(currentUser?.userId ?? currentUser?.user_id ?? currentUser?.id);
   }
 
   private isCommitteeScoringMemberRole(role: string | null | undefined): boolean {

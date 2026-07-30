@@ -187,13 +187,12 @@
       </div>
 
       <div *ngIf="!isDetailLoading" class="overflow-x-auto">
-        <table class="w-full min-w-[1050px] table-fixed text-left text-sm border-collapse">
+        <table class="w-full min-w-[920px] table-fixed text-left text-sm border-collapse">
           <colgroup>
             <col class="w-14">
             <col class="w-20">
             <col>
             <col class="w-24">
-            <col class="w-44">
             <col class="w-28">
             <col class="w-56">
           </colgroup>
@@ -202,8 +201,7 @@
               <th class="px-3 py-3 border-r border-blue-300/40 text-center">STT</th>
               <th class="px-3 py-3 border-r border-blue-300/40 text-center">CLO</th>
               <th class="px-3 py-3 border-r border-blue-300/40">Mô tả năng lực</th>
-              <th class="px-3 py-3 border-r border-blue-300/40 text-center">Điểm của tôi</th>
-              <th class="px-3 py-3 border-r border-blue-300/40 text-center">Tiến độ tổ</th>
+              <th class="px-3 py-3 border-r border-blue-300/40 text-center">Điểm ủy viên</th>
               <th class="px-3 py-3 border-r border-blue-300/40 text-center">TB tổ</th>
               <th class="px-3 py-3">Nhận xét</th>
             </tr>
@@ -227,13 +225,6 @@
                        (blur)="normalizeScore(criterion)"
                        [disabled]="!isStage2Open || isSaving"
                        class="w-full px-2 py-1.5 border border-slate-300 rounded text-center font-bold text-sm focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] disabled:bg-slate-100 disabled:text-slate-400"/>
-              </td>
-              <td class="px-3 py-3 border-r border-slate-200">
-                <div class="min-h-[36px] flex items-center justify-center text-center">
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200">
-                    {{ getCommitteeProgressText(criterion) }}
-                  </span>
-                </div>
               </td>
               <td class="px-3 py-3 border-r border-slate-200 bg-blue-50/70 text-center">
                 <span class="font-black text-[#00429D]">{{ getCommitteeAverageScore(criterion) === null ? 'Chưa đủ điểm' : getCommitteeAverageScore(criterion) }}</span>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
-import { BaseResponse, StudentCampaignResponse, UserResponse } from '../models/base.model';
+import { CampaignResponse, StudentCampaignResponse, UserResponse } from '../models/base.model';
 
 export interface CommitteeMemberRequest {
   user_id: number;
@@ -48,6 +48,12 @@ export interface CommitteePageDataResponse {
   students: StudentCampaignResponse[];
 }
 
+export interface CommitteeGradingPageDataResponse {
+  committees: CommitteeResponse[];
+  campaigns: CampaignResponse[];
+  students: StudentCampaignResponse[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -65,6 +71,10 @@ export class CommitteeService {
 
   getCommitteePageData(campaignId: number, departmentId: number): Observable<CommitteePageDataResponse> {
     return this.apiService.get<CommitteePageDataResponse>(`/base/committees/page-data?campaign_id=${campaignId}&department_id=${departmentId}`);
+  }
+
+  getCommitteeGradingPageData(): Observable<CommitteeGradingPageDataResponse> {
+    return this.apiService.get<CommitteeGradingPageDataResponse>('/base/committees/grading-page-data');
   }
 
   getCommitteeById(id: number): Observable<CommitteeResponse> {
