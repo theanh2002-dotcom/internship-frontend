@@ -117,16 +117,16 @@ export class ScoreSummaryComponent implements OnInit {
     });
   }
 
-  goToEvaluation(student: StudentScore, mode: 'GUIDED' | 'COMMITTEE'): void {
+  goToEvaluation(student: StudentScore, target: 'STAGE_1' | 'STAGE_2' | 'SUMMARY'): void {
     const queryParams: Record<string, string | number> = {
-      mode,
+      mode: 'GUIDED',
       studentCampaignId: student.id,
       campaignId: student.campaignId,
-      stage: mode === 'COMMITTEE' ? 'STAGE_2' : 'STAGE_1'
+      tab: target
     };
 
-    if (mode === 'COMMITTEE' && student.committeeId) {
-      queryParams['committeeId'] = student.committeeId;
+    if (target !== 'SUMMARY') {
+      queryParams['stage'] = target;
     }
 
     this.router.navigate(['/teacher/rubric-evaluation'], { queryParams });

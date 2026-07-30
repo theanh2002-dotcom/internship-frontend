@@ -331,7 +331,7 @@
       </div>
 
       <div *ngIf="activeTab !== 'SUMMARY' && visibleCriteria.length > 0" class="overflow-x-auto">
-        <table class="w-full min-w-[980px] table-fixed text-left text-sm border-collapse">
+        <table class="w-full min-w-[1120px] table-fixed text-left text-sm border-collapse">
           <colgroup>
             <col class="w-12">
             <col class="w-16">
@@ -340,6 +340,8 @@
             <col class="w-20">
             <col class="w-16">
             <col class="w-16">
+            <col *ngIf="selectedStage === 'STAGE_2'" class="w-24">
+            <col *ngIf="selectedStage === 'STAGE_2'" class="w-24">
             <col class="w-24">
             <col class="w-24">
             <col class="w-44">
@@ -349,7 +351,7 @@
               <th rowspan="2" class="px-2 py-3 border-r border-blue-300/40 text-center">STT</th>
               <th rowspan="2" class="px-2 py-3 border-r border-blue-300/40 text-center">CLO</th>
               <th rowspan="2" class="px-3 py-3 border-r border-blue-300/40">Mô tả năng lực</th>
-              <th colspan="4" class="px-2 py-3 border-r border-blue-300/40 text-center">Đánh giá (Thang điểm 10)</th>
+              <th [attr.colspan]="selectedStage === 'STAGE_2' ? 6 : 4" class="px-2 py-3 border-r border-blue-300/40 text-center">Đánh giá (Thang điểm 10)</th>
               <th rowspan="2" class="px-2 py-3 border-r border-blue-300/40 text-center leading-tight">{{ getStageAverageTitle() }}</th>
               <th rowspan="2" class="px-2 py-3 border-r border-blue-300/40 text-center">Mức đạt</th>
               <th rowspan="2" class="px-3 py-3 text-left">Ghi chú / Nhận xét</th>
@@ -359,6 +361,8 @@
               <th class="px-2 py-2 border-r border-blue-300/40 text-center leading-tight">Điểm GVHD</th>
               <th class="px-1.5 py-2 border-r border-blue-300/40 text-center leading-tight">TS ĐVHD (%)</th>
               <th class="px-1.5 py-2 border-r border-blue-300/40 text-center leading-tight">TS GVHD (%)</th>
+              <th *ngIf="selectedStage === 'STAGE_2'" class="px-2 py-2 border-r border-blue-300/40 text-center leading-tight">TB ủy viên</th>
+              <th *ngIf="selectedStage === 'STAGE_2'" class="px-2 py-2 border-r border-blue-300/40 text-center leading-tight">UV đã chấm</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200">
@@ -415,6 +419,14 @@
               <td class="px-1.5 py-3 border-r border-slate-200 text-center text-slate-700">
                 {{ criterion.gvhdBeta | number:'1.0-0' }}%
               </td>
+              <td *ngIf="selectedStage === 'STAGE_2'" class="px-2 py-3 border-r border-slate-200 text-center bg-violet-50/60">
+                <span class="font-bold text-violet-800">{{ getCommitteeScoreText(criterion) }}</span>
+              </td>
+              <td *ngIf="selectedStage === 'STAGE_2'" class="px-2 py-3 border-r border-slate-200 text-center bg-violet-50/60">
+                <span class="inline-flex items-center justify-center rounded-full border border-violet-200 bg-white px-2 py-1 text-xs font-bold text-violet-800">
+                  {{ getCommitteeProgressText(criterion) }}
+                </span>
+              </td>
               <td class="px-2 py-3 border-r border-slate-200 text-center bg-blue-50/70">
                 <span class="font-black text-[#00429D]">{{ getStageAverageScoreText(criterion) }}</span>
               </td>
@@ -435,7 +447,7 @@
               </td>
             </tr>
             <tr class="bg-[#00429D] text-white font-semibold">
-              <td colspan="7" class="px-4 py-3 border-r border-blue-300/40 text-right">
+              <td [attr.colspan]="selectedStage === 'STAGE_2' ? 9 : 7" class="px-4 py-3 border-r border-blue-300/40 text-right">
                 ĐIỂM TRUNG BÌNH {{ selectedStage === 'STAGE_1' ? 'CHẶNG 1' : 'CHẶNG 2' }} (chưa có trọng số HP)
               </td>
               <td class="px-3 py-3 border-r border-blue-300/40 text-center text-lg font-black whitespace-nowrap">{{ getAverageScoreText() }}</td>

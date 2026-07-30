@@ -133,18 +133,18 @@
                         <!-- Scores -->
                         <td class="px-2 py-3 border-r border-slate-200 text-center font-medium">
                             <button type="button"
-                                    (click)="goToEvaluation(student, 'GUIDED')"
+                                    (click)="goToEvaluation(student, 'STAGE_1')"
                                     class="inline-flex min-w-14 items-center justify-center rounded border border-transparent px-2 py-1 text-[#00429D] hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    title="Mở tab Chấm SV hướng dẫn">
+                                    title="Mở Chặng 1 trong Chấm SV hướng dẫn">
                                 <span *ngIf="student.stage1Score !== null">{{ student.stage1Score | number:'1.1-1' }}</span>
                                 <span *ngIf="student.stage1Score === null" class="text-slate-400">-</span>
                             </button>
                         </td>
                         <td class="px-2 py-3 border-r border-slate-200 text-center font-medium">
                             <button type="button"
-                                    (click)="goToEvaluation(student, 'COMMITTEE')"
+                                    (click)="goToEvaluation(student, 'STAGE_2')"
                                     class="inline-flex min-w-14 items-center justify-center rounded border border-transparent px-2 py-1 text-[#00429D] hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    title="Mở tab Chấm SV hội đồng">
+                                    title="Mở Chặng 2 trong Chấm SV hướng dẫn">
                                 <span *ngIf="student.stage2Score !== null">{{ student.stage2Score | number:'1.1-1' }}</span>
                                 <span *ngIf="student.stage2Score === null" class="text-slate-400">-</span>
                             </button>
@@ -152,10 +152,15 @@
                         
                         <!-- Final Score -->
                         <td class="px-2 py-3 border-r border-slate-200 text-center">
-                            <span *ngIf="student.totalScore !== null" class="font-bold text-base sm:text-lg" [ngClass]="{'text-green-600': student.totalScore >= 5, 'text-red-600': student.totalScore < 5}">
-                                {{ student.totalScore | number:'1.1-1' }}
-                            </span>
-                            <span *ngIf="student.totalScore === null" class="text-slate-300">-</span>
+                            <button type="button"
+                                    (click)="goToEvaluation(student, 'SUMMARY')"
+                                    class="inline-flex min-w-14 items-center justify-center rounded border border-transparent px-2 py-1 hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                    title="Mở tổng hợp điểm chi tiết">
+                                <span *ngIf="student.totalScore !== null" class="font-bold text-base sm:text-lg" [ngClass]="{'text-green-600': student.totalScore >= 5, 'text-red-600': student.totalScore < 5}">
+                                    {{ student.totalScore | number:'1.1-1' }}
+                                </span>
+                                <span *ngIf="student.totalScore === null" class="text-slate-400">-</span>
+                            </button>
                         </td>
                         
                         <!-- Status Badge -->

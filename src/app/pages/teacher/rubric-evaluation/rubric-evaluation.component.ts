@@ -7,6 +7,7 @@ import { CampaignResponse, StudentCampaignResponse } from '../../../core/models/
 import { ToastService } from '../../../core/services/toast.service';
 import { CampaignService } from '../../../core/services/campaign.service';
 import { ActivatedRoute } from '@angular/router';
+import { CommitteeResponse, CommitteeService } from '../../../core/services/committee.service';
 
 interface RubricLevel {
   label: string;
@@ -32,12 +33,18 @@ interface RubricCriterion {
   companyScore?: number | null;
   gvhdComment?: string;
   companyComment?: string;
+  committeeScore?: number | null;
+  committeeScoreTotal?: number;
+  committeeScoreCount?: number;
+  gvhdEvaluatorIds?: number[];
+  committeeEvaluatorIds?: number[];
 }
 
 interface ScoreAccumulator {
   total: number;
   count: number;
   comments: string[];
+  evaluatorIds: Set<number>;
 }
 
 interface SummaryCloRow {
@@ -76,6 +83,7 @@ export class RubricEvaluationComponent implements OnInit {
   summaryEvaluations: any[] = [];
   isSummaryLoading = false;
   campaign: any = null;
+  guidedCommittee: CommitteeResponse | null = null;
   isCampaignActive = true;
   isStage1Open = false;
   isStage2Open = false;
@@ -93,6 +101,7 @@ export class RubricEvaluationComponent implements OnInit {
   gradingMode: 'GUIDED' | 'COMMITTEE' = 'GUIDED';
   private pendingStudentCampaignId: number | null = null;
   private pendingStage: 'STAGE_1' | 'STAGE_2' | null = null;
+  private pendingTab: 'STAGE_1' | 'STAGE_2' | 'SUMMARY' | null = null;
   private hasLoadedGuidedStudents = false;
 
   columns = [
@@ -120,6 +129,7 @@ export class RubricEvaluationComponent implements OnInit {
     private authService: AuthService,
     private toastService: ToastService,
     private campaignService: CampaignService,
+    private committeeService: CommitteeService,
     private route: ActivatedRoute
   ) {}
 
@@ -348,20 +358,29 @@ export class RubricEvaluationComponent implements OnInit {
     this.paginate();
   }
 
-  selectStudent(student: StudentCampaignResponse, initialStage: 'STAGE_1' | 'STAGE_2' = 'STAGE_1'): void {
+  selectStudent(
+    student: StudentCampaignResponse,
+    initialStage: 'STAGE_1' | 'STAGE_2' = 'STAGE_1',
+    initialTab: 'STAGE_1' | 'STAGE_2' | 'SUMMARY' = initialStage
+  ): void {
     this.selectedStudent = student;
     this.criteria = [];
     this.existingEvaluation = null;
     this.generalComment = '';
     this.campaign = null;
+    this.guidedCommittee = null;
     this.isStage1Open = false;
     this.isStage2Open = false;
     this.selectedStage = initialStage;
-    this.activeTab = initialStage;
+    this.activeTab = initialTab;
     this.finalResult = null;
     this.loadCampaignInfo(student.campaign_id);
+    this.loadGuidedCommitteeInfo(student.committee_id);
     this.loadRubricConfig();
     this.loadFinalResult();
+    if (initialTab === 'SUMMARY') {
+      this.loadSummaryEvaluations();
+    }
   }
 
   private readNavigationContext(): void {
@@ -381,6 +400,9 @@ export class RubricEvaluationComponent implements OnInit {
 
     const stage = params.get('stage');
     this.pendingStage = stage === 'STAGE_2' ? 'STAGE_2' : stage === 'STAGE_1' ? 'STAGE_1' : null;
+
+    const tab = params.get('tab');
+    this.pendingTab = tab === 'SUMMARY' ? 'SUMMARY' : tab === 'STAGE_2' ? 'STAGE_2' : tab === 'STAGE_1' ? 'STAGE_1' : null;
   }
 
   private openPendingGuidedStudentIfNeeded(): void {
@@ -393,9 +415,28 @@ export class RubricEvaluationComponent implements OnInit {
       return;
     }
 
-    this.selectStudent(student, this.pendingStage || 'STAGE_1');
+    const tab = this.pendingTab || this.pendingStage || 'STAGE_1';
+    const stage = tab === 'SUMMARY' ? (this.pendingStage || 'STAGE_1') : tab;
+    this.selectStudent(student, stage, tab);
     this.pendingStudentCampaignId = null;
     this.pendingStage = null;
+    this.pendingTab = null;
+  }
+
+  private loadGuidedCommitteeInfo(committeeId: number | null | undefined): void {
+    if (!committeeId) {
+      this.guidedCommittee = null;
+      return;
+    }
+
+    this.committeeService.getCommitteeById(Number(committeeId)).subscribe({
+      next: (response) => {
+        this.guidedCommittee = this.unwrapResponse(response);
+      },
+      error: () => {
+        this.guidedCommittee = null;
+      }
+    });
   }
 
   loadCampaignInfo(campaignId: number): void {
@@ -569,7 +610,7 @@ export class RubricEvaluationComponent implements OnInit {
 
   getStageTemplateSubtitle(): string {
     const weight = this.selectedStage === 'STAGE_1' ? this.departmentStage1Weight : this.departmentStage2Weight;
-    const evaluator = this.selectedStage === 'STAGE_1' ? 'GVHD + ĐVHD' : 'GVHD + ĐVHD + Tổ đánh giá TTTN';
+    const evaluator = this.selectedStage === 'STAGE_1' ? 'GVHD + ĐVHD' : 'GVHD + ĐVHD + Ủy viên hội đồng';
     return `Trọng số chặng ${this.selectedStage === 'STAGE_1' ? '1' : '2'}: ${weight}% tổng điểm học phần | Người đánh giá: ${evaluator}`;
   }
 
@@ -876,12 +917,13 @@ export class RubricEvaluationComponent implements OnInit {
     const stage1CompanyScores = this.buildScoreMap(stage1Evaluations, ['COMPANY_SUPERVISOR', 'COMPANY']);
     const stage2GvhdScores = this.buildScoreMap(stage2Evaluations, 'GVHD');
     const stage2CompanyScores = this.buildScoreMap(stage2Evaluations, ['COMPANY_SUPERVISOR', 'COMPANY']);
+    const stage2CommitteeScores = this.buildScoreMap(stage2Evaluations, 'COMMITTEE_MEMBER');
 
     return this.criteria
       .filter(criterion => criterion.stage1Weight > 0 || criterion.stage2Weight > 0)
       .map(criterion => {
         const stage1Average = this.getSummaryStageAverage(criterion, stage1GvhdScores, stage1CompanyScores);
-        const stage2Average = this.getSummaryStageAverage(criterion, stage2GvhdScores, stage2CompanyScores);
+        const stage2Average = this.getSummaryStageAverage(criterion, stage2GvhdScores, stage2CompanyScores, stage2CommitteeScores, true);
         const cloScore = this.getSummaryCloScore(criterion, stage1Average, stage2Average);
         const contribution = cloScore === null ? null : this.roundTo(cloScore * (criterion.alphaWeight / 100), 3);
         return { criterion, stage1Average, stage2Average, cloScore, contribution };
@@ -943,9 +985,21 @@ export class RubricEvaluationComponent implements OnInit {
     return this.formatScore(score);
   }
 
+  getCommitteeScoreText(criterion: RubricCriterion): string {
+    if (this.selectedStage !== 'STAGE_2') return 'N/A';
+    return this.formatScore(criterion.committeeScore);
+  }
+
+  getCommitteeProgressText(criterion: RubricCriterion): string {
+    if (this.selectedStage !== 'STAGE_2') return 'N/A';
+    const scored = criterion.committeeEvaluatorIds?.length || 0;
+    const required = this.getRequiredCommitteeMemberIds().length;
+    return required > 0 ? `${scored}/${required}` : `${scored}`;
+  }
+
   getStageAverageScore(criterion: RubricCriterion): number | null {
     const companyScore = this.isCompanySupervisor ? this.toNullableScore(criterion.selectedScore) : criterion.companyScore;
-    const gvhdScore = this.isCompanySupervisor ? criterion.gvhdScore : this.toNullableScore(criterion.selectedScore);
+    const gvhdScore = this.getTeacherGroupScore(criterion);
     const companyRequired = criterion.companyBeta > 0;
     const gvhdRequired = criterion.gvhdBeta > 0;
 
@@ -1011,21 +1065,33 @@ export class RubricEvaluationComponent implements OnInit {
       c.companyScore = null;
       c.gvhdComment = '';
       c.companyComment = '';
+      c.committeeScore = null;
+      c.committeeScoreTotal = 0;
+      c.committeeScoreCount = 0;
+      c.gvhdEvaluatorIds = [];
+      c.committeeEvaluatorIds = [];
     });
   }
 
   private applyAggregatedScores(evaluations: any[]): void {
     const gvhdScores = this.buildScoreMap(evaluations, 'GVHD');
     const companyScores = this.buildScoreMap(evaluations, ['COMPANY_SUPERVISOR', 'COMPANY']);
+    const committeeScores = this.buildScoreMap(evaluations, 'COMMITTEE_MEMBER');
 
     this.criteria.forEach(criterion => {
       const gvhd = gvhdScores.get(criterion.id);
       const company = companyScores.get(criterion.id);
+      const committee = committeeScores.get(criterion.id);
 
       criterion.gvhdScore = gvhd ? this.clampScore(gvhd.total / gvhd.count) : null;
       criterion.companyScore = company ? this.clampScore(company.total / company.count) : null;
       criterion.gvhdComment = gvhd?.comments[0] || '';
       criterion.companyComment = company?.comments[0] || '';
+      criterion.committeeScore = committee ? this.clampScore(committee.total / committee.count) : null;
+      criterion.committeeScoreTotal = committee?.total || 0;
+      criterion.committeeScoreCount = committee?.count || 0;
+      criterion.gvhdEvaluatorIds = gvhd ? Array.from(gvhd.evaluatorIds) : [];
+      criterion.committeeEvaluatorIds = committee ? Array.from(committee.evaluatorIds) : [];
     });
   }
 
@@ -1039,9 +1105,11 @@ export class RubricEvaluationComponent implements OnInit {
           const scoreValue = this.toNullableScore(score.score_level);
           if (!score.clo_code || scoreValue === null) return;
 
-          const current = scoreMap.get(score.clo_code) || { total: 0, count: 0, comments: [] };
+          const current = scoreMap.get(score.clo_code) || { total: 0, count: 0, comments: [], evaluatorIds: new Set<number>() };
           current.total += scoreValue;
           current.count += 1;
+          const evaluatorId = Number(evaluation.evaluator_id);
+          if (Number.isFinite(evaluatorId)) current.evaluatorIds.add(evaluatorId);
 
           const comment = score.comment || score.short_comment;
           if (comment) current.comments.push(comment);
@@ -1053,14 +1121,78 @@ export class RubricEvaluationComponent implements OnInit {
     return scoreMap;
   }
 
+  private getTeacherGroupScore(criterion: RubricCriterion): number | null {
+    if (this.selectedStage !== 'STAGE_2' || !this.guidedCommittee) {
+      return this.isCompanySupervisor ? (criterion.gvhdScore ?? null) : this.toNullableScore(criterion.selectedScore);
+    }
+
+    const requiredTeacherIds = this.getRequiredStage2TeacherIds();
+    if (requiredTeacherIds.length > 0 && requiredTeacherIds.some(id => !this.hasStage2TeacherScore(criterion, id))) {
+      return null;
+    }
+
+    const gvhdScore = this.isCompanySupervisor ? (criterion.gvhdScore ?? null) : this.toNullableScore(criterion.selectedScore);
+    const committeeTotal = criterion.committeeScoreTotal || 0;
+    const committeeCount = criterion.committeeScoreCount || 0;
+    const total = (gvhdScore !== null ? gvhdScore : 0) + committeeTotal;
+    const count = (gvhdScore !== null ? 1 : 0) + committeeCount;
+
+    return count > 0 ? this.roundTo(total / count, 1) : null;
+  }
+
+  private hasStage2TeacherScore(criterion: RubricCriterion, evaluatorId: number): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    const currentScore = this.toNullableScore(criterion.selectedScore);
+    if (!this.isCompanySupervisor && Number(currentUser?.userId) === Number(evaluatorId) && currentScore !== null) {
+      return true;
+    }
+
+    return (criterion.gvhdEvaluatorIds || []).some(id => Number(id) === Number(evaluatorId)) ||
+      (criterion.committeeEvaluatorIds || []).some(id => Number(id) === Number(evaluatorId));
+  }
+
+  private getRequiredStage2TeacherIds(): number[] {
+    if (!this.guidedCommittee?.members?.length) {
+      return [];
+    }
+
+    return Array.from(new Set(
+      this.guidedCommittee.members
+        .filter(member => member.role === 'GVHD' || this.isCommitteeScoringMemberRole(member.role))
+        .map(member => Number(member.user_id))
+        .filter(id => Number.isFinite(id))
+    ));
+  }
+
+  private getRequiredCommitteeMemberIds(): number[] {
+    if (!this.guidedCommittee?.members?.length) {
+      return [];
+    }
+
+    return Array.from(new Set(
+      this.guidedCommittee.members
+        .filter(member => this.isCommitteeScoringMemberRole(member.role))
+        .map(member => Number(member.user_id))
+        .filter(id => Number.isFinite(id))
+    ));
+  }
+
+  private isCommitteeScoringMemberRole(role: string | null | undefined): boolean {
+    const normalizedRole = (role || '').trim().toUpperCase();
+    return normalizedRole === 'COMMITTEE_MEMBER' || normalizedRole === 'MEMBER';
+  }
+
   private getSummaryStageAverage(
     criterion: RubricCriterion,
     gvhdScores: Map<string, ScoreAccumulator>,
-    companyScores: Map<string, ScoreAccumulator>
+    companyScores: Map<string, ScoreAccumulator>,
+    committeeScores?: Map<string, ScoreAccumulator>,
+    requireFullStage2Committee = false
   ): number | null {
     const gvhd = gvhdScores.get(criterion.id);
     const company = companyScores.get(criterion.id);
-    const gvhdScore = gvhd ? this.clampScore(gvhd.total / gvhd.count) : null;
+    const committee = committeeScores?.get(criterion.id);
+    const gvhdScore = this.getSummaryTeacherGroupScore(criterion, gvhd, committee, requireFullStage2Committee);
     const companyScore = company ? this.clampScore(company.total / company.count) : null;
     const companyRequired = criterion.companyBeta > 0;
     const gvhdRequired = criterion.gvhdBeta > 0;
@@ -1076,6 +1208,30 @@ export class RubricEvaluationComponent implements OnInit {
       (gvhdRequired ? (gvhdScore || 0) * criterion.gvhdBeta : 0);
 
     return this.roundTo(weightedScore / totalWeight, 1);
+  }
+
+  private getSummaryTeacherGroupScore(
+    criterion: RubricCriterion,
+    gvhd: ScoreAccumulator | undefined,
+    committee: ScoreAccumulator | undefined,
+    requireFullStage2Committee: boolean
+  ): number | null {
+    if (!requireFullStage2Committee || !this.guidedCommittee) {
+      return gvhd ? this.clampScore(gvhd.total / gvhd.count) : null;
+    }
+
+    const requiredTeacherIds = this.getRequiredStage2TeacherIds();
+    const scoredIds = new Set<number>([
+      ...(gvhd ? Array.from(gvhd.evaluatorIds) : []),
+      ...(committee ? Array.from(committee.evaluatorIds) : [])
+    ]);
+    if (requiredTeacherIds.length > 0 && requiredTeacherIds.some(id => !scoredIds.has(Number(id)))) {
+      return null;
+    }
+
+    const total = (gvhd?.total || 0) + (committee?.total || 0);
+    const count = (gvhd?.count || 0) + (committee?.count || 0);
+    return count > 0 ? this.roundTo(total / count, 1) : null;
   }
 
   private getSummaryCloScore(criterion: RubricCriterion, stage1Average: number | null, stage2Average: number | null): number | null {
