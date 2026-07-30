@@ -36,6 +36,7 @@ export class ScoreSummaryComponent implements OnInit {
   
   // Filters & Pagination
   campaigns: any[] = [];
+  availableCampaigns: any[] = [];
   selectedCampaignId: number | null = null;
   searchQuery: string = '';
   selectedStatus: string = '';
@@ -67,6 +68,7 @@ export class ScoreSummaryComponent implements OnInit {
     this.campaignService.getCampaigns({ page: 1, limit: 100 }, 'ACTIVE').subscribe({
       next: (res) => {
         this.campaigns = res.data || [];
+        this.refreshAvailableCampaigns();
         this.applyFilters();
       },
       error: (err) => {
@@ -77,7 +79,7 @@ export class ScoreSummaryComponent implements OnInit {
 
   loadData(): void {
     this.isLoading = true;
-    this.finalResultService.getMyStudentFinalResults(this.selectedCampaignId).subscribe({
+    this.finalResultService.getMyStudentFinalResults(null).subscribe({
       next: (res) => {
         const finalResults = Array.isArray(res) ? res : [];
         this.processStudents(finalResults);
@@ -115,6 +117,7 @@ export class ScoreSummaryComponent implements OnInit {
         committeeId: result.committee_id ?? null
       };
     });
+    this.refreshAvailableCampaigns();
   }
 
   goToEvaluation(student: StudentScore, target: 'STAGE_1' | 'STAGE_2' | 'SUMMARY'): void {
@@ -183,12 +186,33 @@ export class ScoreSummaryComponent implements OnInit {
 
   onCampaignChange(): void {
     this.currentPage = 1;
-    this.loadData();
+    this.applyFilters();
   }
 
   onPageChange(page: number): void {
     this.currentPage = page;
     this.paginate();
+  }
+
+  private refreshAvailableCampaigns(): void {
+    const managedCampaignIds = new Set(
+      this.students
+        .map(student => Number(student.campaignId))
+        .filter(id => Number.isFinite(id) && id > 0)
+    );
+
+    this.availableCampaigns = this.campaigns
+      .filter(campaign => managedCampaignIds.has(Number(campaign.id)))
+      .sort((a, b) => {
+        const aTime = a.start_date ? new Date(a.start_date).getTime() : 0;
+        const bTime = b.start_date ? new Date(b.start_date).getTime() : 0;
+        return bTime - aTime;
+      });
+
+    if (this.selectedCampaignId !== null && !managedCampaignIds.has(Number(this.selectedCampaignId))) {
+      this.selectedCampaignId = null;
+      this.currentPage = 1;
+    }
   }
 
   get totalStudents(): number { return this.filteredStudents.length; }
