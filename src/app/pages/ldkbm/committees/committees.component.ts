@@ -1,10 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommitteeService, CommitteeResponse, CreateCommitteeRequest } from '../../../core/services/committee.service';
 import { CampaignService } from '../../../core/services/campaign.service';
-import { UserService } from '../../../core/services/user.service';
-import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { DepartmentCampaignService } from '../../../core/services/department-campaign.service';
 import { CampaignResponse, UserResponse, StudentCampaignResponse } from '../../../core/models/base.model';
 
 @Component({
@@ -61,10 +58,7 @@ export class CommitteesComponent implements OnInit {
   constructor(
     private committeeService: CommitteeService,
     private campaignService: CampaignService,
-    private userService: UserService,
-    private studentCampaignService: StudentCampaignService,
-    private authService: AuthService,
-    private departmentCampaignService: DepartmentCampaignService
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -107,21 +101,19 @@ export class CommitteesComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // Load Department Campaign Context
-    this.departmentCampaignService.findOrCreate(this.selectedCampaignId, this.departmentId).subscribe({
+    this.committeeService.getCommitteePageData(this.selectedCampaignId, this.departmentId).subscribe({
       next: (res) => {
-        this.departmentCampaignId = res.id;
-        if (this.departmentCampaignId) {
-          this.loadCommittees();
-          this.loadTeachersAndMentors();
-          this.loadStudents();
-        } else {
-          this.error = 'Không tìm thấy đợt thực tập của bộ môn.';
-          this.loading = false;
-        }
+        this.departmentCampaignId = res.department_campaign?.id || null;
+        this.committees = res.committees || [];
+        this.teachers = res.teachers || [];
+        this.companyMentors = res.company_mentors || [];
+        this.allStudents = res.students || [];
+        this.updateAvailableMembers();
+        this.filterStudents();
+        this.loading = false;
       },
       error: (err) => {
-        this.error = err.message || 'Lỗi tải ngữ cảnh đợt thực tập.';
+        this.error = err.message || 'Lỗi tải dữ liệu tổ đánh giá.';
         this.loading = false;
       }
     });
@@ -141,39 +133,12 @@ export class CommitteesComponent implements OnInit {
     });
   }
 
-  loadTeachersAndMentors(): void {
-    if (!this.departmentId) return;
-    this.userService.getUsers({ page: 1, limit: 1000 }, 'GVHD', this.departmentId).subscribe({
-      next: (res) => {
-        this.teachers = res.data || [];
-        this.updateAvailableMembers();
-      }
-    });
-    this.userService.getUsers({ page: 1, limit: 1000 }, 'COMPANY_SUPERVISOR').subscribe({
-      next: (res) => {
-        this.companyMentors = res.data || [];
-        this.updateAvailableMembers();
-      }
-    });
-  }
-
   updateAvailableMembers(): void {
     this.availableMembers = [...this.teachers, ...this.companyMentors];
   }
 
   refreshCommitteeData(): void {
-    this.loadCommittees();
-    this.loadStudents();
-  }
-
-  loadStudents(): void {
-    if (!this.selectedCampaignId || !this.departmentId) return;
-    this.studentCampaignService.findByCampaignAndDepartment(this.selectedCampaignId, this.departmentId, { page: 1, limit: 1000 }).subscribe({
-      next: (res) => {
-        this.allStudents = res.data || [];
-        this.filterStudents();
-      }
-    });
+    this.loadContextAndData();
   }
 
   // --- STATS HELPER ---
@@ -384,8 +349,7 @@ export class CommitteesComponent implements OnInit {
       this.committeeService.deleteCommittee(committee.id).subscribe({
         next: () => {
           this.showSuccess('Đã xóa hội đồng thành công.');
-          this.loadCommittees();
-          this.loadStudents();
+          this.refreshCommitteeData();
         },
         error: (err) => {
           this.showError(err.error?.message || err.message || 'Lỗi khi xóa hội đồng.');
@@ -467,8 +431,7 @@ export class CommitteesComponent implements OnInit {
       next: () => {
         this.closeStudentModal();
         this.showSuccess('Phân công sinh viên vào hội đồng thành công.');
-        this.loadCommittees();
-        this.loadStudents();
+        this.refreshCommitteeData();
       },
       error: (err) => {
         this.showError(err.error?.message || err.message || 'Lỗi khi phân công sinh viên.');
