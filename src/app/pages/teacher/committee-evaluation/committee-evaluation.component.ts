@@ -4,7 +4,7 @@ import { CampaignService } from '../../../core/services/campaign.service';
 import { CommitteeResponse, CommitteeService } from '../../../core/services/committee.service';
 import { DepartmentCampaignService } from '../../../core/services/department-campaign.service';
 import { EvaluationRequest, EvaluationService } from '../../../core/services/evaluation.service';
-import { CampaignResponse, StudentCampaignResponse } from '../../../core/models/base.model';
+import { StudentCampaignResponse } from '../../../core/models/base.model';
 import { ToastService } from '../../../core/services/toast.service';
 
 interface CommitteeCriterion {
@@ -23,6 +23,11 @@ interface MemberScore {
   isCurrentUser: boolean;
 }
 
+interface CampaignOption {
+  id: number;
+  name: string;
+}
+
 @Component({
   selector: 'app-committee-evaluation',
   templateUrl: './committee-evaluation.component.html',
@@ -30,16 +35,16 @@ interface MemberScore {
 })
 export class CommitteeEvaluationComponent implements OnInit {
   isLoading = true;
+  isStudentsLoading = false;
   isSaving = false;
   isDetailLoading = false;
 
   committees: CommitteeResponse[] = [];
-  campaigns: CampaignResponse[] = [];
+  campaigns: CampaignOption[] = [];
   selectedCampaignId: number | null = null;
   selectedCommitteeId: number | null = null;
   selectedCommittee: CommitteeResponse | null = null;
 
-  allStudents: StudentCampaignResponse[] = [];
   students: StudentCampaignResponse[] = [];
   selectedStudent: StudentCampaignResponse | null = null;
   searchTerm = '';
@@ -54,7 +59,8 @@ export class CommitteeEvaluationComponent implements OnInit {
 
   currentPage = 1;
   pageSize = 5;
-  paginatedStudents: StudentCampaignResponse[] = [];
+  totalStudents = 0;
+  private searchTimer: any = null;
 
   constructor(
     private authService: AuthService,
@@ -71,22 +77,19 @@ export class CommitteeEvaluationComponent implements OnInit {
 
   loadData(): void {
     this.isLoading = true;
-    this.committeeService.getCommitteeGradingPageData().subscribe({
-      next: (data) => {
-        this.committees = data.committees || [];
-        this.campaigns = data.campaigns || [];
-        this.allStudents = (data.students || [])
-          .sort((a: StudentCampaignResponse, b: StudentCampaignResponse) => this.compareStudentsByName(a, b));
+    this.committeeService.getMyScoringCommittees().subscribe({
+      next: (committees) => {
+        this.committees = committees || [];
+        this.campaigns = this.buildCampaignOptions(this.committees);
         const firstCampaignId = this.committees
           .map(committee => committee.campaign_id)
           .find((campaignId): campaignId is number => campaignId !== undefined && campaignId !== null);
         this.selectedCampaignId = firstCampaignId || null;
-        this.applyFilters();
         this.isLoading = false;
       },
       error: () => {
         this.isLoading = false;
-        this.toastService.error('Không thể tải dữ liệu chấm hội đồng.');
+        this.toastService.error('Không thể tải danh sách hội đồng.');
       }
     });
   }
@@ -95,7 +98,7 @@ export class CommitteeEvaluationComponent implements OnInit {
     this.selectedCommittee = this.filteredCommittees.find(c => Number(c.id) === Number(this.selectedCommitteeId)) || null;
     this.currentPage = 1;
     this.selectedStudent = null;
-    this.applyFilters();
+    this.loadStudents();
   }
 
   onCampaignChange(): void {
@@ -104,7 +107,8 @@ export class CommitteeEvaluationComponent implements OnInit {
     this.currentPage = 1;
     this.selectedStudent = null;
     this.searchTerm = '';
-    this.applyFilters();
+    this.students = [];
+    this.totalStudents = 0;
   }
 
   get filteredCommittees(): CommitteeResponse[] {
@@ -114,43 +118,49 @@ export class CommitteeEvaluationComponent implements OnInit {
     return this.committees.filter(committee => Number(committee.campaign_id) === Number(this.selectedCampaignId));
   }
 
-  get selectedCampaign(): CampaignResponse | null {
+  get selectedCampaign(): CampaignOption | null {
     return this.campaigns.find(campaign => Number(campaign.id) === Number(this.selectedCampaignId)) || null;
   }
 
-  applyFilters(): void {
+  loadStudents(): void {
     if (this.selectedCommitteeId === null) {
       this.students = [];
-      this.paginatedStudents = [];
+      this.totalStudents = 0;
       return;
     }
 
-    let result = [...this.allStudents];
-    result = result.filter(student => Number(student.committee_id) === Number(this.selectedCommitteeId));
-
-    const term = this.searchTerm.trim().toLowerCase();
-    if (term) {
-      result = result.filter(student =>
-        (student.student_code || '').toLowerCase().includes(term) ||
-        (student.full_name || '').toLowerCase().includes(term) ||
-        (student.class_name || '').toLowerCase().includes(term)
-      );
-    }
-
-    this.students = result;
-    const totalPages = Math.ceil(this.students.length / this.pageSize) || 1;
-    if (this.currentPage > totalPages) this.currentPage = totalPages;
-    this.paginate();
+    this.isStudentsLoading = true;
+    this.committeeService.getCommitteeStudentsForScoring(
+      Number(this.selectedCommitteeId),
+      this.currentPage,
+      this.pageSize,
+      this.searchTerm
+    ).subscribe({
+      next: (page) => {
+        this.students = page.data || [];
+        this.totalStudents = page.total || 0;
+        this.isStudentsLoading = false;
+      },
+      error: () => {
+        this.students = [];
+        this.totalStudents = 0;
+        this.isStudentsLoading = false;
+        this.toastService.error('Không thể tải danh sách sinh viên hội đồng.');
+      }
+    });
   }
 
-  paginate(): void {
-    const start = (this.currentPage - 1) * this.pageSize;
-    this.paginatedStudents = this.students.slice(start, start + this.pageSize);
+  onSearchChange(): void {
+    this.currentPage = 1;
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.searchTimer = setTimeout(() => this.loadStudents(), 250);
   }
 
   onPageChange(page: number): void {
     this.currentPage = page;
-    this.paginate();
+    this.loadStudents();
   }
 
   selectStudent(student: StudentCampaignResponse): void {
@@ -196,12 +206,6 @@ export class CommitteeEvaluationComponent implements OnInit {
   }
 
   loadCampaignInfo(campaignId: number): void {
-    const cachedCampaign = this.campaigns.find(campaign => Number(campaign.id) === Number(campaignId));
-    if (cachedCampaign) {
-      this.applyCampaignInfo(cachedCampaign);
-      return;
-    }
-
     this.campaignService.getById(campaignId).subscribe({
       next: (res) => {
         this.applyCampaignInfo(this.unwrap(res));
@@ -355,10 +359,14 @@ export class CommitteeEvaluationComponent implements OnInit {
     return parts.length ? parts[parts.length - 1] : '';
   }
 
-  private compareStudentsByName(a: StudentCampaignResponse, b: StudentCampaignResponse): number {
-    const first = this.getStudentFirstName(a).localeCompare(this.getStudentFirstName(b), 'vi', { sensitivity: 'base' });
-    if (first !== 0) return first;
-    return (a.student_code || '').localeCompare(b.student_code || '', 'vi', { numeric: true });
+  private buildCampaignOptions(committees: CommitteeResponse[]): CampaignOption[] {
+    const campaignMap = new Map<number, string>();
+    committees.forEach(committee => {
+      const campaignId = Number(committee.campaign_id);
+      if (!Number.isFinite(campaignId)) return;
+      campaignMap.set(campaignId, committee.campaign_name || `Đợt ${campaignId}`);
+    });
+    return Array.from(campaignMap.entries()).map(([id, name]) => ({ id, name }));
   }
 
   private handleDetailError(message: string): void {

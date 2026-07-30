@@ -82,22 +82,27 @@
         <div class="relative w-full md:w-80">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
           <input [(ngModel)]="searchTerm"
-                 (input)="applyFilters()"
+                 (input)="onSearchChange()"
                  placeholder="Tìm mã SV, họ tên, lớp..."
                  class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"/>
         </div>
         <div class="flex items-center gap-2 text-sm text-slate-500">
           <span class="material-symbols-outlined text-[18px]">info</span>
-          Tổng: <span class="font-bold text-slate-800">{{ students.length }}</span> sinh viên
+          Tổng: <span class="font-bold text-slate-800">{{ totalStudents }}</span> sinh viên
         </div>
       </div>
 
-      <div *ngIf="students.length === 0" class="p-14 text-center text-slate-500">
+      <div *ngIf="isStudentsLoading" class="p-14 text-center text-slate-500">
+        <span class="material-symbols-outlined animate-spin text-4xl mb-3 text-[#00429D]">autorenew</span>
+        <p class="font-semibold">Đang tải danh sách sinh viên...</p>
+      </div>
+
+      <div *ngIf="!isStudentsLoading && totalStudents === 0" class="p-14 text-center text-slate-500">
         <span class="material-symbols-outlined text-5xl text-slate-300 mb-3">person_off</span>
         <p class="font-semibold">Không có sinh viên nào trong hội đồng đang chọn.</p>
       </div>
 
-      <div *ngIf="students.length > 0" class="overflow-x-auto">
+      <div *ngIf="!isStudentsLoading && students.length > 0" class="overflow-x-auto">
         <table class="w-full min-w-[900px] text-left text-sm border-collapse">
           <thead class="bg-slate-50 text-slate-500 uppercase text-xs tracking-wide border-b border-slate-200">
             <tr>
@@ -111,7 +116,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200">
-            <tr *ngFor="let student of paginatedStudents; let i = index" class="hover:bg-blue-50/40">
+            <tr *ngFor="let student of students; let i = index" class="hover:bg-blue-50/40">
               <td class="px-4 py-3 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
               <td class="px-4 py-3 font-medium text-[#002d70]">{{ student.student_code }}</td>
               <td class="px-4 py-3 font-semibold text-slate-800">{{ student.full_name }}</td>
@@ -129,9 +134,9 @@
         </table>
       </div>
 
-      <app-pagination *ngIf="students.length > pageSize"
+      <app-pagination *ngIf="!isStudentsLoading && totalStudents > pageSize"
                       [currentPage]="currentPage"
-                      [totalItems]="students.length"
+                      [totalItems]="totalStudents"
                       [pageSize]="pageSize"
                       itemLabel="sinh viên"
                       (pageChange)="onPageChange($event)">

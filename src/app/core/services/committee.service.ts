@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
-import { CampaignResponse, StudentCampaignResponse, UserResponse } from '../models/base.model';
+import { BasePagination, StudentCampaignResponse, UserResponse } from '../models/base.model';
+import { HttpParams } from '@angular/common/http';
 
 export interface CommitteeMemberRequest {
   user_id: number;
@@ -28,6 +29,7 @@ export interface CommitteeResponse {
   id: number;
   department_campaign_id: number;
   campaign_id?: number;
+  campaign_name?: string;
   department_id?: number;
   name: string;
   evaluation_date?: string;
@@ -45,12 +47,6 @@ export interface CommitteePageDataResponse {
   committees: CommitteeResponse[];
   teachers: UserResponse[];
   company_mentors: UserResponse[];
-  students: StudentCampaignResponse[];
-}
-
-export interface CommitteeGradingPageDataResponse {
-  committees: CommitteeResponse[];
-  campaigns: CampaignResponse[];
   students: StudentCampaignResponse[];
 }
 
@@ -73,8 +69,23 @@ export class CommitteeService {
     return this.apiService.get<CommitteePageDataResponse>(`/base/committees/page-data?campaign_id=${campaignId}&department_id=${departmentId}`);
   }
 
-  getCommitteeGradingPageData(): Observable<CommitteeGradingPageDataResponse> {
-    return this.apiService.get<CommitteeGradingPageDataResponse>('/base/committees/grading-page-data');
+  getMyScoringCommittees(): Observable<CommitteeResponse[]> {
+    return this.apiService.get<CommitteeResponse[]>('/base/committees/my-scoring-committees');
+  }
+
+  getCommitteeStudentsForScoring(
+    committeeId: number,
+    page: number,
+    limit: number,
+    searchText?: string
+  ): Observable<BasePagination<StudentCampaignResponse>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+    if (searchText?.trim()) {
+      params = params.set('searchText', searchText.trim());
+    }
+    return this.apiService.get<BasePagination<StudentCampaignResponse>>(`/base/committees/${committeeId}/scoring-students`, params);
   }
 
   getCommitteeById(id: number): Observable<CommitteeResponse> {
