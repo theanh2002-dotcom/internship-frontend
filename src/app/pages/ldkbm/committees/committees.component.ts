@@ -234,7 +234,7 @@ export class CommitteesComponent implements OnInit {
         user_id: m.user_id,
         full_name: m.full_name || t?.full_name || `ID: ${m.user_id}`,
         email: m.email || t?.email || '',
-        role: m.role
+        role: this.normalizeCommitteeRole(m.role)
       };
     });
     
@@ -266,12 +266,18 @@ export class CommitteesComponent implements OnInit {
     
     const teacher = this.availableMembers.find(t => Number(t.id) === Number(this.selectedTeacherId));
     if (!teacher) return;
+
+    const normalizedRole = this.normalizeCommitteeRole(this.selectedMemberRole);
+    if (!this.isAllowedRoleForUser(teacher, normalizedRole)) {
+      this.showError('Vai trò không khớp với loại tài khoản đã chọn.');
+      return;
+    }
     
     this.committeeMembers.push({
       user_id: teacher.id,
       full_name: teacher.full_name,
       email: teacher.email,
-      role: this.selectedMemberRole
+      role: normalizedRole
     });
     
     // Reset selection fields
@@ -279,12 +285,30 @@ export class CommitteesComponent implements OnInit {
     this.selectedMemberRole = 'COMMITTEE_MEMBER';
   }
 
+  onSelectedMemberChange(selectedTeacherId: number | string | null): void {
+    this.selectedTeacherId = selectedTeacherId ? Number(selectedTeacherId) : null;
+    const user = this.getSelectedMemberUser();
+    if (!user) {
+      this.selectedMemberRole = 'COMMITTEE_MEMBER';
+      return;
+    }
+
+    if (user.role === 'COMPANY_SUPERVISOR') {
+      this.selectedMemberRole = 'COMPANY_SUPERVISOR';
+      return;
+    }
+
+    if (user.role === 'GVHD' && this.isRoleOptionDisabled(this.selectedMemberRole)) {
+      this.selectedMemberRole = this.hasSelectedGvhd() ? 'COMMITTEE_MEMBER' : 'GVHD';
+    }
+  }
+
   removeMember(userId: number): void {
     this.committeeMembers = this.committeeMembers.filter(m => m.user_id !== userId);
   }
 
   get selectedGvhdCount(): number {
-    return this.committeeMembers.filter(m => m.role === 'GVHD').length;
+    return this.committeeMembers.filter(m => this.normalizeCommitteeRole(m.role) === 'GVHD').length;
   }
 
   hasSelectedGvhd(): boolean {
@@ -322,7 +346,7 @@ export class CommitteesComponent implements OnInit {
       room: this.formRoom,
       members: this.committeeMembers.map(m => ({
         user_id: m.user_id,
-        role: m.role
+        role: this.normalizeCommitteeRole(m.role)
       }))
     };
 
@@ -467,7 +491,7 @@ export class CommitteesComponent implements OnInit {
 
   // --- MEMBER ROLE FORMATTER ---
   getRoleLabel(role: string): string {
-    switch (role) {
+    switch (this.normalizeCommitteeRole(role)) {
       case 'COMPANY_SUPERVISOR': return 'Doanh nghiệp (ĐVHD)';
       case 'GVHD': return 'GV Hướng dẫn (GVHD)';
       case 'COMMITTEE_MEMBER': return 'Ủy viên (UV)';
@@ -484,5 +508,33 @@ export class CommitteesComponent implements OnInit {
   showError(msg: string): void {
     this.error = msg;
     setTimeout(() => this.error = null, 5000);
+  }
+
+  normalizeCommitteeRole(role: string | null | undefined): string {
+    const normalized = (role || '').trim().toUpperCase();
+    if (normalized === 'MEMBER') return 'COMMITTEE_MEMBER';
+    return normalized;
+  }
+
+  isAllowedRoleForUser(user: UserResponse, role: string): boolean {
+    const normalizedRole = this.normalizeCommitteeRole(role);
+    if (user.role === 'COMPANY_SUPERVISOR') {
+      return normalizedRole === 'COMPANY_SUPERVISOR';
+    }
+    if (user.role === 'GVHD') {
+      return normalizedRole === 'GVHD' || normalizedRole === 'COMMITTEE_MEMBER';
+    }
+    return false;
+  }
+
+  isRoleOptionDisabled(role: string | null | undefined): boolean {
+    const user = this.getSelectedMemberUser();
+    if (!user) return false;
+    return !this.isAllowedRoleForUser(user, this.normalizeCommitteeRole(role));
+  }
+
+  private getSelectedMemberUser(): UserResponse | undefined {
+    if (!this.selectedTeacherId) return undefined;
+    return this.availableMembers.find(user => Number(user.id) === Number(this.selectedTeacherId));
   }
 }
