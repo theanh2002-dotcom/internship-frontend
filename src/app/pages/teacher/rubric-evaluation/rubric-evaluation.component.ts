@@ -89,6 +89,7 @@ export class RubricEvaluationComponent implements OnInit {
   paginatedStudents: StudentCampaignResponse[] = [];
 
   isCompanySupervisor = false;
+  gradingMode: 'GUIDED' | 'COMMITTEE' = 'GUIDED';
 
   columns = [
     { key: 'STT', label: 'STT', width: '60px', align: 'center' },
@@ -122,6 +123,12 @@ export class RubricEvaluationComponent implements OnInit {
     this.isCompanySupervisor = currentUser?.role === 'COMPANY_SUPERVISOR';
     this.loadCampaigns();
     this.loadEligibleStudents();
+  }
+
+  setGradingMode(mode: 'GUIDED' | 'COMMITTEE'): void {
+    if (this.gradingMode === mode) return;
+    this.selectedStudent = null;
+    this.gradingMode = mode;
   }
 
   loadCampaigns(): void {

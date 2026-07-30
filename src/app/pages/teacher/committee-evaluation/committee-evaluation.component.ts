@@ -79,7 +79,12 @@ export class CommitteeEvaluationComponent implements OnInit {
       campaigns: this.campaignService.getCampaigns({ page: 1, limit: 1000 })
     }).subscribe({
       next: ({ committees, campaigns }) => {
-        this.committees = committees || [];
+        const currentUser = this.authService.getCurrentUser();
+        this.committees = (committees || []).filter(committee =>
+          (committee.members || []).some(member =>
+            Number(member.user_id) === Number(currentUser?.userId) && member.role === 'COMMITTEE_MEMBER'
+          )
+        );
         this.campaigns = campaigns.data || [];
         const firstCampaignId = this.committees
           .map(committee => committee.campaign_id)
@@ -99,8 +104,13 @@ export class CommitteeEvaluationComponent implements OnInit {
       next: (res) => {
         const data = Array.isArray(res) ? res : (res.data || res.payload || []);
         const committeeIds = new Set(this.committees.map(c => Number(c.id)));
+        const currentUserId = Number(this.authService.getCurrentUser()?.userId);
         this.allStudents = data
-          .filter((student: StudentCampaignResponse) => student.committee_id && committeeIds.has(Number(student.committee_id)))
+          .filter((student: StudentCampaignResponse) =>
+            student.committee_id &&
+            committeeIds.has(Number(student.committee_id)) &&
+            !(student.gvhd_ids || []).map(Number).includes(currentUserId)
+          )
           .sort((a: StudentCampaignResponse, b: StudentCampaignResponse) => this.compareStudentsByName(a, b));
         this.applyFilters();
         this.isLoading = false;
@@ -239,8 +249,14 @@ export class CommitteeEvaluationComponent implements OnInit {
     this.evaluationService.findEvaluations(this.selectedStudent.id).subscribe({
       next: (res) => {
         this.evaluations = (Array.isArray(res) ? res : (res.data || res.payload || []))
-          .filter((evaluation: any) => evaluation.stage === 'STAGE_2' && evaluation.evaluator_type === 'COMMITTEE_MEMBER');
-        this.existingEvaluation = this.evaluations.find((evaluation: any) => evaluation.evaluator_id === currentUser?.userId) || null;
+          .filter((evaluation: any) =>
+            evaluation.stage === 'STAGE_2' &&
+            ['GVHD', 'COMMITTEE_MEMBER'].includes(evaluation.evaluator_type)
+          );
+        this.existingEvaluation = this.evaluations.find((evaluation: any) =>
+          evaluation.evaluator_type === 'COMMITTEE_MEMBER' &&
+          evaluation.evaluator_id === currentUser?.userId
+        ) || null;
         if (this.existingEvaluation) {
           this.generalComment = this.existingEvaluation.general_comment || '';
           (this.existingEvaluation.scores || []).forEach((score: any) => {
@@ -308,9 +324,13 @@ export class CommitteeEvaluationComponent implements OnInit {
 
   getMemberScores(criterion: CommitteeCriterion): MemberScore[] {
     const currentUser = this.authService.getCurrentUser();
-    const members = this.selectedCommittee?.members || [];
+    const members = this.scoringCommitteeMembers;
     return members.map(member => {
-      const evaluation = this.evaluations.find(evaluation => Number(evaluation.evaluator_id) === Number(member.user_id));
+      const evaluation = this.evaluations.find(evaluation =>
+        Number(evaluation.evaluator_id) === Number(member.user_id) &&
+        ((member.role === 'GVHD' && evaluation.evaluator_type === 'GVHD') ||
+          (member.role === 'COMMITTEE_MEMBER' && evaluation.evaluator_type === 'COMMITTEE_MEMBER'))
+      );
       const score = evaluation?.scores?.find((item: any) => item.clo_code === criterion.id);
       return {
         memberName: `${member.full_name || member.email || 'Thành viên'}${member.role === 'GVHD' ? ' (GVHD)' : ''}`,
@@ -322,11 +342,27 @@ export class CommitteeEvaluationComponent implements OnInit {
   }
 
   getCommitteeAverageScore(criterion: CommitteeCriterion): number | null {
-    const values = this.getMemberScores(criterion)
+    const memberScores = this.getMemberScores(criterion);
+    if (memberScores.length === 0) return null;
+    const values = memberScores.map(item => item.isCurrentUser ? this.toNullableScore(criterion.selectedScore) : item.score);
+    if (values.some(value => value === null)) return null;
+    const completedValues = values.filter((value): value is number => value !== null);
+    return this.roundTo(completedValues.reduce((sum, value) => sum + value, 0) / completedValues.length, 1);
+  }
+
+  get scoringCommitteeMembers(): any[] {
+    return (this.selectedCommittee?.members || [])
+      .filter(member => member.role === 'GVHD' || member.role === 'COMMITTEE_MEMBER');
+  }
+
+  getCommitteeProgressText(criterion: CommitteeCriterion): string {
+    const memberScores = this.getMemberScores(criterion);
+    if (memberScores.length === 0) return 'Chưa có thành viên chấm';
+    const completed = memberScores
       .map(item => item.isCurrentUser ? this.toNullableScore(criterion.selectedScore) : item.score)
-      .filter((value): value is number => value !== null);
-    if (values.length === 0) return null;
-    return this.roundTo(values.reduce((sum, value) => sum + value, 0) / values.length, 1);
+      .filter(value => value !== null)
+      .length;
+    return `${completed}/${memberScores.length} thành viên đã chấm`;
   }
 
   getAverageScoreText(): string {

@@ -4,7 +4,30 @@
     <p>Đang tải dữ liệu...</p>
   </div>
 
-  <div *ngIf="!selectedStudent && !isLoading" class="space-y-6">
+  <div *ngIf="!isCompanySupervisor && !selectedStudent" class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800">Chấm điểm</h2>
+        <p class="text-sm text-slate-500 mt-1">Chọn nhóm sinh viên cần chấm theo vai trò hiện tại của giảng viên.</p>
+      </div>
+      <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
+        <button type="button"
+                (click)="setGradingMode('GUIDED')"
+                [class]="gradingMode === 'GUIDED' ? 'px-4 py-2 rounded-md bg-[#00429D] text-white text-sm font-semibold shadow-sm' : 'px-4 py-2 rounded-md text-slate-600 hover:text-slate-900 text-sm font-semibold'">
+          Chấm SV hướng dẫn
+        </button>
+        <button type="button"
+                (click)="setGradingMode('COMMITTEE')"
+                [class]="gradingMode === 'COMMITTEE' ? 'px-4 py-2 rounded-md bg-[#00429D] text-white text-sm font-semibold shadow-sm' : 'px-4 py-2 rounded-md text-slate-600 hover:text-slate-900 text-sm font-semibold'">
+          Chấm SV hội đồng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <app-committee-evaluation *ngIf="!isCompanySupervisor && gradingMode === 'COMMITTEE' && !selectedStudent"></app-committee-evaluation>
+
+  <div *ngIf="gradingMode === 'GUIDED' && !selectedStudent && !isLoading" class="space-y-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
         <h2 class="text-2xl font-bold text-slate-800">Danh sách Sinh viên</h2>
@@ -125,7 +148,7 @@
     </section>
   </div>
 
-  <div *ngIf="selectedStudent && !isLoading" class="space-y-6 min-w-0">
+  <div *ngIf="gradingMode === 'GUIDED' && selectedStudent && !isLoading" class="space-y-6 min-w-0">
     <div class="flex items-center gap-4">
       <button (click)="selectedStudent = null"
               class="w-11 h-11 rounded-full border border-slate-300 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-[#00429D] transition-colors shadow-sm"
