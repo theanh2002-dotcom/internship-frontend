@@ -79,10 +79,10 @@ export class CommitteeEvaluationComponent implements OnInit {
       campaigns: this.campaignService.getCampaigns({ page: 1, limit: 1000 })
     }).subscribe({
       next: ({ committees, campaigns }) => {
-        const currentUser = this.authService.getCurrentUser();
+        const currentUserId = this.getCurrentUserId();
         this.committees = (committees || []).filter(committee =>
           (committee.members || []).some(member =>
-            Number(member.user_id) === Number(currentUser?.userId) && member.role === 'COMMITTEE_MEMBER'
+            Number(member.user_id) === currentUserId && this.isCommitteeScoringMemberRole(member.role)
           )
         );
         this.campaigns = campaigns.data || [];
@@ -104,7 +104,7 @@ export class CommitteeEvaluationComponent implements OnInit {
       next: (res) => {
         const data = Array.isArray(res) ? res : (res.data || res.payload || []);
         const committeeIds = new Set(this.committees.map(c => Number(c.id)));
-        const currentUserId = Number(this.authService.getCurrentUser()?.userId);
+        const currentUserId = this.getCurrentUserId();
         this.allStudents = data
           .filter((student: StudentCampaignResponse) =>
             student.committee_id &&
@@ -329,7 +329,7 @@ export class CommitteeEvaluationComponent implements OnInit {
       const evaluation = this.evaluations.find(evaluation =>
         Number(evaluation.evaluator_id) === Number(member.user_id) &&
         ((member.role === 'GVHD' && evaluation.evaluator_type === 'GVHD') ||
-          (member.role === 'COMMITTEE_MEMBER' && evaluation.evaluator_type === 'COMMITTEE_MEMBER'))
+          (this.isCommitteeScoringMemberRole(member.role) && evaluation.evaluator_type === 'COMMITTEE_MEMBER'))
       );
       const score = evaluation?.scores?.find((item: any) => item.clo_code === criterion.id);
       return {
@@ -352,7 +352,7 @@ export class CommitteeEvaluationComponent implements OnInit {
 
   get scoringCommitteeMembers(): any[] {
     return (this.selectedCommittee?.members || [])
-      .filter(member => member.role === 'GVHD' || member.role === 'COMMITTEE_MEMBER');
+      .filter(member => member.role === 'GVHD' || this.isCommitteeScoringMemberRole(member.role));
   }
 
   getCommitteeProgressText(criterion: CommitteeCriterion): string {
@@ -423,5 +423,15 @@ export class CommitteeEvaluationComponent implements OnInit {
   private roundTo(value: number, digits: number): number {
     const factor = Math.pow(10, digits);
     return Math.round(value * factor) / factor;
+  }
+
+  private getCurrentUserId(): number {
+    const currentUser: any = this.authService.getCurrentUser();
+    return Number(currentUser?.userId ?? currentUser?.user_id ?? currentUser?.id);
+  }
+
+  private isCommitteeScoringMemberRole(role: string | null | undefined): boolean {
+    const normalizedRole = (role || '').trim().toUpperCase();
+    return normalizedRole === 'COMMITTEE_MEMBER' || normalizedRole === 'MEMBER';
   }
 }
