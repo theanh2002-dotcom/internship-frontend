@@ -12,6 +12,7 @@ export interface FinalResultResponse {
   class_name: string;
   campaign_id?: number;
   department_id?: number;
+  committee_id?: number;
   company_name?: string;
   gvhd_name?: string;
   stage_1_score?: number;

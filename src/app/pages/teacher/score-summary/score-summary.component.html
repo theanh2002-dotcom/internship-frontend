@@ -132,12 +132,22 @@
                         
                         <!-- Scores -->
                         <td class="px-2 py-3 border-r border-slate-200 text-center font-medium">
-                            <span *ngIf="student.stage1Score !== null">{{ student.stage1Score | number:'1.1-1' }}</span>
-                            <span *ngIf="student.stage1Score === null" class="text-slate-300">-</span>
+                            <button type="button"
+                                    (click)="goToEvaluation(student, 'GUIDED')"
+                                    class="inline-flex min-w-14 items-center justify-center rounded border border-transparent px-2 py-1 text-[#00429D] hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                    title="Mở tab Chấm SV hướng dẫn">
+                                <span *ngIf="student.stage1Score !== null">{{ student.stage1Score | number:'1.1-1' }}</span>
+                                <span *ngIf="student.stage1Score === null" class="text-slate-400">-</span>
+                            </button>
                         </td>
                         <td class="px-2 py-3 border-r border-slate-200 text-center font-medium">
-                            <span *ngIf="student.stage2Score !== null">{{ student.stage2Score | number:'1.1-1' }}</span>
-                            <span *ngIf="student.stage2Score === null" class="text-slate-300">-</span>
+                            <button type="button"
+                                    (click)="goToEvaluation(student, 'COMMITTEE')"
+                                    class="inline-flex min-w-14 items-center justify-center rounded border border-transparent px-2 py-1 text-[#00429D] hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                    title="Mở tab Chấm SV hội đồng">
+                                <span *ngIf="student.stage2Score !== null">{{ student.stage2Score | number:'1.1-1' }}</span>
+                                <span *ngIf="student.stage2Score === null" class="text-slate-400">-</span>
+                            </button>
                         </td>
                         
                         <!-- Final Score -->

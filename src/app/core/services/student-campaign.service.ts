@@ -45,6 +45,10 @@ export class StudentCampaignService {
     return this.apiService.get<any>('/base/student-campaigns/my-guided-students');
   }
 
+  findById(id: number): Observable<any> {
+    return this.apiService.get<any>(`/base/student-campaigns/${id}`);
+  }
+
   importStudents(request: ImportStudentRequest): Observable<any> {
     return this.apiService.post<any>('/base/student-campaigns/import', request);
   }

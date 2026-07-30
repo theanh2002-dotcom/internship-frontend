@@ -6,6 +6,8 @@ import { DepartmentCampaignService } from '../../../core/services/department-cam
 import { EvaluationRequest, EvaluationService } from '../../../core/services/evaluation.service';
 import { StudentCampaignResponse } from '../../../core/models/base.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { ActivatedRoute } from '@angular/router';
+import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 
 interface CommitteeCriterion {
   id: string;
@@ -61,6 +63,8 @@ export class CommitteeEvaluationComponent implements OnInit {
   pageSize = 5;
   totalStudents = 0;
   private searchTimer: any = null;
+  private pendingStudentCampaignId: number | null = null;
+  private pendingCommitteeId: number | null = null;
 
   constructor(
     private authService: AuthService,
@@ -68,10 +72,13 @@ export class CommitteeEvaluationComponent implements OnInit {
     private committeeService: CommitteeService,
     private departmentCampaignService: DepartmentCampaignService,
     private evaluationService: EvaluationService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private route: ActivatedRoute,
+    private studentCampaignService: StudentCampaignService
   ) {}
 
   ngOnInit(): void {
+    this.readNavigationContext();
     this.loadData();
   }
 
@@ -84,8 +91,16 @@ export class CommitteeEvaluationComponent implements OnInit {
         const firstCampaignId = this.committees
           .map(committee => committee.campaign_id)
           .find((campaignId): campaignId is number => campaignId !== undefined && campaignId !== null);
-        this.selectedCampaignId = firstCampaignId || null;
+        const pendingCommittee = this.pendingCommitteeId
+          ? this.committees.find(committee => Number(committee.id) === Number(this.pendingCommitteeId))
+          : null;
+        this.selectedCampaignId = pendingCommittee?.campaign_id || this.selectedCampaignId || firstCampaignId || null;
+        this.selectedCommittee = pendingCommittee || null;
+        this.selectedCommitteeId = pendingCommittee?.id || null;
         this.isLoading = false;
+        if (this.selectedCommitteeId !== null) {
+          this.loadStudents(true);
+        }
       },
       error: () => {
         this.isLoading = false;
@@ -122,7 +137,7 @@ export class CommitteeEvaluationComponent implements OnInit {
     return this.campaigns.find(campaign => Number(campaign.id) === Number(this.selectedCampaignId)) || null;
   }
 
-  loadStudents(): void {
+  loadStudents(openPendingStudent = false): void {
     if (this.selectedCommitteeId === null) {
       this.students = [];
       this.totalStudents = 0;
@@ -140,6 +155,9 @@ export class CommitteeEvaluationComponent implements OnInit {
         this.students = page.data || [];
         this.totalStudents = page.total || 0;
         this.isStudentsLoading = false;
+        if (openPendingStudent) {
+          this.openPendingCommitteeStudent();
+        }
       },
       error: () => {
         this.students = [];
@@ -174,6 +192,48 @@ export class CommitteeEvaluationComponent implements OnInit {
     this.selectedCommittee = this.committees.find(c => Number(c.id) === Number(student.committee_id)) || this.selectedCommittee;
     this.selectedCommitteeId = this.selectedCommittee?.id || this.selectedCommitteeId;
     this.loadDetail();
+  }
+
+  private readNavigationContext(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const studentCampaignId = Number(params.get('studentCampaignId'));
+    this.pendingStudentCampaignId = Number.isFinite(studentCampaignId) && studentCampaignId > 0 ? studentCampaignId : null;
+
+    const committeeId = Number(params.get('committeeId'));
+    this.pendingCommitteeId = Number.isFinite(committeeId) && committeeId > 0 ? committeeId : null;
+
+    const campaignId = Number(params.get('campaignId'));
+    this.selectedCampaignId = Number.isFinite(campaignId) && campaignId > 0 ? campaignId : null;
+  }
+
+  private openPendingCommitteeStudent(): void {
+    if (this.pendingStudentCampaignId === null || this.selectedCommitteeId === null) {
+      return;
+    }
+
+    const student = this.students.find(item => Number(item.id) === Number(this.pendingStudentCampaignId));
+    if (student) {
+      this.selectPendingCommitteeStudent(student);
+      return;
+    }
+
+    this.studentCampaignService.findById(this.pendingStudentCampaignId).subscribe({
+      next: (response) => {
+        const detail = this.unwrap(response) as StudentCampaignResponse;
+        if (Number(detail?.committee_id) !== Number(this.selectedCommitteeId)) {
+          this.toastService.error('Sinh viên không thuộc hội đồng đang chọn.');
+          return;
+        }
+        this.selectPendingCommitteeStudent(detail);
+      },
+      error: () => this.toastService.error('Không thể mở sinh viên cần chấm.')
+    });
+  }
+
+  private selectPendingCommitteeStudent(student: StudentCampaignResponse): void {
+    this.pendingStudentCampaignId = null;
+    this.pendingCommitteeId = null;
+    this.selectStudent(student);
   }
 
   loadDetail(): void {

@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CampaignResponse, StudentCampaignResponse } from '../../../core/models/base.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { CampaignService } from '../../../core/services/campaign.service';
+import { ActivatedRoute } from '@angular/router';
 
 interface RubricLevel {
   label: string;
@@ -90,6 +91,9 @@ export class RubricEvaluationComponent implements OnInit {
 
   isCompanySupervisor = false;
   gradingMode: 'GUIDED' | 'COMMITTEE' = 'GUIDED';
+  private pendingStudentCampaignId: number | null = null;
+  private pendingStage: 'STAGE_1' | 'STAGE_2' | null = null;
+  private hasLoadedGuidedStudents = false;
 
   columns = [
     { key: 'STT', label: 'STT', width: '60px', align: 'center' },
@@ -115,20 +119,30 @@ export class RubricEvaluationComponent implements OnInit {
     private evaluationService: EvaluationService,
     private authService: AuthService,
     private toastService: ToastService,
-    private campaignService: CampaignService
+    private campaignService: CampaignService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
     this.isCompanySupervisor = currentUser?.role === 'COMPANY_SUPERVISOR';
-    this.loadCampaigns();
-    this.loadEligibleStudents();
+    this.readNavigationContext();
+    if (this.isCompanySupervisor || this.gradingMode === 'GUIDED') {
+      this.loadCampaigns();
+      this.loadEligibleStudents();
+    } else {
+      this.isLoading = false;
+    }
   }
 
   setGradingMode(mode: 'GUIDED' | 'COMMITTEE'): void {
     if (this.gradingMode === mode) return;
     this.selectedStudent = null;
     this.gradingMode = mode;
+    if (mode === 'GUIDED' && !this.hasLoadedGuidedStudents) {
+      this.loadCampaigns();
+      this.loadEligibleStudents();
+    }
   }
 
   loadCampaigns(): void {
@@ -162,6 +176,8 @@ export class RubricEvaluationComponent implements OnInit {
         this.refreshAvailableCampaigns();
         this.filterStudents();
         this.isLoading = false;
+        this.hasLoadedGuidedStudents = true;
+        this.openPendingGuidedStudentIfNeeded();
         this.checkAllEvaluationsStatus();
       },
       error: () => {
@@ -332,7 +348,7 @@ export class RubricEvaluationComponent implements OnInit {
     this.paginate();
   }
 
-  selectStudent(student: StudentCampaignResponse): void {
+  selectStudent(student: StudentCampaignResponse, initialStage: 'STAGE_1' | 'STAGE_2' = 'STAGE_1'): void {
     this.selectedStudent = student;
     this.criteria = [];
     this.existingEvaluation = null;
@@ -340,12 +356,46 @@ export class RubricEvaluationComponent implements OnInit {
     this.campaign = null;
     this.isStage1Open = false;
     this.isStage2Open = false;
-    this.selectedStage = 'STAGE_1';
-    this.activeTab = 'STAGE_1';
+    this.selectedStage = initialStage;
+    this.activeTab = initialStage;
     this.finalResult = null;
     this.loadCampaignInfo(student.campaign_id);
     this.loadRubricConfig();
     this.loadFinalResult();
+  }
+
+  private readNavigationContext(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const mode = params.get('mode');
+    if (mode === 'COMMITTEE' && !this.isCompanySupervisor) {
+      this.gradingMode = 'COMMITTEE';
+    } else {
+      this.gradingMode = 'GUIDED';
+    }
+
+    const studentCampaignId = Number(params.get('studentCampaignId'));
+    this.pendingStudentCampaignId = Number.isFinite(studentCampaignId) && studentCampaignId > 0 ? studentCampaignId : null;
+
+    const campaignId = Number(params.get('campaignId'));
+    this.selectedCampaignId = Number.isFinite(campaignId) && campaignId > 0 ? campaignId : null;
+
+    const stage = params.get('stage');
+    this.pendingStage = stage === 'STAGE_2' ? 'STAGE_2' : stage === 'STAGE_1' ? 'STAGE_1' : null;
+  }
+
+  private openPendingGuidedStudentIfNeeded(): void {
+    if (this.gradingMode !== 'GUIDED' || this.pendingStudentCampaignId === null) {
+      return;
+    }
+
+    const student = this.allStudents.find(item => Number(item.id) === Number(this.pendingStudentCampaignId));
+    if (!student) {
+      return;
+    }
+
+    this.selectStudent(student, this.pendingStage || 'STAGE_1');
+    this.pendingStudentCampaignId = null;
+    this.pendingStage = null;
   }
 
   loadCampaignInfo(campaignId: number): void {

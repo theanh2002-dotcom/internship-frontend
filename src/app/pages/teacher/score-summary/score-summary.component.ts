@@ -5,6 +5,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { CampaignService } from '../../../core/services/campaign.service';
 import { firstValueFrom } from 'rxjs';
 import { FinalResultResponse, FinalResultService } from '../../../core/services/final-result.service';
+import { Router } from '@angular/router';
 
 interface StudentScore {
   id: number;
@@ -21,6 +22,7 @@ interface StudentScore {
   status: string;
   campaignId: number;
   departmentId: number;
+  committeeId: number | null;
 }
 
 @Component({
@@ -52,7 +54,8 @@ export class ScoreSummaryComponent implements OnInit {
     private finalResultService: FinalResultService,
     private departmentCampaignService: DepartmentCampaignService,
     private toastService: ToastService,
-    private campaignService: CampaignService
+    private campaignService: CampaignService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -108,9 +111,25 @@ export class ScoreSummaryComponent implements OnInit {
         totalScore,
         status: this.getResultStatus(result.grade_level, totalScore),
         campaignId: result.campaign_id || 0,
-        departmentId: result.department_id || 0
+        departmentId: result.department_id || 0,
+        committeeId: result.committee_id ?? null
       };
     });
+  }
+
+  goToEvaluation(student: StudentScore, mode: 'GUIDED' | 'COMMITTEE'): void {
+    const queryParams: Record<string, string | number> = {
+      mode,
+      studentCampaignId: student.id,
+      campaignId: student.campaignId,
+      stage: mode === 'COMMITTEE' ? 'STAGE_2' : 'STAGE_1'
+    };
+
+    if (mode === 'COMMITTEE' && student.committeeId) {
+      queryParams['committeeId'] = student.committeeId;
+    }
+
+    this.router.navigate(['/teacher/rubric-evaluation'], { queryParams });
   }
 
   applyFilters(): void {
