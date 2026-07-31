@@ -287,6 +287,12 @@ export class CampaignManagementComponent implements OnInit {
       }
       return;
     }
+    if (!this.isAtLeastOneMonthRange(this.formStartDate, this.formEndDate)) {
+      if (showError) {
+        this.toastService.error('Thời gian đợt thực tập phải tối thiểu 1 tháng');
+      }
+      return;
+    }
 
     this.isTimelinePreviewLoading = true;
     this.campaignService.previewTimeline({
@@ -329,6 +335,14 @@ export class CampaignManagementComponent implements OnInit {
     return value ? value.substring(0, 10) : '';
   }
 
+  private isAtLeastOneMonthRange(startDate: string, endDate: string): boolean {
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T23:59:59`);
+    const minimumEnd = new Date(start);
+    minimumEnd.setMonth(minimumEnd.getMonth() + 1);
+    return end >= minimumEnd;
+  }
+
   saveCampaign(): void {
     // Validate
     if (!this.formName.trim()) {
@@ -345,6 +359,10 @@ export class CampaignManagementComponent implements OnInit {
     }
     if (this.formStartDate >= this.formEndDate) {
       this.toastService.error('Ngày kết thúc phải sau ngày bắt đầu');
+      return;
+    }
+    if (!this.isAtLeastOneMonthRange(this.formStartDate, this.formEndDate)) {
+      this.toastService.error('Thời gian đợt thực tập phải tối thiểu 1 tháng');
       return;
     }
 
@@ -521,6 +539,18 @@ export class CampaignManagementComponent implements OnInit {
     }
     if (!this.groupRegex.trim()) {
       this.toastService.error('Vui lòng nhập Regex lọc sinh viên');
+      return;
+    }
+    if (!this.groupStartDate || !this.groupEndDate) {
+      this.toastService.error('Vui lòng chọn ngày bắt đầu và ngày kết thúc cho nhóm');
+      return;
+    }
+    if (this.groupStartDate >= this.groupEndDate) {
+      this.toastService.error('Ngày kết thúc nhóm phải sau ngày bắt đầu');
+      return;
+    }
+    if (!this.isAtLeastOneMonthRange(this.groupStartDate, this.groupEndDate)) {
+      this.toastService.error('Thời gian lộ trình nhóm phải tối thiểu 1 tháng');
       return;
     }
 
