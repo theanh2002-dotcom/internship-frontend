@@ -23,7 +23,6 @@ import { LdkbmLayoutComponent } from './layout/ldkbm-layout/ldkbm-layout.compone
 import { StudentLayoutComponent } from './layout/student-layout/student-layout.component';
 import { TeacherLayoutComponent } from './layout/teacher-layout/teacher-layout.component';
 import { RubricEvaluationComponent } from './pages/teacher/rubric-evaluation/rubric-evaluation.component';
-import { CommitteeEvaluationComponent } from './pages/teacher/committee-evaluation/committee-evaluation.component';
 import { ScoreSummaryComponent } from './pages/teacher/score-summary/score-summary.component';
 import { SurveyStudentComponent } from './pages/student/survey-student/survey-student.component';
 import { SurveyCompanyComponent } from './pages/company/survey-company/survey-company.component';
@@ -46,7 +45,6 @@ import { DepartmentManagementComponent } from './pages/admin/department-manageme
 import { UserManagementComponent } from './pages/admin/user-management/user-management.component';
 import { SystemSettingsComponent } from './pages/admin/system-settings/system-settings.component';
 import { NotificationManagementComponent } from './pages/admin/notification-management/notification-management.component';
-import { CommitteesComponent } from './pages/ldkbm/committees/committees.component';
 import { LdkbmScoreSummaryComponent } from './pages/ldkbm/score-summary/score-summary.component';
 import { SetupPasswordComponent } from './pages/auth/setup-password/setup-password.component';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -81,7 +79,6 @@ import { TableCellDirective } from './shared/components/table/table-cell.directi
     StudentLayoutComponent,
     TeacherLayoutComponent,
     RubricEvaluationComponent,
-    CommitteeEvaluationComponent,
     ScoreSummaryComponent,
     SurveyStudentComponent,
     SurveyCompanyComponent,
@@ -103,7 +100,6 @@ import { TableCellDirective } from './shared/components/table/table-cell.directi
     UserManagementComponent,
     SystemSettingsComponent,
     NotificationManagementComponent,
-    CommitteesComponent,
     LdkbmScoreSummaryComponent,
     SetupPasswordComponent,
     StatusBadgeComponent,

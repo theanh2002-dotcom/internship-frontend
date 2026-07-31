@@ -22,7 +22,6 @@ interface StudentScore {
   status: string;
   campaignId: number;
   departmentId: number;
-  committeeId: number | null;
 }
 
 @Component({
@@ -113,8 +112,7 @@ export class ScoreSummaryComponent implements OnInit {
         totalScore,
         status: this.getResultStatus(result.grade_level, totalScore),
         campaignId: result.campaign_id || 0,
-        departmentId: result.department_id || 0,
-        committeeId: result.committee_id ?? null
+        departmentId: result.department_id || 0
       };
     });
     this.refreshAvailableCampaigns();
@@ -374,7 +372,7 @@ export class ScoreSummaryComponent implements OnInit {
 
     put(2, 2, stage === 'STAGE_1' ? 'CHẶNG 1 - ĐÁNH GIÁ TỔNG KẾT GIỮA KỲ (Tuần 4)' : 'CHẶNG 2 - ĐÁNH GIÁ TỔNG KẾT CUỐI KỲ (Tuần 8)');
     put(4, 2, `Trọng số chặng ${stage === 'STAGE_1' ? '1' : '2'}: ${stageWeight}% tổng điểm học phần`);
-    put(4, 7, stage === 'STAGE_1' ? 'Người đánh giá: GVHD + DVHD' : 'Người đánh giá: Tổ đánh giá TTTN');
+    put(4, 7, 'Người đánh giá: GVHD + DVHD');
     put(6, 2, 'Họ tên sinh viên:'); put(6, 3, student.name);
     put(6, 7, 'Mã số sinh viên:'); put(6, 8, student.mssv);
     put(7, 2, 'GVHD:'); put(7, 3, student.gvhdName);

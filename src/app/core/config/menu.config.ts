@@ -17,7 +17,6 @@ export const ldkbmMenu: MenuItem[] = [
   { title: 'Bảng điều khiển', icon: 'dashboard', route: '/ldkbm/general-dashboard', exact: true },
   { title: 'Cấu hình CLO & Rubric', icon: 'fact_check', route: '/ldkbm/clo-config' },
   { title: 'Import & Phân công SV', icon: 'group_add', route: '/ldkbm/student-assignment' },
-  { title: 'Quản lý tổ đánh giá', icon: 'groups', route: '/ldkbm/committees' },
   { title: 'Bảng tổng hợp điểm', icon: 'table_view', route: '/ldkbm/score-summary' },
   { title: 'Tổng hợp Khảo sát', icon: 'insights', route: '/ldkbm/survey-dashboard' },
 ];

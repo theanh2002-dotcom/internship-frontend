@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { CommitteeService } from '../../../core/services/committee.service';
 
 @Component({
   selector: 'app-teacher-dashboard',
@@ -29,72 +28,15 @@ export class TeacherDashboardComponent implements OnInit {
   // Cảnh báo tiến độ sinh viên
   studentAlerts: any[] = [];
 
-  // Lịch chấm điểm sắp tới
-  upcomingEvaluations: any[] = [];
-
   constructor(
     private studentCampaignService: StudentCampaignService,
-    private authService: AuthService,
-    private committeeService: CommitteeService
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
     this.teacherName = user?.fullName || 'Giảng viên';
     this.loadDashboardData();
-    this.loadUpcomingCommittees();
-  }
-
-  getRoleLabel(role: string): string {
-    const map: Record<string, string> = {
-      'PRESIDENT': 'Chủ tịch Hội đồng',
-      'SECRETARY': 'Thư ký Hội đồng',
-      'MEMBER': 'Ủy viên',
-    };
-    return map[role] || role;
-  }
-
-  loadUpcomingCommittees(): void {
-    this.committeeService.getMyCommittees().subscribe({
-      next: (res) => {
-        const committees = res || [];
-        const loggedInUser = this.authService.getCurrentUser();
-        
-        this.upcomingEvaluations = committees.map((c: any) => {
-          const myMember = c.members?.find((m: any) => m.user_id === loggedInUser?.userId);
-          const roleStr = myMember ? this.getRoleLabel(myMember.role) : 'Thành viên';
-          
-          let day = '?';
-          let monthYear = 'N/A';
-          let timeStr = 'Chưa xếp giờ';
-          if (c.evaluation_date) {
-            try {
-              const dt = new Date(c.evaluation_date.replace(' ', 'T'));
-              if (!isNaN(dt.getTime())) {
-                day = String(dt.getDate()).padStart(2, '0');
-                const month = String(dt.getMonth() + 1).padStart(2, '0');
-                const year = dt.getFullYear();
-                monthYear = `${month}/${year}`;
-                
-                const hours = String(dt.getHours()).padStart(2, '0');
-                const minutes = String(dt.getMinutes()).padStart(2, '0');
-                timeStr = `${hours}:${minutes}`;
-              }
-            } catch (e) {
-              // fallback
-            }
-          }
-          
-          return {
-            day,
-            monthYear,
-            time: timeStr,
-            room: c.room || 'Chưa xếp phòng',
-            role: roleStr
-          };
-        });
-      }
-    });
   }
 
   loadDashboardData(): void {

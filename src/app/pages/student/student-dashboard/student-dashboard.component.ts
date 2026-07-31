@@ -389,7 +389,7 @@ export class StudentDashboardComponent implements OnInit {
     } else {
       if (status === 'REPORT_SUBMITTED') {
         this.upcomingTasks.push({
-          title: 'Đợi Hội đồng / Giảng viên chấm điểm báo cáo (TTTN-06)',
+          title: 'Đợi Giảng viên chấm điểm báo cáo (TTTN-06)',
           deadline: 'Chờ chấm',
           type: 'info'
         });
