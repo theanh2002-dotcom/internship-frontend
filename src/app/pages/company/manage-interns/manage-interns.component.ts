@@ -57,17 +57,36 @@ export class ManageInternsComponent implements OnInit {
 
   loadCampaigns() {
     this.isLoading = true;
-    this.campaignService.getCampaignOptions('ACTIVE').subscribe({
-      next: (res) => {
-        this.campaigns = res || [];
-        this.selectedCampaignId = this.campaigns.length > 0 ? this.campaigns[0].id : null;
-        if (this.selectedCampaignId) {
-          this.loadInterns();
-        } else {
-          this.interns = [];
-          this.filterInterns();
-          this.isLoading = false;
-        }
+    this.studentCampaignService.getCompanyStudents().subscribe({
+      next: (studentRes) => {
+        const scopedStudents = Array.isArray(studentRes) ? studentRes : (studentRes.data || studentRes.payload || []);
+        const scopedCampaignIds = new Set(
+          scopedStudents
+            .map((student: any) => Number(student.campaign_id))
+            .filter((id: number) => Number.isFinite(id))
+        );
+
+        this.campaignService.getCampaignOptions('ACTIVE').subscribe({
+          next: (campaignRes) => {
+            const campaigns = Array.isArray(campaignRes) ? campaignRes : (campaignRes.data || campaignRes.payload || []);
+            this.campaigns = campaigns.filter((campaign: any) => scopedCampaignIds.has(Number(campaign.id)));
+            this.selectedCampaignId = this.campaigns.length > 0 ? this.campaigns[0].id : null;
+            if (this.selectedCampaignId) {
+              this.loadInterns();
+            } else {
+              this.interns = [];
+              this.filterInterns();
+              this.isLoading = false;
+            }
+          },
+          error: () => {
+            this.campaigns = [];
+            this.selectedCampaignId = null;
+            this.interns = [];
+            this.filterInterns();
+            this.isLoading = false;
+          }
+        });
       },
       error: () => {
         this.campaigns = [];
