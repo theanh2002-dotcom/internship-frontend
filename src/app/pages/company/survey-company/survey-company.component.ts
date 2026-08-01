@@ -80,9 +80,9 @@ export class SurveyCompanyComponent implements OnInit {
 
   loadCampaigns() {
     this.isLoading = true;
-    this.campaignService.getCampaigns({ page: 1, limit: 100, orderBy: 'startDate:DESC' }, 'ACTIVE').subscribe({
+    this.campaignService.getCampaignOptions('ACTIVE').subscribe({
       next: (res) => {
-        this.campaigns = res.data || [];
+        this.campaigns = res || [];
         this.selectedCampaignId = this.campaigns.length > 0 ? this.campaigns[0].id : null;
         this.loadCompanyStudents();
       },

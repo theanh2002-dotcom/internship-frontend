@@ -172,3 +172,9 @@ export interface FinalReportResponse {
   file_type: string;
   created_at: string;
 }
+
+export interface CampaignOptionResponse {
+  id: number;
+  name: string;
+}
+

@@ -133,9 +133,9 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   loadCampaigns(): void {
-    this.campaignService.getCampaigns({ page: 1, limit: 100 }, 'ACTIVE').subscribe({
+    this.campaignService.getCampaignOptions('ACTIVE').subscribe({
       next: (res) => {
-        this.campaigns = res.data || [];
+        this.campaigns = res || [];
         this.refreshAvailableCampaigns();
         this.filterStudents();
       },
@@ -295,11 +295,7 @@ export class RubricEvaluationComponent implements OnInit {
 
     this.availableCampaigns = this.campaigns
       .filter(c => c.status === 'ACTIVE' && assignedCampaignIds.has(Number(c.id)))
-      .sort((a, b) => {
-        const aTime = a.start_date ? new Date(a.start_date).getTime() : 0;
-        const bTime = b.start_date ? new Date(b.start_date).getTime() : 0;
-        return bTime - aTime;
-      });
+      ;
 
     if (this.selectedCampaignId !== null && !assignedCampaignIds.has(Number(this.selectedCampaignId))) {
       this.selectedCampaignId = null;

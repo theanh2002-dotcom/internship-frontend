@@ -84,9 +84,9 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   loadCampaigns(): void {
-    this.campaignService.getCampaigns({ page: 1, limit: 100 }).subscribe({
+    this.campaignService.getCampaignOptions().subscribe({
       next: (res) => {
-        this.campaigns = res.data || [];
+        this.campaigns = res || [];
         if (this.campaigns.length > 0) {
           this.selectedCampaignId = this.campaigns[0].id;
           if (!this.departmentId) {
