@@ -544,7 +544,6 @@ export class RubricEvaluationComponent implements OnInit {
 
   get canExportTttn04(): boolean {
     return this.activeTab === 'STAGE_1'
-      && !this.isCompanySupervisor
       && Boolean(this.selectedStudent)
       && Boolean(this.existingEvaluation)
       && !this.isSaving
@@ -553,7 +552,6 @@ export class RubricEvaluationComponent implements OnInit {
 
   get canExportTttn05(): boolean {
     return this.activeTab === 'STAGE_2'
-      && !this.isCompanySupervisor
       && Boolean(this.selectedStudent)
       && Boolean(this.existingEvaluation)
       && !this.isSaving
@@ -825,8 +823,8 @@ export class RubricEvaluationComponent implements OnInit {
     if (!this.selectedStudent) {
       return;
     }
-    if (this.activeTab !== 'STAGE_1' || this.isCompanySupervisor) {
-      this.toastService.error('Phiếu TTTN-04 chỉ xuất ở Chặng 1 của Giảng viên hướng dẫn.');
+    if (this.activeTab !== 'STAGE_1') {
+      this.toastService.error('Phiếu TTTN-04 chỉ xuất ở Chặng 1.');
       return;
     }
     if (!this.existingEvaluation) {
@@ -851,8 +849,8 @@ export class RubricEvaluationComponent implements OnInit {
     if (!this.selectedStudent) {
       return;
     }
-    if (this.activeTab !== 'STAGE_2' || this.isCompanySupervisor) {
-      this.toastService.error('Phiếu TTTN-05 chỉ xuất ở Chặng 2 của Giảng viên hướng dẫn.');
+    if (this.activeTab !== 'STAGE_2') {
+      this.toastService.error('Phiếu TTTN-05 chỉ xuất ở Chặng 2.');
       return;
     }
     if (!this.existingEvaluation) {
