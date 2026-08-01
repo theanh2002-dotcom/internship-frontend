@@ -31,6 +31,7 @@ interface StudentScore {
 })
 export class ScoreSummaryComponent implements OnInit {
   isLoading = true;
+  isExportingTttn07 = false;
   students: StudentScore[] = [];
   
   // Filters & Pagination
@@ -270,6 +271,44 @@ export class ScoreSummaryComponent implements OnInit {
       console.error('Lỗi xuất Excel:', error);
       this.toastService.error('Không thể xuất Excel. Vui lòng thử lại.');
     }
+  }
+
+  exportTttn07Zip(): void {
+    if (this.filteredStudents.length === 0) {
+      this.toastService.error('Không có sinh viên để xuất TTTN-07.');
+      return;
+    }
+
+    const studentIds = this.filteredStudents.map(student => student.id).filter(Boolean);
+    if (studentIds.length === 0) {
+      this.toastService.error('Không có dữ liệu sinh viên hợp lệ để xuất TTTN-07.');
+      return;
+    }
+
+    this.isExportingTttn07 = true;
+    this.toastService.info('Đang tạo file ZIP TTTN-07...');
+    this.evaluationService.exportTttn07Zip(studentIds).subscribe({
+      next: (blob) => {
+        const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        this.downloadBlob(blob, `TTTN-07-GVHD-${datePart}.zip`);
+        this.toastService.success('Xuất TTTN-07 thành công.');
+        this.isExportingTttn07 = false;
+      },
+      error: (err) => {
+        console.error('Lỗi xuất TTTN-07:', err);
+        this.toastService.error(err?.error?.message || 'Không thể xuất TTTN-07. Vui lòng thử lại.');
+        this.isExportingTttn07 = false;
+      }
+    });
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
   private async buildExportDetail(student: StudentScore): Promise<any> {
