@@ -463,6 +463,15 @@
         <span *ngIf="!isExportingTttn04" class="material-symbols-outlined text-[20px]">download</span>
         Xuất TTTN-04
       </button>
+      <button *ngIf="activeTab === 'STAGE_2' && !isCompanySupervisor"
+              (click)="exportStage2Tttn05()"
+              [disabled]="!canExportTttn05"
+              title="Xuất phiếu đánh giá tổng kết cuối kỳ TTTN-05"
+              class="px-6 py-2.5 bg-white text-[#00429D] font-semibold rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        <span *ngIf="isExportingTttn05" class="material-symbols-outlined animate-spin text-[20px]">autorenew</span>
+        <span *ngIf="!isExportingTttn05" class="material-symbols-outlined text-[20px]">download</span>
+        Xuất TTTN-05
+      </button>
       <button (click)="submitEvaluation()"
               [disabled]="!canSubmit"
               class="px-8 py-2.5 bg-[#00429D] text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">

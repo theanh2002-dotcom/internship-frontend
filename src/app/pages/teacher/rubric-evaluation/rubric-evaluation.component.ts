@@ -59,6 +59,7 @@ export class RubricEvaluationComponent implements OnInit {
   isLoading = true;
   isSaving = false;
   isExportingTttn04 = false;
+  isExportingTttn05 = false;
 
   allStudents: StudentCampaignResponse[] = [];
   students: StudentCampaignResponse[] = [];
@@ -550,6 +551,15 @@ export class RubricEvaluationComponent implements OnInit {
       && !this.isExportingTttn04;
   }
 
+  get canExportTttn05(): boolean {
+    return this.activeTab === 'STAGE_2'
+      && !this.isCompanySupervisor
+      && Boolean(this.selectedStudent)
+      && Boolean(this.existingEvaluation)
+      && !this.isSaving
+      && !this.isExportingTttn05;
+  }
+
   getStageWeight(criterion: RubricCriterion): number {
     return this.selectedStage === 'STAGE_1' ? criterion.stage1Weight : criterion.stage2Weight;
   }
@@ -833,6 +843,32 @@ export class RubricEvaluationComponent implements OnInit {
       error: (err) => {
         this.isExportingTttn04 = false;
         this.showExportError(err, 'Không thể xuất phiếu TTTN-04.');
+      }
+    });
+  }
+
+  exportStage2Tttn05(): void {
+    if (!this.selectedStudent) {
+      return;
+    }
+    if (this.activeTab !== 'STAGE_2' || this.isCompanySupervisor) {
+      this.toastService.error('Phiếu TTTN-05 chỉ xuất ở Chặng 2 của Giảng viên hướng dẫn.');
+      return;
+    }
+    if (!this.existingEvaluation) {
+      this.toastService.error('Bạn cần lưu điểm Chặng 2 trước khi xuất phiếu TTTN-05.');
+      return;
+    }
+
+    this.isExportingTttn05 = true;
+    this.evaluationService.exportStage2Tttn05(this.selectedStudent.id).subscribe({
+      next: (blob) => {
+        this.isExportingTttn05 = false;
+        this.downloadBlob(blob, `TTTN-05-${this.sanitizeFileName(this.selectedStudent!.student_code || 'sinh-vien')}.docx`);
+      },
+      error: (err) => {
+        this.isExportingTttn05 = false;
+        this.showExportError(err, 'Không thể xuất phiếu TTTN-05.');
       }
     });
   }

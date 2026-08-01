@@ -65,4 +65,11 @@ export class EvaluationService {
       { responseType: 'blob' }
     );
   }
+
+  exportStage2Tttn05(studentCampaignId: number): Observable<Blob> {
+    return this.http.get(
+      `${environment.apiUrl}/base/evaluations/stage2/${studentCampaignId}/tttn-05`,
+      { responseType: 'blob' }
+    );
+  }
 }
