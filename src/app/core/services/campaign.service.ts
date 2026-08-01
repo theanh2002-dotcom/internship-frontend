@@ -116,6 +116,13 @@ export class CampaignService {
   }
 
   /**
+   * DELETE /base/campaigns/{id} — chỉ xóa khi đợt chưa có sinh viên
+   */
+  delete(id: number): Observable<any> {
+    return this.apiService.delete<any>(`/base/campaigns/${id}`);
+  }
+
+  /**
    * GET /base/campaigns/options - lấy danh sách Campaign cơ bản (ID và Tên) cho dropdown
    */
   getCampaignOptions(status?: string): Observable<any> {

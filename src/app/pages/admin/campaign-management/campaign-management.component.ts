@@ -405,6 +405,27 @@ export class CampaignManagementComponent implements OnInit {
     });
   }
 
+  deleteCampaign(campaign: CampaignResponse): void {
+    if ((campaign.student_count || 0) > 0) {
+      this.toastService.error('Chỉ được xóa đợt thực tập khi chưa có sinh viên nào trong đợt.');
+      return;
+    }
+    const confirmed = window.confirm(`Xóa đợt thực tập "${campaign.name}"? Thao tác này không thể hoàn tác.`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.campaignService.delete(campaign.id).subscribe({
+      next: () => {
+        this.toastService.success('Đã xóa đợt thực tập');
+        this.loadCampaigns();
+      },
+      error: (err) => {
+        this.toastService.error(err?.message || 'Xóa đợt thực tập thất bại');
+      }
+    });
+  }
+
   onPageChange(page: number): void {
     this.currentPage = page;
     this.loadCampaigns();

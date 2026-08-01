@@ -126,6 +126,15 @@
         (click)="toggleStatus(campaign)">
 <span class="material-symbols-outlined text-[18px]">{{ campaign.status === 'ACTIVE' ? 'stop_circle' : 'play_circle' }}</span>
 </button>
+<button class="p-1.5 rounded transition-colors"
+        [disabled]="(campaign.student_count || 0) > 0"
+        [title]="(campaign.student_count || 0) > 0 ? 'Chỉ xóa khi đợt chưa có sinh viên' : 'Xóa đợt thực tập'"
+        [ngClass]="(campaign.student_count || 0) > 0
+          ? 'text-slate-300 cursor-not-allowed'
+          : 'text-slate-400 hover:text-red-600 hover:bg-red-50'"
+        (click)="deleteCampaign(campaign)">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
 </div>
 </td>
 </tr>
