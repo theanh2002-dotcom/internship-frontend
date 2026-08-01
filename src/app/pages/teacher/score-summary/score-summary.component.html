@@ -7,10 +7,11 @@
         </div>
         <div class="flex flex-wrap gap-3 shrink-0">
             <button (click)="exportTttn07Zip()"
-                    [disabled]="isExportingTttn07 || filteredStudents.length === 0"
+                    [disabled]="isExportingTttn07 || selectedCampaignId === null || filteredStudents.length === 0"
+                    [title]="selectedCampaignId === null ? 'Vui lòng chọn một đợt thực tập trước khi xuất TTTN-07' : 'Xuất TTTN-07 cho sinh viên trong đợt đang chọn'"
                     class="flex items-center gap-2 bg-white text-[#00429D] border border-[#00429D] px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 <span class="material-symbols-outlined text-[20px]">{{ isExportingTttn07 ? 'autorenew' : 'folder_zip' }}</span>
-                {{ isExportingTttn07 ? 'Đang xuất...' : 'Xuất TTTN-07' }}
+                {{ isExportingTttn07 ? 'Đang xuất...' : 'Xuất TTTN-07 theo đợt' }}
             </button>
             <button (click)="exportExcel()" class="flex items-center gap-2 bg-[#00429D] text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors font-medium shadow-sm">
                 <span class="material-symbols-outlined text-[20px]">download</span>

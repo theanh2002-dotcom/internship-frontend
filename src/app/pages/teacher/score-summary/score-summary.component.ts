@@ -274,6 +274,10 @@ export class ScoreSummaryComponent implements OnInit {
   }
 
   exportTttn07Zip(): void {
+    if (this.selectedCampaignId === null) {
+      this.toastService.error('Vui lòng chọn đợt thực tập trước khi xuất TTTN-07.');
+      return;
+    }
     if (this.filteredStudents.length === 0) {
       this.toastService.error('Không có sinh viên để xuất TTTN-07.');
       return;
@@ -287,10 +291,10 @@ export class ScoreSummaryComponent implements OnInit {
 
     this.isExportingTttn07 = true;
     this.toastService.info('Đang tạo file ZIP TTTN-07...');
-    this.evaluationService.exportTttn07Zip(studentIds).subscribe({
+    this.evaluationService.exportTttn07Zip(this.selectedCampaignId, studentIds).subscribe({
       next: (blob) => {
         const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        this.downloadBlob(blob, `TTTN-07-GVHD-${datePart}.zip`);
+        this.downloadBlob(blob, `TTTN-07-GVHD-Dot-${this.selectedCampaignId}-${datePart}.zip`);
         this.toastService.success('Xuất TTTN-07 thành công.');
         this.isExportingTttn07 = false;
       },

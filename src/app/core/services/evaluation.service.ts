@@ -73,10 +73,13 @@ export class EvaluationService {
     );
   }
 
-  exportTttn07Zip(studentCampaignIds: number[]): Observable<Blob> {
+  exportTttn07Zip(campaignId: number, studentCampaignIds: number[]): Observable<Blob> {
     return this.http.post(
       `${environment.apiUrl}/base/evaluations/tttn-07/export`,
-      studentCampaignIds,
+      {
+        campaign_id: campaignId,
+        student_campaign_ids: studentCampaignIds
+      },
       { responseType: 'blob' }
     );
   }
