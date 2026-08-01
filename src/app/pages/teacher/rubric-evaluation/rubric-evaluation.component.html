@@ -454,6 +454,15 @@
               class="px-6 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors">
         Hủy bỏ
       </button>
+      <button *ngIf="activeTab === 'STAGE_1' && !isCompanySupervisor"
+              (click)="exportStage1Tttn04()"
+              [disabled]="!canExportTttn04"
+              title="Xuất phiếu đánh giá tổng kết giữa kỳ TTTN-04"
+              class="px-6 py-2.5 bg-white text-[#00429D] font-semibold rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        <span *ngIf="isExportingTttn04" class="material-symbols-outlined animate-spin text-[20px]">autorenew</span>
+        <span *ngIf="!isExportingTttn04" class="material-symbols-outlined text-[20px]">download</span>
+        Xuất TTTN-04
+      </button>
       <button (click)="submitEvaluation()"
               [disabled]="!canSubmit"
               class="px-8 py-2.5 bg-[#00429D] text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">

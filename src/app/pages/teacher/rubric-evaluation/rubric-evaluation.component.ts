@@ -58,6 +58,7 @@ interface SummaryCloRow {
 export class RubricEvaluationComponent implements OnInit {
   isLoading = true;
   isSaving = false;
+  isExportingTttn04 = false;
 
   allStudents: StudentCampaignResponse[] = [];
   students: StudentCampaignResponse[] = [];
@@ -540,6 +541,15 @@ export class RubricEvaluationComponent implements OnInit {
     return !this.isSaving && Boolean(this.selectedStudent) && !this.isScoringLocked();
   }
 
+  get canExportTttn04(): boolean {
+    return this.activeTab === 'STAGE_1'
+      && !this.isCompanySupervisor
+      && Boolean(this.selectedStudent)
+      && Boolean(this.existingEvaluation)
+      && !this.isSaving
+      && !this.isExportingTttn04;
+  }
+
   getStageWeight(criterion: RubricCriterion): number {
     return this.selectedStage === 'STAGE_1' ? criterion.stage1Weight : criterion.stage2Weight;
   }
@@ -799,6 +809,63 @@ export class RubricEvaluationComponent implements OnInit {
         this.isSaving = false;
       }
     });
+  }
+
+  exportStage1Tttn04(): void {
+    if (!this.selectedStudent) {
+      return;
+    }
+    if (this.activeTab !== 'STAGE_1' || this.isCompanySupervisor) {
+      this.toastService.error('Phiếu TTTN-04 chỉ xuất ở Chặng 1 của Giảng viên hướng dẫn.');
+      return;
+    }
+    if (!this.existingEvaluation) {
+      this.toastService.error('Bạn cần lưu điểm Chặng 1 trước khi xuất phiếu TTTN-04.');
+      return;
+    }
+
+    this.isExportingTttn04 = true;
+    this.evaluationService.exportStage1Tttn04(this.selectedStudent.id).subscribe({
+      next: (blob) => {
+        this.isExportingTttn04 = false;
+        this.downloadBlob(blob, `TTTN-04-${this.sanitizeFileName(this.selectedStudent!.student_code || 'sinh-vien')}.docx`);
+      },
+      error: (err) => {
+        this.isExportingTttn04 = false;
+        this.showExportError(err, 'Không thể xuất phiếu TTTN-04.');
+      }
+    });
+  }
+
+  private showExportError(err: any, fallbackMessage: string): void {
+    const errorBlob = err?.error;
+    if (errorBlob instanceof Blob && errorBlob.type?.includes('application/json')) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || '{}'));
+          this.toastService.error(parsed?.message || fallbackMessage);
+        } catch {
+          this.toastService.error(fallbackMessage);
+        }
+      };
+      reader.readAsText(errorBlob);
+      return;
+    }
+    this.toastService.error(err?.error?.message || err?.message || fallbackMessage);
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  private sanitizeFileName(value: string): string {
+    return value.replace(/[\\/:*?"<>|]+/g, '-').trim() || 'sinh-vien';
   }
 
   lockCurrentStage(): void {

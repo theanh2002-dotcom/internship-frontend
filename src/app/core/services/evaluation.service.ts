@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface ScoreItem {
   clo_code: string;
@@ -21,7 +23,10 @@ export interface EvaluationRequest {
   providedIn: 'root'
 })
 export class EvaluationService {
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private http: HttpClient
+  ) {}
 
   submitEvaluation(request: EvaluationRequest): Observable<any> {
     return this.apiService.post<any>('/base/evaluations', request);
@@ -53,5 +58,11 @@ export class EvaluationService {
       {}
     );
   }
-}
 
+  exportStage1Tttn04(studentCampaignId: number): Observable<Blob> {
+    return this.http.get(
+      `${environment.apiUrl}/base/evaluations/stage1/${studentCampaignId}/tttn-04`,
+      { responseType: 'blob' }
+    );
+  }
+}
