@@ -294,7 +294,7 @@ export class RubricEvaluationComponent implements OnInit {
     );
 
     this.availableCampaigns = this.campaigns
-      .filter(c => c.status === 'ACTIVE' && assignedCampaignIds.has(Number(c.id)))
+      .filter(c => assignedCampaignIds.has(Number(c.id)))
       ;
 
     if (this.selectedCampaignId !== null && !assignedCampaignIds.has(Number(this.selectedCampaignId))) {
