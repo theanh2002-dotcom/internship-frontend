@@ -537,7 +537,7 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   get canSubmit(): boolean {
-    return !this.isSaving && this.isFullyScored() && !this.isScoringLocked();
+    return !this.isSaving && Boolean(this.selectedStudent) && !this.isScoringLocked();
   }
 
   getStageWeight(criterion: RubricCriterion): number {
@@ -733,7 +733,7 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   get canLockCurrentStage(): boolean {
-    return Boolean(this.selectedStudent && this.existingEvaluation && !this.isStageManuallyLocked() && !this.isSaving);
+    return Boolean(this.selectedStudent && !this.isStageManuallyLocked() && !this.isSaving);
   }
 
   isFullyScored(): boolean {
@@ -802,7 +802,29 @@ export class RubricEvaluationComponent implements OnInit {
   }
 
   lockCurrentStage(): void {
-    if (!this.selectedStudent || !this.canLockCurrentStage) return;
+    if (!this.selectedStudent) {
+      return;
+    }
+    if (this.isStageManuallyLocked()) {
+      this.toastService.error('Điểm chặng này đã khóa.');
+      return;
+    }
+    if (!this.existingEvaluation) {
+      this.toastService.error('Bạn cần lưu điểm chặng này trước khi khóa.');
+      return;
+    }
+    if (this.selectedStage === 'STAGE_1' && !this.isStage1Open) {
+      this.toastService.error(`Chưa đến thời gian mở chấm Chặng 1. Chặng này bắt đầu từ ${this.midtermStartDateStr}.`);
+      return;
+    }
+    if (this.selectedStage === 'STAGE_2' && !this.isStage2Open) {
+      this.toastService.error(`Chưa đến thời gian mở chấm Chặng 2. Chặng này bắt đầu từ ${this.tttn06StartDateStr}.`);
+      return;
+    }
+    if (this.selectedStage === 'STAGE_2' && !this.isStage1FullyLocked()) {
+      this.toastService.error('Phải khóa đầy đủ điểm Chặng 1 trước khi khóa điểm Chặng 2.');
+      return;
+    }
     const ok = window.confirm('Sau khi khóa điểm, bạn sẽ không thể sửa điểm của chặng này. Tiếp tục khóa?');
     if (!ok) return;
 
