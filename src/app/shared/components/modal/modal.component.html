@@ -18,7 +18,7 @@
       <button class="px-4 py-2 border border-slate-300 text-slate-700 font-label-md text-[13px] rounded hover:bg-slate-100 transition-colors" (click)="onClose()">
         {{ cancelText }}
       </button>
-      <button class="px-6 py-2 bg-[#00429D] text-white font-label-md text-[13px] rounded hover:bg-blue-800 transition-colors shadow-sm" (click)="onSave()">
+      <button [ngClass]="saveButtonClass ? saveButtonClass : 'px-6 py-2 bg-[#00429D] text-white font-label-md text-[13px] rounded hover:bg-blue-800 transition-colors shadow-sm'" (click)="onSave()">
         {{ saveText }}
       </button>
     </div>

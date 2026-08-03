@@ -11,6 +11,7 @@ export class ModalComponent {
   @Input() saveText: string = 'Lưu lại';
   @Input() cancelText: string = 'Hủy bỏ';
   @Input() showFooter: boolean = true;
+  @Input() saveButtonClass: string = '';
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
 

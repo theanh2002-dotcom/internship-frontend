@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CampaignService, CampaignRequest, CampaignTimelinePreviewResponse } from '../../../core/services/campaign.service';
 import { CampaignResponse, PaginationRequest } from '../../../core/models/base.model';
 import { DepartmentService } from '../../../core/services/department.service';
+import { EvaluationService } from '../../../core/services/evaluation.service';
 
 @Component({
   selector: 'app-campaign-management',
@@ -12,6 +13,13 @@ import { DepartmentService } from '../../../core/services/department.service';
 export class CampaignManagementComponent implements OnInit {
   isModalOpen = false;
   isLoading = false;
+
+  // Unlock Grade Modal State
+  isUnlockModalOpen = false;
+  selectedCampaignForUnlock: CampaignResponse | null = null;
+  unlockStage: 'STAGE_1' | 'STAGE_2' | 'ALL' = 'STAGE_1';
+  unlockReason = '';
+  isUnlocking = false;
 
   // Pagination
   currentPage = 1;
@@ -63,7 +71,8 @@ export class CampaignManagementComponent implements OnInit {
   constructor(
     private toastService: ToastService, 
     private campaignService: CampaignService,
-    private departmentService: DepartmentService
+    private departmentService: DepartmentService,
+    private evaluationService: EvaluationService
   ) {
     // Sinh danh sách năm học (5 năm gần đây)
     const currentYear = new Date().getFullYear();
@@ -450,5 +459,39 @@ export class CampaignManagementComponent implements OnInit {
     return found ? found.label : `HK${semester}`;
   }
 
+  // ── Unlock Grade Actions ───────────────────────
 
+  openUnlockModal(campaign: CampaignResponse): void {
+    this.selectedCampaignForUnlock = campaign;
+    this.unlockStage = 'STAGE_1';
+    this.unlockReason = '';
+    this.isUnlockModalOpen = true;
+  }
+
+  closeUnlockModal(): void {
+    this.isUnlockModalOpen = false;
+    this.selectedCampaignForUnlock = null;
+    this.isUnlocking = false;
+  }
+
+  confirmUnlockGrade(): void {
+    if (!this.selectedCampaignForUnlock) {
+      return;
+    }
+    this.isUnlocking = true;
+    this.evaluationService.unlockCampaignGrade(this.selectedCampaignForUnlock.id, {
+      stage: this.unlockStage,
+      reason: this.unlockReason.trim() || undefined
+    }).subscribe({
+      next: (res) => {
+        this.isUnlocking = false;
+        this.toastService.success(res?.message || 'Mở khóa điểm thành công');
+        this.closeUnlockModal();
+      },
+      error: (err) => {
+        this.isUnlocking = false;
+        this.toastService.error(err?.message || 'Mở khóa điểm thất bại');
+      }
+    });
+  }
 }

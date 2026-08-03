@@ -153,8 +153,11 @@ export class ManageStudentsComponent implements OnInit {
   }
 
   isCampaignActive(campaignId: number): boolean {
-    const camp = this.campaigns.find(c => c.id === campaignId);
-    return camp ? camp.status === 'ACTIVE' : true; 
+    if (!campaignId) return true;
+    if (this.campaigns.length > 0) {
+      return this.campaigns.some(c => Number(c.id) === Number(campaignId));
+    }
+    return true;
   }
 
   paginate(): void {

@@ -83,4 +83,8 @@ export class EvaluationService {
       { responseType: 'blob' }
     );
   }
+
+  unlockCampaignGrade(campaignId: number, req: { stage: string; reason?: string }): Observable<any> {
+    return this.apiService.patch<any>(`/base/evaluations/campaign/${campaignId}/unlock-grade`, req);
+  }
 }

@@ -42,7 +42,9 @@ export class StudentAssignmentComponent implements OnInit {
   isAutoAssignModalOpen = false;
   isStatsModalOpen = false;
   isDeleteConfirmOpen = false;
+  isUnassignConfirmOpen = false;
   studentPendingDelete: any | null = null;
+  studentsToUnassign: any[] = [];
 
   // Manual Form
   formStudentCode = '';
@@ -51,6 +53,7 @@ export class StudentAssignmentComponent implements OnInit {
   formEmail = '';
 
   // Assign Form
+  assignMode: 'MANUAL' | 'AUTO' = 'MANUAL';
   teachers: UserResponse[] = [];
   selectedTeacherIds = new Set<number>();
   teacherSearchQuery = '';
@@ -171,6 +174,10 @@ export class StudentAssignmentComponent implements OnInit {
 
   isAllSelected(): boolean {
     return this.students.length > 0 && this.students.every(s => this.selectedStudentIds.has(s.id));
+  }
+
+  clearSelection(): void {
+    this.selectedStudentIds.clear();
   }
 
   // --- MANUAL CREATE ---
@@ -516,45 +523,75 @@ export class StudentAssignmentComponent implements OnInit {
 
   // --- ASSIGN TEACHER ---
 
-  openAssignModal(): void {
-    if (this.selectedStudentIds.size === 0) {
-      this.showError('Vui lòng chọn ít nhất 1 sinh viên để phân công.');
-      return;
-    }
-    this.selectedTeacherIds.clear();
-    this.teacherSearchQuery = '';
-    this.isAssignModalOpen = true;
-  }
-
-  openAssignModalForOne(studentId: number): void {
-    this.selectedStudentIds.clear();
-    this.selectedStudentIds.add(studentId);
-    this.selectedTeacherIds.clear();
-    this.teacherSearchQuery = '';
-    this.isAssignModalOpen = true;
-  }
-
-  openAutoAssignModal(): void {
+  openAssignModal(mode: 'MANUAL' | 'AUTO' = 'MANUAL'): void {
     if (!this.selectedCampaignId || !this.departmentId) {
       this.showError('Vui lòng chọn đợt thực tập và kiểm tra khoa/bộ môn trước.');
       return;
     }
+
+    if (mode === 'MANUAL' && this.selectedStudentIds.size === 0) {
+      // Nếu chưa chọn sinh viên nào trên bảng -> Mặc định mở Tab Phân bổ tự động
+      this.assignMode = 'AUTO';
+    } else {
+      this.assignMode = mode;
+    }
+
+    // Khởi tạo trạng thái cho Tab Thủ công
+    this.selectedTeacherIds.clear();
+    if (this.selectedStudentIds.size === 1) {
+      const singleId = Array.from(this.selectedStudentIds)[0];
+      const student = this.students.find(s => s.id === singleId);
+      if (student?.gvhd_ids && Array.isArray(student.gvhd_ids)) {
+        student.gvhd_ids.forEach((id: number) => this.selectedTeacherIds.add(id));
+      }
+    }
+    this.teacherSearchQuery = '';
+
+    // Khởi tạo trạng thái cho Tab Tự động
     this.autoAssignScope = this.selectedStudentIds.size > 0 ? 'SELECTED' : 'UNASSIGNED';
     this.autoOverwriteExisting = false;
     this.autoSelectedTeacherIds.clear();
     this.autoSurplusTeacherIds.clear();
     this.autoTeacherSearchQuery = '';
     this.autoPreview = null;
-    this.isAutoAssignModalOpen = true;
+    this.isAutoPreviewLoading = false;
+    this.isAutoApplying = false;
+
+    this.isAssignModalOpen = true;
   }
 
-  closeAutoAssignModal(): void {
-    this.isAutoAssignModalOpen = false;
+  openAssignModalForOne(student: any): void {
+    const studentId = typeof student === 'object' ? student.id : student;
+    const studentObj = typeof student === 'object' ? student : this.students.find(s => s.id === studentId);
+    this.selectedStudentIds.clear();
+    this.selectedStudentIds.add(studentId);
+    this.openAssignModal('MANUAL');
+  }
+
+  openAutoAssignModal(): void {
+    this.openAssignModal('AUTO');
+  }
+
+  setAssignMode(mode: 'MANUAL' | 'AUTO'): void {
+    if (mode === 'MANUAL' && this.selectedStudentIds.size === 0) {
+      this.showError('Vui lòng chọn ít nhất 1 sinh viên trên bảng để dùng chế độ Phân công thủ công.');
+      return;
+    }
+    this.assignMode = mode;
+  }
+
+  closeAssignModal(): void {
+    this.isAssignModalOpen = false;
+    this.teacherSearchQuery = '';
     this.autoTeacherSearchQuery = '';
     this.autoPreview = null;
     this.autoSurplusTeacherIds.clear();
     this.isAutoPreviewLoading = false;
     this.isAutoApplying = false;
+  }
+
+  closeAutoAssignModal(): void {
+    this.closeAssignModal();
   }
 
   onAutoAssignScopeChange(): void {
@@ -748,11 +785,6 @@ export class StudentAssignmentComponent implements OnInit {
     }
   }
 
-  closeAssignModal(): void {
-    this.isAssignModalOpen = false;
-    this.teacherSearchQuery = '';
-  }
-
   saveAssignment(): void {
     if (this.selectedTeacherIds.size === 0) {
       this.showError('Vui lòng chọn ít nhất 1 Giáo viên hướng dẫn.');
@@ -776,6 +808,64 @@ export class StudentAssignmentComponent implements OnInit {
       },
       error: (err) => {
         this.showError(err.message || 'Lỗi khi phân công');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  unassignFromModal(): void {
+    const list = this.selectedStudentsForAssignment;
+    if (list.length === 0) return;
+    this.closeAssignModal();
+    this.studentsToUnassign = list;
+    this.isUnassignConfirmOpen = true;
+  }
+
+  get hasAssignedStudentsInModal(): boolean {
+    return this.selectedStudentsForAssignment.some(s => !!s.gvhd_name || (s.gvhd_ids && s.gvhd_ids.length > 0));
+  }
+
+  openUnassignConfirmForOne(student: any): void {
+    this.studentsToUnassign = [student];
+    this.isUnassignConfirmOpen = true;
+  }
+
+  openBulkUnassignConfirm(): void {
+    if (this.selectedStudentIds.size === 0) {
+      this.showError('Vui lòng chọn ít nhất 1 sinh viên.');
+      return;
+    }
+    const list = this.students.filter(s => this.selectedStudentIds.has(s.id));
+    this.studentsToUnassign = list;
+    this.isUnassignConfirmOpen = true;
+  }
+
+  closeUnassignConfirm(): void {
+    this.isUnassignConfirmOpen = false;
+    this.studentsToUnassign = [];
+  }
+
+  confirmUnassignGvhd(): void {
+    if (this.studentsToUnassign.length === 0) return;
+
+    const assignments: AssignItem[] = this.studentsToUnassign.map(s => ({
+      student_campaign_id: s.id,
+      gvhd_ids: []
+    }));
+
+    const req: AssignRequest = { assignments };
+
+    this.isLoading = true;
+    this.studentCampaignService.assignGvhd(req).subscribe({
+      next: () => {
+        const count = this.studentsToUnassign.length;
+        this.closeUnassignConfirm();
+        this.showSuccess(`Đã hủy phân công GVHD cho ${count} sinh viên thành công.`);
+        this.selectedStudentIds.clear();
+        this.loadStudents();
+      },
+      error: (err) => {
+        this.showError(err.message || 'Lỗi khi hủy phân công');
         this.isLoading = false;
       }
     });

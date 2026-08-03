@@ -906,12 +906,13 @@ export class RubricEvaluationComponent implements OnInit {
     if (!this.selectedStudent) {
       return;
     }
+    const stageName = this.selectedStage === 'STAGE_1' ? 'Chặng 1' : 'Chặng 2';
     if (this.isStageManuallyLocked()) {
-      this.toastService.error('Điểm chặng này đã khóa.');
+      this.toastService.error(`Điểm ${stageName} đã khóa.`);
       return;
     }
     if (!this.existingEvaluation) {
-      this.toastService.error('Bạn cần lưu điểm chặng này trước khi khóa.');
+      this.toastService.error(`Bạn cần lưu điểm ${stageName} trước khi khóa.`);
       return;
     }
     if (this.selectedStage === 'STAGE_1' && !this.isStage1Open) {
@@ -926,7 +927,7 @@ export class RubricEvaluationComponent implements OnInit {
       this.toastService.error('Phải khóa đầy đủ điểm Chặng 1 trước khi khóa điểm Chặng 2.');
       return;
     }
-    const ok = window.confirm('Sau khi khóa điểm, bạn sẽ không thể sửa điểm của chặng này. Tiếp tục khóa?');
+    const ok = window.confirm(`Sau khi khóa điểm ${stageName}, bạn sẽ không thể sửa điểm của chặng này. Tiếp tục khóa?`);
     if (!ok) return;
 
     this.isSaving = true;
@@ -938,11 +939,11 @@ export class RubricEvaluationComponent implements OnInit {
       next: (res) => {
         this.finalResult = this.unwrapResponse(res);
         this.isSaving = false;
-        this.toastService.success('Đã khóa điểm chặng.');
+        this.toastService.success(`Đã khóa điểm ${stageName}.`);
       },
       error: (err) => {
         this.isSaving = false;
-        this.toastService.error(err?.error?.message || 'Không thể khóa điểm chặng.');
+        this.toastService.error(err?.error?.message || `Không thể khóa điểm ${stageName}.`);
       }
     });
   }

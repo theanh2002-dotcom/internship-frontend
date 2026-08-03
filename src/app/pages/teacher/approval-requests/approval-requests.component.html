@@ -1,153 +1,206 @@
-<div class="mb-6">
-  <h2 class="text-2xl font-bold text-gray-900">Yêu cầu Cần phê duyệt</h2>
-  <p class="text-sm text-gray-600 mt-1">Danh sách các biểu mẫu TTTN-01 và TTTN-02 do sinh viên nộp.</p>
+<div class="mb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+  <div>
+    <h2 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">Yêu cầu Cần phê duyệt</h2>
+    <p class="text-xs md:text-sm text-slate-500 mt-0.5">Danh sách các biểu mẫu TTTN-01 và TTTN-02 do sinh viên gửi cần giảng viên xét duyệt.</p>
+  </div>
 </div>
 
-<div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-  <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-    <div class="flex space-x-2">
-      <button class="px-4 py-2 text-sm font-medium bg-blue-50 border border-blue-200 rounded text-blue-700">Chờ duyệt ({{requests.length}})</button>
+<div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+  <!-- Toolbar: Tab bên trái, Lọc đợt & Tìm kiếm bên phải -->
+  <div class="px-4 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50">
+    <div class="flex items-center gap-2">
+      <div class="px-3 py-1.5 text-xs font-semibold bg-blue-50 border border-blue-200 rounded text-[#00429D] flex items-center gap-1.5 shadow-xs">
+        <span class="w-2 h-2 rounded-full bg-[#00429D] animate-pulse"></span>
+        Chờ duyệt ({{ filteredRequests.length }})
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2.5 flex-1 justify-end max-w-xl">
+      <!-- Dropdown Chọn Đợt thực tập -->
+      <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 border border-slate-300 rounded text-[13px] shadow-xs w-48 sm:w-56 shrink-0">
+        <span class="material-symbols-outlined text-slate-400 text-[18px]">event</span>
+        <select [(ngModel)]="selectedCampaignId" (change)="applyFilters()" class="bg-transparent text-[13px] font-medium text-slate-700 focus:outline-none w-full cursor-pointer truncate">
+          <option [ngValue]="null">— Tất cả đợt thực tập —</option>
+          <option *ngFor="let camp of campaigns" [ngValue]="camp.id">{{ camp.name }}</option>
+        </select>
+      </div>
+
+      <!-- Ô tìm kiếm -->
+      <div class="relative w-44 sm:w-60">
+        <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[16px]">search</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (input)="applyFilters()" 
+          placeholder="Tìm Mã SV, Tên, ĐVHD..." 
+          class="w-full pl-8 pr-2.5 py-1.5 text-[13px] bg-white border border-slate-300 rounded focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] shadow-xs"
+        />
+      </div>
     </div>
   </div>
   
-  <div *ngIf="isLoading" class="p-8 text-center text-gray-500">
-    <span class="material-symbols-outlined animate-spin text-3xl mb-2">autorenew</span>
-    <p>Đang tải dữ liệu...</p>
+  <div *ngIf="isLoading" class="p-12 text-center text-slate-500">
+    <span class="material-symbols-outlined animate-spin text-3xl mb-2 text-[#00429D]">autorenew</span>
+    <p class="text-sm">Đang tải danh sách yêu cầu phê duyệt...</p>
   </div>
 
-  <table *ngIf="!isLoading" class="w-full text-left border-collapse">
-    <thead>
-      <tr class="bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200 uppercase tracking-wider">
-        <th class="py-3 px-4 text-center w-16">STT</th>
-        <th class="py-3 px-4">Sinh viên</th>
-        <th class="py-3 px-4">Loại Yêu Cầu</th>
-        <th class="py-3 px-4">Chi tiết (ĐVHD)</th>
-        <th class="py-3 px-4">Ngày nộp</th>
-        <th class="py-3 px-4">Trạng thái</th>
-        <th class="py-3 px-4 text-center">Hành động</th>
-      </tr>
-    </thead>
-    <tbody class="text-sm text-gray-900">
-      <tr *ngIf="requests.length === 0">
-        <td colspan="7" class="py-8 text-center text-gray-500">
-          Không có yêu cầu nào đang chờ phê duyệt.
-        </td>
-      </tr>
-      <tr *ngFor="let req of requests; let i = index" class="border-b border-gray-200 hover:bg-gray-50">
-        <td class="py-3 px-4 text-center text-gray-500">{{ i + 1 }}</td>
-        <td class="py-3 px-4">
-          <div class="font-medium text-gray-900">{{ req.full_name }}</div>
-          <div class="text-gray-500 font-mono text-xs">{{ req.student_code }}</div>
-        </td>
-        <td class="py-3 px-4 font-medium">
-          {{ req.status === 'COMPANY_DECLARED' ? 'TTTN-01 (Kê khai ĐVHD)' : 'TTTN-02 (Kế hoạch TTTN)' }}
-        </td>
-        <td class="py-3 px-4 text-gray-600">
-          {{ req.company_info?.company_name || 'Chưa có thông tin' }}
-        </td>
-        <td class="py-3 px-4 text-gray-500 font-mono">
-          {{ req.created_at | date:'dd/MM/yyyy' }}
-        </td>
-        <td class="py-3 px-4">
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            Chờ duyệt
-          </span>
-        </td>
-        <td class="py-3 px-4 text-center">
-          <button *ngIf="isCampaignActive(req.campaign_id)" (click)="openRequest(req)" class="text-[#00429D] hover:underline font-medium text-sm">
-            Xem & Duyệt
-          </button>
-          <span *ngIf="!isCampaignActive(req.campaign_id)" class="text-red-500 font-medium text-xs flex items-center justify-center gap-1">
-            <span class="material-symbols-outlined text-[14px]">lock</span> Đóng
-          </span>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div *ngIf="!isLoading" class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 border-b border-slate-200 uppercase tracking-wider">
+          <th class="py-3 px-4 text-center w-14">STT</th>
+          <th class="py-3 px-4">Sinh viên</th>
+          <th class="py-3 px-4">Đợt thực tập</th>
+          <th class="py-3 px-4">Loại Yêu Cầu</th>
+          <th class="py-3 px-4">Chi tiết (ĐVHD)</th>
+          <th class="py-3 px-4">Ngày nộp</th>
+          <th class="py-3 px-4 text-center">Trạng thái</th>
+          <th class="py-3 px-4 text-center w-28">Hành động</th>
+        </tr>
+      </thead>
+      <tbody class="text-[13px] text-slate-800 divide-y divide-slate-200">
+        <tr *ngIf="filteredRequests.length === 0">
+          <td colspan="8" class="py-12 text-center text-slate-500">
+            <span class="material-symbols-outlined text-4xl text-slate-300 mb-1 block">check_circle</span>
+            Không có yêu cầu nào đang chờ phê duyệt.
+          </td>
+        </tr>
+        <tr *ngFor="let req of filteredRequests; let i = index" class="hover:bg-slate-50 transition-colors">
+          <td class="py-3 px-4 text-center text-slate-500 font-medium">{{ i + 1 }}</td>
+          <td class="py-3 px-4">
+            <div class="font-semibold text-slate-900">{{ req.full_name }}</div>
+            <div class="text-slate-500 font-mono text-[11px]">{{ req.student_code }} <span *ngIf="req.class_name">• {{ req.class_name }}</span></div>
+          </td>
+          <td class="py-3 px-4">
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+              <span class="material-symbols-outlined text-[13px] text-slate-400">event</span>
+              {{ getCampaignName(req.campaign_id) }}
+            </span>
+          </td>
+          <td class="py-3 px-4">
+            <span *ngIf="req.status === 'COMPANY_DECLARED'" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+              TTTN-01 (Kê khai ĐVHD)
+            </span>
+            <span *ngIf="req.status !== 'COMPANY_DECLARED'" class="inline-flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+              TTTN-02 (Kế hoạch TTTN)
+            </span>
+          </td>
+          <td class="py-3 px-4 text-slate-600 max-w-[200px] truncate" [title]="req.company_info?.company_name || 'Chưa có thông tin'">
+            {{ req.company_info?.company_name || 'Chưa có thông tin' }}
+          </td>
+          <td class="py-3 px-4 text-slate-500 font-mono text-xs">
+            {{ req.created_at | date:'dd/MM/yyyy' }}
+          </td>
+          <td class="py-3 px-4 text-center">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+              Chờ duyệt
+            </span>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <button 
+              *ngIf="isCampaignActive(req.campaign_id)" 
+              (click)="openRequest(req)" 
+              class="text-[#00429D] hover:text-blue-800 hover:underline font-semibold text-[13px] inline-flex items-center gap-1 cursor-pointer"
+            >
+              Xem & Duyệt
+            </button>
+            <span *ngIf="!isCampaignActive(req.campaign_id)" class="text-red-500 font-medium text-xs flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">lock</span> Đóng
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- Modal Duyệt -->
-<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-  <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center shrink-0">
-      <h3 class="text-lg font-bold text-gray-900">
-        Chi tiết Yêu cầu: {{ requestType === 'COMPANY' ? 'Kê khai ĐVHD' : 'Kế hoạch Thực tập' }}
-      </h3>
-      <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
-        <span class="material-symbols-outlined">close</span>
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
+    <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center shrink-0 bg-slate-50">
+      <div>
+        <h3 class="text-base font-bold text-slate-900">
+          Chi tiết Yêu cầu: {{ requestType === 'COMPANY' ? 'Kê khai Đơn vị thực tập (TTTN-01)' : 'Kế hoạch Thực tập (TTTN-02)' }}
+        </h3>
+        <p class="text-xs text-slate-500 mt-0.5">Xem xét thông tin do sinh viên gửi trước khi phê duyệt.</p>
+      </div>
+      <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 rounded p-1">
+        <span class="material-symbols-outlined text-[20px]">close</span>
       </button>
     </div>
     
     <div class="p-6 space-y-4 overflow-y-auto">
-
-
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
         <div>
-          <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Sinh viên</label>
-          <div class="text-sm text-gray-900 font-medium">{{ selectedRequest?.full_name }} ({{ selectedRequest?.student_code }})</div>
+          <span class="text-slate-500 block mb-0.5">Sinh viên:</span>
+          <span class="font-bold text-slate-900 text-[13px]">{{ selectedRequest?.full_name }}</span>
+          <span class="text-slate-500 font-mono ml-1">({{ selectedRequest?.student_code }})</span>
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Trạng thái hiện tại</label>
-          <div class="text-sm text-yellow-600 font-medium">Chờ duyệt</div>
+          <span class="text-slate-500 block mb-0.5">Đợt thực tập:</span>
+          <span class="font-semibold text-slate-800 text-[13px]">{{ getCampaignName(selectedRequest?.campaign_id) }}</span>
         </div>
-        
+      </div>
+
+      <div>
         <ng-container *ngIf="requestType === 'COMPANY'">
-          <div class="col-span-2">
-            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Thông tin Đơn vị thực tập (TTTN-01)</label>
-            <div class="text-sm text-gray-900 p-4 bg-gray-50 rounded border border-gray-200 space-y-2">
-              <p><strong>Tên đơn vị:</strong> {{ selectedRequest?.company_info?.company_name }}</p>
-              <p><strong>Mã số thuế:</strong> {{ selectedRequest?.company_info?.tax_code }}</p>
-              <p><strong>Địa chỉ:</strong> {{ selectedRequest?.company_info?.address }}</p>
-              <div class="border-t border-gray-200 my-2 pt-2"></div>
-              <p><strong>Cán bộ hướng dẫn:</strong> {{ selectedRequest?.company_info?.supervisor_name }}</p>
-              <p><strong>SĐT CBHD:</strong> {{ selectedRequest?.company_info?.supervisor_phone }}</p>
-              <p><strong>Email CBHD:</strong> {{ selectedRequest?.company_info?.supervisor_email }}</p>
-              <div class="border-t border-gray-200 my-2 pt-2"></div>
-              <p><strong>Định hướng công việc dự kiến:</strong></p>
-              <p class="whitespace-pre-wrap text-gray-700">{{ selectedRequest?.company_info?.expected_domain }}</p>
-            </div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Thông tin Đơn vị thực tập (TTTN-01)</label>
+          <div class="text-xs text-slate-800 p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2.5">
+            <p><strong>Tên đơn vị:</strong> <span class="font-medium text-slate-900">{{ selectedRequest?.company_info?.company_name }}</span></p>
+            <p><strong>Mã số thuế:</strong> <span class="font-mono">{{ selectedRequest?.company_info?.tax_code || '---' }}</span></p>
+            <p><strong>Địa chỉ:</strong> {{ selectedRequest?.company_info?.address || '---' }}</p>
+            <div class="border-t border-slate-200 my-2 pt-2"></div>
+            <p><strong>Cán bộ hướng dẫn (ĐVHD):</strong> <span class="font-medium text-slate-900">{{ selectedRequest?.company_info?.supervisor_name || '---' }}</span></p>
+            <p><strong>SĐT CBHD:</strong> <span class="font-mono">{{ selectedRequest?.company_info?.supervisor_phone || '---' }}</span></p>
+            <p><strong>Email CBHD:</strong> <span class="font-mono text-blue-700">{{ selectedRequest?.company_info?.supervisor_email || '---' }}</span></p>
+            <div class="border-t border-slate-200 my-2 pt-2"></div>
+            <p><strong>Định hướng công việc dự kiến:</strong></p>
+            <p class="whitespace-pre-wrap text-slate-700 bg-white p-2.5 rounded border border-slate-200 text-xs">{{ selectedRequest?.company_info?.expected_domain || 'Không có mô tả' }}</p>
           </div>
         </ng-container>
 
         <ng-container *ngIf="requestType === 'PLAN'">
-          <div class="col-span-2">
-            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Kế hoạch Thực tập (TTTN-02)</label>
-            <div *ngIf="!selectedRequest?.internship_plans?.length" class="text-sm text-gray-500 italic">
-              Sinh viên chưa nhập chi tiết kế hoạch các tuần.
-            </div>
-            <div *ngIf="selectedRequest?.internship_plans?.length" class="space-y-3">
-              <div *ngFor="let plan of selectedRequest!.internship_plans" class="text-sm text-gray-900 p-3 bg-gray-50 rounded border border-gray-200">
-                <p class="font-medium text-blue-700">Tuần {{ plan.week }}</p>
-                <p class="mt-1"><strong>Mục tiêu / Công việc dự kiến:</strong></p>
-                <p class="whitespace-pre-wrap text-gray-700 mt-1">{{ plan.task }}</p>
-                <p class="mt-2" *ngIf="plan.expected_result"><strong>Kết quả mong đợi:</strong></p>
-                <p class="whitespace-pre-wrap text-gray-700 mt-1" *ngIf="plan.expected_result">{{ plan.expected_result }}</p>
-                <p class="mt-2" *ngIf="plan.evidence_form"><strong>Hình thức minh chứng:</strong></p>
-                <p class="whitespace-pre-wrap text-gray-700 mt-1" *ngIf="plan.evidence_form">{{ plan.evidence_form }}</p>
-              </div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Kế hoạch Thực tập (TTTN-02)</label>
+          <div *ngIf="!selectedRequest?.internship_plans?.length" class="text-xs text-slate-500 italic p-4 bg-slate-50 rounded border border-slate-200">
+            Sinh viên chưa nhập chi tiết kế hoạch các tuần.
+          </div>
+          <div *ngIf="selectedRequest?.internship_plans?.length" class="space-y-3">
+            <div *ngFor="let plan of selectedRequest!.internship_plans" class="text-xs text-slate-800 p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <p class="font-bold text-[#00429D] text-sm">Tuần {{ plan.week }}</p>
+              <p class="mt-1.5"><strong>Mục tiêu / Công việc dự kiến:</strong></p>
+              <p class="whitespace-pre-wrap text-slate-700 mt-1 bg-white p-2 rounded border border-slate-200">{{ plan.task }}</p>
+              <p class="mt-2" *ngIf="plan.expected_result"><strong>Kết quả mong đợi:</strong></p>
+              <p class="whitespace-pre-wrap text-slate-700 mt-1 bg-white p-2 rounded border border-slate-200" *ngIf="plan.expected_result">{{ plan.expected_result }}</p>
+              <p class="mt-2" *ngIf="plan.evidence_form"><strong>Hình thức minh chứng:</strong></p>
+              <p class="whitespace-pre-wrap text-slate-700 mt-1 bg-white p-2 rounded border border-slate-200" *ngIf="plan.evidence_form">{{ plan.evidence_form }}</p>
             </div>
           </div>
         </ng-container>
       </div>
       
-      <div class="pt-4 border-t border-gray-200">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Nhận xét của GVHD (Tùy chọn)</label>
-        <textarea rows="2" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-[#00429D] focus:border-[#00429D] sm:text-sm" placeholder="Nhập lý do từ chối hoặc nhận xét..."></textarea>
+      <div class="pt-3 border-t border-slate-200">
+        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Nhận xét của GVHD (Tùy chọn)</label>
+        <textarea rows="2" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-[#00429D] focus:border-[#00429D] outline-none" placeholder="Nhập nhận xét hoặc lưu ý cho sinh viên..."></textarea>
       </div>
     </div>
     
-    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center shrink-0">
+    <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
       <div class="flex-1">
-        <div *ngIf="selectedRequest && !isCampaignActive(selectedRequest.campaign_id)" class="text-red-500 font-medium text-sm flex items-center gap-1">
+        <div *ngIf="selectedRequest && !isCampaignActive(selectedRequest.campaign_id)" class="text-red-500 font-medium text-xs flex items-center gap-1">
           <span class="material-symbols-outlined text-[16px]">lock</span>
           Đợt thực tập đã kết thúc, bạn chỉ có thể xem dữ liệu.
         </div>
       </div>
-      <div class="flex gap-3">
-        <button (click)="closeModal()" [disabled]="isProcessing" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">Đóng</button>
-        <button *ngIf="selectedRequest && isCampaignActive(selectedRequest.campaign_id)" (click)="reject()" [disabled]="isProcessing" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">Từ chối</button>
-        <button *ngIf="selectedRequest && isCampaignActive(selectedRequest.campaign_id)" (click)="approve()" [disabled]="isProcessing" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 flex items-center gap-2 disabled:opacity-50">
-          <span *ngIf="isProcessing" class="material-symbols-outlined animate-spin text-[16px]">autorenew</span>
+      <div class="flex gap-2.5">
+        <button (click)="closeModal()" [disabled]="isProcessing" class="px-4 py-2 border border-slate-300 shadow-xs text-xs font-medium rounded text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 cursor-pointer">
+          Đóng
+        </button>
+        <button *ngIf="selectedRequest && isCampaignActive(selectedRequest.campaign_id)" (click)="reject()" [disabled]="isProcessing" class="px-4 py-2 border border-transparent shadow-xs text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 cursor-pointer">
+          Từ chối
+        </button>
+        <button *ngIf="selectedRequest && isCampaignActive(selectedRequest.campaign_id)" (click)="approve()" [disabled]="isProcessing" class="px-4 py-2 border border-transparent shadow-xs text-xs font-semibold rounded text-white bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1.5 disabled:opacity-50 cursor-pointer">
+          <span *ngIf="isProcessing" class="material-symbols-outlined animate-spin text-[15px]">autorenew</span>
+          <span *ngIf="!isProcessing" class="material-symbols-outlined text-[16px]">check</span>
           Phê duyệt
         </button>
       </div>

@@ -16,7 +16,7 @@ export const adminMenu: MenuItem[] = [
 export const ldkbmMenu: MenuItem[] = [
   { title: 'Bảng điều khiển', icon: 'dashboard', route: '/ldkbm/general-dashboard', exact: true },
   { title: 'Cấu hình CLO & Rubric', icon: 'fact_check', route: '/ldkbm/clo-config' },
-  { title: 'Import & Phân công SV', icon: 'group_add', route: '/ldkbm/student-assignment' },
+  { title: 'Phân công GVHD', icon: 'group_add', route: '/ldkbm/student-assignment' },
   { title: 'Bảng tổng hợp điểm', icon: 'table_view', route: '/ldkbm/score-summary' },
   { title: 'Tổng hợp Khảo sát', icon: 'insights', route: '/ldkbm/survey-dashboard' },
 ];
@@ -41,4 +41,3 @@ export const companyMenu: MenuItem[] = [
   { title: 'Đánh giá Sinh viên', icon: 'assignment_turned_in', route: '/company/rubric-evaluation' },
   { title: 'Phản hồi Đánh giá', icon: 'rate_review', route: '/company/survey' },
 ];
-
