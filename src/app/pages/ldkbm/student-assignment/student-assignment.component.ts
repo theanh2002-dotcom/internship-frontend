@@ -232,10 +232,6 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   openDeleteConfirm(student: any): void {
-    if (!this.canDeleteStudentFromSelectedCampaign()) {
-      this.showError('Chỉ được xóa sinh viên trước thời gian bắt đầu của đợt thực tập.');
-      return;
-    }
     this.studentPendingDelete = student;
     this.isDeleteConfirmOpen = true;
   }
@@ -247,11 +243,6 @@ export class StudentAssignmentComponent implements OnInit {
 
   confirmDeleteStudent(): void {
     if (!this.studentPendingDelete) return;
-    if (!this.canDeleteStudentFromSelectedCampaign()) {
-      this.closeDeleteConfirm();
-      this.showError('Chỉ được xóa sinh viên trước thời gian bắt đầu của đợt thực tập.');
-      return;
-    }
 
     const id = this.studentPendingDelete.id;
     this.isLoading = true;
@@ -266,18 +257,6 @@ export class StudentAssignmentComponent implements OnInit {
         this.isLoading = false;
       }
     });
-  }
-
-  canDeleteStudentFromSelectedCampaign(): boolean {
-    const campaign = this.getSelectedCampaign();
-    if (!campaign?.start_date) return false;
-    return new Date(this.normalizeDateString(campaign.start_date)).getTime() > Date.now();
-  }
-
-  getDeleteDisabledTitle(): string {
-    return this.canDeleteStudentFromSelectedCampaign()
-      ? 'Xóa khỏi đợt thực tập'
-      : 'Chỉ được xóa trước thời gian bắt đầu của đợt thực tập';
   }
 
   getSelectedCampaign(): CampaignResponse | undefined {
