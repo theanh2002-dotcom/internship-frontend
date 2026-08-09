@@ -25,7 +25,7 @@
     <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
       <div class="relative w-full md:w-64">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-        <input [(ngModel)]="searchQuery" (input)="onFilterChange()" class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] transition-shadow" placeholder="Tìm kiếm theo tên, mã đợt..." type="text"/>
+        <input [(ngModel)]="searchQuery" (input)="onFilterChange()" class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] transition-shadow" placeholder="Tìm kiếm theo tên đợt..." type="text"/>
       </div>
       <div class="w-full md:w-44">
         <select [(ngModel)]="selectedStatus" (change)="onFilterChange()" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
@@ -66,7 +66,7 @@
       <thead class="bg-[#f3f3fb] border-b border-slate-200">
         <tr>
           <th class="py-3 px-4 text-center font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider w-16">STT</th>
-          <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Mã đợt</th>
+          <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider min-w-[240px]">Bộ môn áp dụng</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Tên đợt thực tập</th>
           <th class="py-3 px-4 font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Thời gian</th>
           <th class="py-3 px-4 text-center font-label-md text-[13px] font-medium text-slate-500 uppercase tracking-wider">Năm học</th>
@@ -80,7 +80,21 @@
         <tr *ngFor="let campaign of campaigns; let i = index" class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
           <td class="py-3 px-4 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
           <td class="py-3 px-4">
-            <span class="font-data-mono text-[13px] font-bold text-[#00429D]">{{ campaign.code || '#' + campaign.id }}</span>
+            <div *ngIf="getCampaignDepartmentCount(campaign) > 0; else noDepartments" class="space-y-1.5">
+              <div *ngFor="let group of getCampaignDepartmentGroups(campaign)" class="leading-tight">
+                <div class="text-[11px] font-semibold text-slate-500">{{ group.facultyName }}</div>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  <span *ngFor="let dept of group.departments | slice:0:3"
+                        class="inline-flex items-center rounded border border-blue-100 bg-blue-50 px-1.5 py-0.5 text-[11px] font-semibold text-[#00429D]">
+                    {{ dept.code || dept.name }}
+                  </span>
+                  <span *ngIf="group.departments.length > 3" class="text-[11px] text-slate-500 px-1 py-0.5">+{{ group.departments.length - 3 }}</span>
+                </div>
+              </div>
+            </div>
+            <ng-template #noDepartments>
+              <span class="text-xs italic text-red-500">Chưa gắn bộ môn</span>
+            </ng-template>
           </td>
           <td class="py-3 px-4">
             <div class="font-medium text-[#002d70]">{{ campaign.name }}</div>
@@ -318,6 +332,58 @@
       </div>
     </div>
 
+    <!-- Row 4: Bộ môn áp dụng -->
+    <div class="border-t border-slate-200 pt-4 mt-2">
+      <div class="flex flex-col gap-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <label class="font-label-md text-[13px] text-slate-600">Bộ môn áp dụng <span class="text-red-500">*</span></label>
+          <div class="flex items-center gap-2 text-[12px]">
+            <span class="text-slate-500">Đã chọn: <b class="text-slate-700">{{ selectedDepartmentIds.length }}</b></span>
+            <button type="button" class="text-[#00429D] font-semibold hover:underline" (click)="selectAllDepartments()">Chọn tất cả</button>
+            <span class="text-slate-300">|</span>
+            <button type="button" class="text-slate-500 font-semibold hover:underline" (click)="deselectAllDepartments()">Bỏ chọn</button>
+          </div>
+        </div>
+
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+          <input [(ngModel)]="deptSearchQuery"
+                 class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded text-[13px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]"
+                 placeholder="Tìm bộ môn hoặc khoa" type="text"/>
+        </div>
+
+        <div class="max-h-[220px] overflow-y-auto border border-slate-200 rounded bg-white">
+          <div *ngIf="getFilteredDepartmentGroups().length === 0" class="px-3 py-6 text-center text-sm text-slate-400">
+            Không có bộ môn phù hợp
+          </div>
+          <div *ngFor="let group of getFilteredDepartmentGroups()" class="border-b border-slate-100 last:border-b-0">
+            <label class="flex items-center justify-between gap-3 px-3 py-2 bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <span class="inline-flex items-center gap-2 min-w-0">
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-[#00429D] focus:ring-[#00429D]"
+                       [checked]="isFacultyFullySelected(group)"
+                       [indeterminate]="isFacultyPartiallySelected(group)"
+                       (change)="toggleFacultySelection(group)"/>
+                <span class="font-semibold text-[13px] text-slate-700 truncate">{{ group.faculty.name }}</span>
+              </span>
+              <span class="text-[11px] text-slate-500 shrink-0">{{ group.departments.length }} bộ môn</span>
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-1 px-3 py-2">
+              <label *ngFor="let dept of group.departments" class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer">
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-[#00429D] focus:ring-[#00429D]"
+                       [checked]="isDepartmentSelected(dept.id)"
+                       (change)="toggleDepartmentSelection(dept.id)"/>
+                <span class="min-w-0">
+                  <span class="block text-[13px] font-medium text-slate-700 truncate">{{ dept.name }}</span>
+                  <span class="block text-[11px] text-slate-400">{{ dept.code }}</span>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Row 4: Ghi chú -->
     <div class="flex flex-col gap-1.5 mt-4">
       <label class="font-label-md text-[13px] text-slate-600">Ghi chú</label>

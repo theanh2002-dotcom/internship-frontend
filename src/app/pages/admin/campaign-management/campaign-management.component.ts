@@ -1,9 +1,21 @@
 import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { CampaignService, CampaignRequest, CampaignTimelinePreviewResponse } from '../../../core/services/campaign.service';
-import { CampaignResponse, PaginationRequest } from '../../../core/models/base.model';
+import { CampaignDepartmentSummary, CampaignResponse, DepartmentResponse, PaginationRequest } from '../../../core/models/base.model';
 import { DepartmentService } from '../../../core/services/department.service';
 import { EvaluationService } from '../../../core/services/evaluation.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+
+interface DepartmentGroup {
+  faculty: DepartmentResponse;
+  departments: DepartmentResponse[];
+}
+
+interface CampaignDepartmentGroup {
+  facultyName: string;
+  departments: CampaignDepartmentSummary[];
+}
 
 @Component({
   selector: 'app-campaign-management',
@@ -64,7 +76,8 @@ export class CampaignManagementComponent implements OnInit {
     { value: 3, label: 'Học kỳ Hè' },
   ];
 
-  departments: any[] = [];
+  departments: DepartmentResponse[] = [];
+  departmentGroups: DepartmentGroup[] = [];
   selectedDepartmentIds: number[] = [];
   deptSearchQuery = '';
 
@@ -96,15 +109,22 @@ export class CampaignManagementComponent implements OnInit {
     return dept ? `${dept.name} (${dept.code})` : '';
   }
 
-  getFilteredDepartments(): any[] {
+  getFilteredDepartmentGroups(): DepartmentGroup[] {
     if (!this.deptSearchQuery.trim()) {
-      return this.departments;
+      return this.departmentGroups;
     }
     const q = this.deptSearchQuery.toLowerCase().trim();
-    return this.departments.filter(d => 
-      d.name.toLowerCase().includes(q) || 
-      d.code.toLowerCase().includes(q)
-    );
+    return this.departmentGroups
+      .map(group => ({
+        faculty: group.faculty,
+        departments: group.departments.filter(d =>
+          d.name.toLowerCase().includes(q) ||
+          d.code.toLowerCase().includes(q) ||
+          group.faculty.name.toLowerCase().includes(q) ||
+          group.faculty.code.toLowerCase().includes(q)
+        )
+      }))
+      .filter(group => group.departments.length > 0);
   }
 
   selectAllDepartments(): void {
@@ -118,7 +138,27 @@ export class CampaignManagementComponent implements OnInit {
   loadDepartments(): void {
     this.departmentService.getDepartments({ page: 1, limit: 100 }).subscribe({
       next: (res) => {
-        this.departments = res.data || [];
+        const faculties = (res.data || []).filter(d => !d.parent_id);
+        if (faculties.length === 0) {
+          this.departmentGroups = [];
+          this.departments = [];
+          return;
+        }
+
+        forkJoin(
+          faculties.map(faculty =>
+            this.departmentService.getChildren(faculty.id).pipe(
+              map(children => ({
+                faculty,
+                departments: (children || []).filter(d => d.parent_id && d.status === 'ACTIVE')
+              })),
+              catchError(() => of({ faculty, departments: [] as DepartmentResponse[] }))
+            )
+          )
+        ).subscribe(groups => {
+          this.departmentGroups = groups.filter(group => group.departments.length > 0);
+          this.departments = this.departmentGroups.flatMap(group => group.departments);
+        });
       },
       error: (err) => {
         this.toastService.error('Không thể tải danh sách khoa');
@@ -137,6 +177,55 @@ export class CampaignManagementComponent implements OnInit {
     } else {
       this.selectedDepartmentIds.push(id);
     }
+  }
+
+  isFacultyFullySelected(group: DepartmentGroup): boolean {
+    return group.departments.length > 0 && group.departments.every(d => this.isDepartmentSelected(d.id));
+  }
+
+  isFacultyPartiallySelected(group: DepartmentGroup): boolean {
+    const selectedCount = group.departments.filter(d => this.isDepartmentSelected(d.id)).length;
+    return selectedCount > 0 && selectedCount < group.departments.length;
+  }
+
+  toggleFacultySelection(group: DepartmentGroup): void {
+    const ids = group.departments.map(d => d.id);
+    if (this.isFacultyFullySelected(group)) {
+      this.selectedDepartmentIds = this.selectedDepartmentIds.filter(id => !ids.includes(id));
+      return;
+    }
+
+    const merged = new Set([...this.selectedDepartmentIds, ...ids]);
+    this.selectedDepartmentIds = Array.from(merged);
+  }
+
+  getCampaignDepartmentGroups(campaign: CampaignResponse): CampaignDepartmentGroup[] {
+    const summaries = campaign.department_summaries || this.getFallbackDepartmentSummaries(campaign.department_ids || []);
+    const groups = new Map<string, CampaignDepartmentSummary[]>();
+    summaries.forEach(summary => {
+      const facultyName = summary.faculty_name || 'Chưa xác định khoa';
+      groups.set(facultyName, [...(groups.get(facultyName) || []), summary]);
+    });
+
+    return Array.from(groups.entries()).map(([facultyName, departments]) => ({ facultyName, departments }));
+  }
+
+  getCampaignDepartmentCount(campaign: CampaignResponse): number {
+    return campaign.department_summaries?.length || campaign.department_ids?.length || 0;
+  }
+
+  private getFallbackDepartmentSummaries(ids: number[]): CampaignDepartmentSummary[] {
+    return ids.map(id => {
+      const dept = this.departments.find(d => d.id === id);
+      return {
+        id,
+        code: dept?.code || '',
+        name: dept?.name || `Bộ môn #${id}`,
+        faculty_id: dept?.parent_id || null,
+        faculty_code: null,
+        faculty_name: dept?.parent_name || null
+      };
+    });
   }
 
   onFilterChange(): void {
@@ -351,10 +440,13 @@ export class CampaignManagementComponent implements OnInit {
       this.toastService.error('Thời gian đợt thực tập phải tối thiểu 1 tháng');
       return;
     }
-
+    if (this.selectedDepartmentIds.length === 0) {
+      this.toastService.error('Vui lòng chọn ít nhất một bộ môn áp dụng');
+      return;
+    }
 
     const request: CampaignRequest = {
-      code: this.formCode.trim(),
+      code: this.formCode.trim() || undefined,
       name: this.formName.trim(),
       academic_year: this.formAcademicYear || undefined,
       semester: this.formSemester,

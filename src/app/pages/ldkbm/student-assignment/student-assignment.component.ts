@@ -521,7 +521,10 @@ export class StudentAssignmentComponent implements OnInit {
       const singleId = Array.from(this.selectedStudentIds)[0];
       const student = this.students.find(s => s.id === singleId);
       if (student?.gvhd_ids && Array.isArray(student.gvhd_ids)) {
-        student.gvhd_ids.forEach((id: number) => this.selectedTeacherIds.add(id));
+        const currentTeacherId = student.gvhd_ids.find((id: number) => id !== null && id !== undefined);
+        if (currentTeacherId !== undefined) {
+          this.selectedTeacherIds.add(currentTeacherId);
+        }
       }
     }
     this.teacherSearchQuery = '';
@@ -760,13 +763,14 @@ export class StudentAssignmentComponent implements OnInit {
     if (this.selectedTeacherIds.has(teacherId)) {
       this.selectedTeacherIds.delete(teacherId);
     } else {
+      this.selectedTeacherIds.clear();
       this.selectedTeacherIds.add(teacherId);
     }
   }
 
   saveAssignment(): void {
-    if (this.selectedTeacherIds.size === 0) {
-      this.showError('Vui lòng chọn ít nhất 1 Giáo viên hướng dẫn.');
+    if (this.selectedTeacherIds.size !== 1) {
+      this.showError('Vui lòng chọn đúng 1 Giáo viên hướng dẫn.');
       return;
     }
 

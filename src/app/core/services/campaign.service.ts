@@ -9,7 +9,7 @@ import { HttpParams } from '@angular/common/http';
  * { code, name, academic_year, semester, description, start_date, end_date }
  */
 export interface CampaignRequest {
-  code: string;
+  code?: string;
   name: string;
   academic_year?: string;
   semester?: number | null;

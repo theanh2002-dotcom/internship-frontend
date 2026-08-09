@@ -369,7 +369,7 @@
       </div>
       
       <div class="flex flex-col gap-1.5">
-        <label class="font-label-md text-[13px] text-slate-600 block">Chọn GV Hướng dẫn <span class="text-red-500">*</span></label>
+        <label class="font-label-md text-[13px] text-slate-600 block">Chọn 1 GV Hướng dẫn <span class="text-red-500">*</span></label>
         <div class="relative">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
           <input
@@ -383,10 +383,11 @@
         <div class="border border-slate-300 rounded max-h-[220px] overflow-y-auto">
           <label *ngFor="let t of filteredTeachers" class="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 transition-colors">
             <input 
-              type="checkbox" 
+              type="radio"
+              name="manualTeacherSelection"
               [checked]="selectedTeacherIds.has(t.id)"
               (change)="toggleTeacherSelection(t.id)"
-              class="w-4 h-4 text-[#00429D] rounded border-slate-300 focus:ring-[#00429D] cursor-pointer"
+              class="w-4 h-4 text-[#00429D] border-slate-300 focus:ring-[#00429D] cursor-pointer"
             >
             <div class="flex flex-col">
               <span class="text-[14px] font-medium text-slate-700">{{ t.full_name }}</span>
