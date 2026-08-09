@@ -158,6 +158,7 @@ export class CampaignManagementComponent implements OnInit {
         ).subscribe(groups => {
           this.departmentGroups = groups.filter(group => group.departments.length > 0);
           this.departments = this.departmentGroups.flatMap(group => group.departments);
+          this.normalizeSelectedDepartmentIds();
         });
       },
       error: (err) => {
@@ -228,6 +229,15 @@ export class CampaignManagementComponent implements OnInit {
     });
   }
 
+  private normalizeSelectedDepartmentIds(): void {
+    if (this.departments.length === 0 || this.selectedDepartmentIds.length === 0) {
+      return;
+    }
+    const validDepartmentIds = new Set(this.departments.map(d => d.id));
+    this.selectedDepartmentIds = Array.from(new Set(this.selectedDepartmentIds))
+      .filter(id => validDepartmentIds.has(id));
+  }
+
   onFilterChange(): void {
     this.currentPage = 1;
     this.loadCampaigns();
@@ -296,6 +306,7 @@ export class CampaignManagementComponent implements OnInit {
     this.formTttn06Deadline = campaign.tttn06_deadline ? campaign.tttn06_deadline.substring(0, 10) : '';
     
     this.selectedDepartmentIds = campaign.department_ids || [];
+    this.normalizeSelectedDepartmentIds();
     this.deptSearchQuery = '';
     this.isModalOpen = true;
   }
@@ -440,6 +451,7 @@ export class CampaignManagementComponent implements OnInit {
       this.toastService.error('Thời gian đợt thực tập phải tối thiểu 1 tháng');
       return;
     }
+    this.normalizeSelectedDepartmentIds();
     if (this.selectedDepartmentIds.length === 0) {
       this.toastService.error('Vui lòng chọn ít nhất một bộ môn áp dụng');
       return;
