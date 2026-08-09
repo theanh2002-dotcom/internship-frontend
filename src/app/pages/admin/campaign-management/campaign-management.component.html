@@ -82,7 +82,7 @@
           <td class="py-3 px-4">
             <div *ngIf="getCampaignDepartmentCount(campaign) > 0; else noDepartments" class="space-y-1.5">
               <div *ngFor="let group of getCampaignDepartmentGroups(campaign)" class="leading-tight">
-                <div class="text-[11px] font-semibold text-slate-500">{{ group.facultyName }}</div>
+                <div *ngIf="group.facultyName" class="text-[11px] font-semibold text-slate-500">{{ group.facultyName }}</div>
                 <div class="flex flex-wrap gap-1 mt-1">
                   <span *ngFor="let dept of group.departments | slice:0:3"
                         class="inline-flex items-center rounded border border-blue-100 bg-blue-50 px-1.5 py-0.5 text-[11px] font-semibold text-[#00429D]">

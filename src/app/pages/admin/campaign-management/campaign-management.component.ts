@@ -13,7 +13,7 @@ interface DepartmentGroup {
 }
 
 interface CampaignDepartmentGroup {
-  facultyName: string;
+  facultyName: string | null;
   departments: CampaignDepartmentSummary[];
 }
 
@@ -204,11 +204,15 @@ export class CampaignManagementComponent implements OnInit {
     const summaries = campaign.department_summaries || this.getFallbackDepartmentSummaries(campaign.department_ids || []);
     const groups = new Map<string, CampaignDepartmentSummary[]>();
     summaries.forEach(summary => {
-      const facultyName = summary.faculty_name || 'Chưa xác định khoa';
-      groups.set(facultyName, [...(groups.get(facultyName) || []), summary]);
+      const facultyName = summary.faculty_name || null;
+      const groupKey = facultyName || `__ungrouped_${summary.id}`;
+      groups.set(groupKey, [...(groups.get(groupKey) || []), summary]);
     });
 
-    return Array.from(groups.entries()).map(([facultyName, departments]) => ({ facultyName, departments }));
+    return Array.from(groups.values()).map(departments => ({
+      facultyName: departments[0]?.faculty_name || null,
+      departments
+    }));
   }
 
   getCampaignDepartmentCount(campaign: CampaignResponse): number {
