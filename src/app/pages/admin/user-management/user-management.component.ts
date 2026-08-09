@@ -37,7 +37,7 @@ export class UserManagementComponent implements OnInit {
 
   roles = [
     { value: 'ADMIN', label: 'Quản trị viên (Admin)' },
-    { value: 'LDKBM', label: 'Lãnh đạo Khoa/Bộ môn' },
+    { value: 'LDKBM', label: 'Lãnh đạo Bộ môn' },
     { value: 'GVHD', label: 'Giáo viên hướng dẫn' },
     { value: 'STUDENT', label: 'Sinh viên' },
     { value: 'COMPANY_SUPERVISOR', label: 'Cán bộ hướng dẫn (Doanh nghiệp)' }
@@ -106,6 +106,18 @@ export class UserManagementComponent implements OnInit {
         }
       });
     }
+  }
+
+  onRoleChange(): void {
+    if (!this.requiresDepartmentSelection()) {
+      this.formFacultyId = null;
+      this.formSubDepartmentId = null;
+      this.subDepartments = [];
+    }
+  }
+
+  requiresDepartmentSelection(): boolean {
+    return this.formRole === 'LDKBM' || this.formRole === 'GVHD';
   }
 
   openCreateModal(): void {
@@ -178,7 +190,18 @@ export class UserManagementComponent implements OnInit {
       return;
     }
 
-    const finalDepartmentId = this.formSubDepartmentId ? this.formSubDepartmentId : this.formFacultyId;
+    if (this.requiresDepartmentSelection()) {
+      if (!this.formFacultyId) {
+        this.toastService.error('Vui lòng chọn Khoa cho tài khoản này.');
+        return;
+      }
+      if (!this.formSubDepartmentId) {
+        this.toastService.error('Vui lòng chọn Bộ môn cho tài khoản này.');
+        return;
+      }
+    }
+
+    const finalDepartmentId = this.formSubDepartmentId || null;
 
     const request: UserRequest = {
       email: this.formEmail.trim(),

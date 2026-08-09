@@ -5,6 +5,7 @@ import { BasePagination, PaginationRequest } from '../models/base.model';
 import { 
   AssignRequest, 
   AssignmentStatsResponse,
+  EligibleTeacherResponse,
   AutoAssignPreviewResponse,
   AutoAssignRequest,
   CompanyInfoRequest, 
@@ -63,6 +64,24 @@ export class StudentCampaignService {
       .set('department_id', departmentId.toString());
 
     return this.apiService.get<AssignmentStatsResponse[]>('/base/student-campaigns/assignment-stats', params);
+  }
+
+  getEligibleTeachers(campaignId: number, departmentId: number): Observable<EligibleTeacherResponse[]> {
+    const params = new HttpParams()
+      .set('campaign_id', campaignId.toString())
+      .set('department_id', departmentId.toString());
+
+    return this.apiService.get<EligibleTeacherResponse[]>('/base/student-campaigns/eligible-teachers', params);
+  }
+
+  inviteTeacher(campaignId: number, departmentId: number, teacherId: number): Observable<EligibleTeacherResponse> {
+    const query = `?campaign_id=${campaignId}&department_id=${departmentId}`;
+    return this.apiService.post<EligibleTeacherResponse>(`/base/student-campaigns/eligible-teachers/${teacherId}${query}`, {});
+  }
+
+  removeInvitedTeacher(campaignId: number, departmentId: number, teacherId: number): Observable<any> {
+    const query = `?campaign_id=${campaignId}&department_id=${departmentId}`;
+    return this.apiService.delete<any>(`/base/student-campaigns/eligible-teachers/${teacherId}${query}`);
   }
 
   previewAutoAssign(request: AutoAssignRequest): Observable<AutoAssignPreviewResponse> {

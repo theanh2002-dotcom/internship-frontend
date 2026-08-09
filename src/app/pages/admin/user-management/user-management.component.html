@@ -157,7 +157,7 @@
       </div>
       <div class="flex flex-col gap-1.5">
         <label class="font-label-md text-[13px] text-slate-600">Vai trò (Role) <span class="text-red-500">*</span></label>
-        <select [(ngModel)]="formRole" 
+        <select [(ngModel)]="formRole" (change)="onRoleChange()"
                 class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
           <option value="">— Chọn vai trò —</option>
           <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
@@ -165,21 +165,21 @@
       </div>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div *ngIf="requiresDepartmentSelection()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="flex flex-col gap-1.5">
-        <label class="font-label-md text-[13px] text-slate-600">Khoa <span class="text-slate-400 font-normal">(tùy chọn)</span></label>
+        <label class="font-label-md text-[13px] text-slate-600">Khoa <span class="text-red-500">*</span></label>
         <select [(ngModel)]="formFacultyId" (change)="onFacultyChange()"
                 class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D]">
-          <option [ngValue]="null">— Không thuộc Khoa cụ thể —</option>
+          <option [ngValue]="null">— Chọn Khoa —</option>
           <option *ngFor="let f of faculties" [ngValue]="f.id">{{ f.name }}</option>
         </select>
       </div>
 
       <div class="flex flex-col gap-1.5">
-        <label class="font-label-md text-[13px] text-slate-600">Bộ môn <span class="text-slate-400 font-normal">(tùy chọn)</span></label>
+        <label class="font-label-md text-[13px] text-slate-600">Bộ môn <span class="text-red-500">*</span></label>
         <select [(ngModel)]="formSubDepartmentId" [disabled]="!formFacultyId || subDepartments.length === 0"
                 class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] disabled:bg-slate-100 disabled:text-slate-400">
-          <option [ngValue]="null">— Không thuộc Bộ môn cụ thể —</option>
+          <option [ngValue]="null">— Chọn Bộ môn —</option>
           <option *ngFor="let sub of subDepartments" [ngValue]="sub.id">{{ sub.name }}</option>
         </select>
       </div>

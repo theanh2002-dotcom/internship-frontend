@@ -86,7 +86,19 @@ export interface AssignmentStatsResponse {
   teacher_id: number;
   teacher_name: string;
   teacher_email: string;
+  department_name?: string;
+  external_department?: boolean;
   assigned_count: number;
+}
+
+export interface EligibleTeacherResponse {
+  id: number;
+  email: string;
+  full_name: string;
+  department_id: number | null;
+  department_name: string | null;
+  external_department: boolean;
+  invited: boolean;
 }
 
 export interface CompanyInfoRequest {

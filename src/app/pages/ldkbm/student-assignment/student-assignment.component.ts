@@ -9,6 +9,7 @@ import {
   AssignRequest, 
   AssignItem,
   AssignmentStatsResponse,
+  EligibleTeacherResponse,
   AutoAssignPreviewResponse,
   AutoAssignRequest
 } from '../../../core/models/request.model';
@@ -54,9 +55,13 @@ export class StudentAssignmentComponent implements OnInit {
 
   // Assign Form
   assignMode: 'MANUAL' | 'AUTO' = 'MANUAL';
-  teachers: UserResponse[] = [];
+  teachers: EligibleTeacherResponse[] = [];
+  allTeachers: UserResponse[] = [];
   selectedTeacherIds = new Set<number>();
   teacherSearchQuery = '';
+  inviteTeacherSearchQuery = '';
+  selectedInviteTeacherId: number | null = null;
+  isInviteLoading = false;
 
   autoAssignScope: 'UNASSIGNED' | 'SELECTED' = 'UNASSIGNED';
   autoOverwriteExisting = false;
@@ -83,7 +88,7 @@ export class StudentAssignmentComponent implements OnInit {
       this.departmentId = user.departmentId;
     }
     this.loadCampaigns();
-    this.loadTeachers();
+    this.loadAllTeachers();
   }
 
   loadCampaigns(): void {
@@ -96,6 +101,7 @@ export class StudentAssignmentComponent implements OnInit {
             this.toastService.error('Tài khoản của bạn chưa được gắn với Khoa/Bộ môn nào. Vui lòng liên hệ Admin.');
           } else {
             this.loadStudents();
+            this.loadTeachers();
           }
         }
       }
@@ -103,9 +109,21 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   loadTeachers(): void {
-    this.userService.getUsers({ page: 1, limit: 1000 }, 'GVHD', this.departmentId || undefined).subscribe({
+    if (!this.selectedCampaignId || !this.departmentId) {
+      this.teachers = [];
+      return;
+    }
+    this.studentCampaignService.getEligibleTeachers(this.selectedCampaignId, this.departmentId).subscribe({
       next: (res) => {
-        this.teachers = res.data || [];
+        this.teachers = res || [];
+      }
+    });
+  }
+
+  loadAllTeachers(): void {
+    this.userService.getUsers({ page: 1, limit: 1000 }, 'GVHD').subscribe({
+      next: (res) => {
+        this.allTeachers = res.data || [];
       }
     });
   }
@@ -115,6 +133,7 @@ export class StudentAssignmentComponent implements OnInit {
     this.selectedStudentIds.clear();
     if (this.departmentId) {
       this.loadStudents();
+      this.loadTeachers();
     } else {
       this.toastService.error('Tài khoản của bạn chưa được gắn với Khoa/Bộ môn nào. Vui lòng liên hệ Admin.');
     }
@@ -540,6 +559,8 @@ export class StudentAssignmentComponent implements OnInit {
     this.isAutoApplying = false;
 
     this.isAssignModalOpen = true;
+    this.loadTeachers();
+    this.loadAllTeachers();
   }
 
   openAssignModalForOne(student: any): void {
@@ -582,7 +603,7 @@ export class StudentAssignmentComponent implements OnInit {
     this.autoOverwriteExisting = false;
   }
 
-  get autoFilteredTeachers(): UserResponse[] {
+  get autoFilteredTeachers(): EligibleTeacherResponse[] {
     const query = this.autoTeacherSearchQuery.trim().toLowerCase();
     if (!query) {
       return this.teachers;
@@ -621,7 +642,7 @@ export class StudentAssignmentComponent implements OnInit {
     return this.autoPreview?.surplus_students || 0;
   }
 
-  get selectedAutoTeachers(): UserResponse[] {
+  get selectedAutoTeachers(): EligibleTeacherResponse[] {
     return this.teachers.filter(teacher => this.autoSelectedTeacherIds.has(teacher.id));
   }
 
@@ -747,7 +768,7 @@ export class StudentAssignmentComponent implements OnInit {
     return this.students.filter(student => this.selectedStudentIds.has(student.id));
   }
 
-  get filteredTeachers(): UserResponse[] {
+  get filteredTeachers(): EligibleTeacherResponse[] {
     const query = this.teacherSearchQuery.trim().toLowerCase();
     if (!query) {
       return this.teachers;
@@ -766,6 +787,59 @@ export class StudentAssignmentComponent implements OnInit {
       this.selectedTeacherIds.clear();
       this.selectedTeacherIds.add(teacherId);
     }
+  }
+
+  get inviteTeacherCandidates(): UserResponse[] {
+    const eligibleIds = new Set(this.teachers.map(teacher => teacher.id));
+    const query = this.inviteTeacherSearchQuery.trim().toLowerCase();
+    return this.allTeachers
+      .filter(teacher => !eligibleIds.has(teacher.id))
+      .filter(teacher => !query
+        || (teacher.full_name || '').toLowerCase().includes(query)
+        || (teacher.email || '').toLowerCase().includes(query)
+        || (teacher.department_name || '').toLowerCase().includes(query))
+      .slice(0, 20);
+  }
+
+  inviteSelectedTeacher(): void {
+    if (!this.selectedCampaignId || !this.departmentId || !this.selectedInviteTeacherId) {
+      this.showError('Vui lòng chọn GVHD cần thêm vào danh sách hướng dẫn.');
+      return;
+    }
+
+    this.isInviteLoading = true;
+    this.studentCampaignService.inviteTeacher(this.selectedCampaignId, this.departmentId, this.selectedInviteTeacherId).subscribe({
+      next: () => {
+        this.showSuccess('Đã thêm GVHD vào danh sách hướng dẫn của Bộ môn.');
+        this.selectedInviteTeacherId = null;
+        this.inviteTeacherSearchQuery = '';
+        this.isInviteLoading = false;
+        this.loadTeachers();
+      },
+      error: (err) => {
+        this.showError(err.message || 'Lỗi khi thêm GVHD vào danh sách hướng dẫn');
+        this.isInviteLoading = false;
+      }
+    });
+  }
+
+  removeInvitedTeacher(teacher: EligibleTeacherResponse): void {
+    if (!this.selectedCampaignId || !this.departmentId || !teacher.invited) {
+      return;
+    }
+
+    this.studentCampaignService.removeInvitedTeacher(this.selectedCampaignId, this.departmentId, teacher.id).subscribe({
+      next: () => {
+        this.showSuccess('Đã bỏ GVHD khỏi danh sách mời.');
+        this.selectedTeacherIds.delete(teacher.id);
+        this.autoSelectedTeacherIds.delete(teacher.id);
+        this.autoSurplusTeacherIds.delete(teacher.id);
+        this.loadTeachers();
+      },
+      error: (err) => {
+        this.showError(err.message || 'Lỗi khi bỏ GVHD khỏi danh sách mời');
+      }
+    });
   }
 
   saveAssignment(): void {
