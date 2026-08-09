@@ -81,12 +81,20 @@
           <td class="py-3 px-4 text-center text-slate-500">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
           <td class="py-3 px-4">
             <div *ngIf="getCampaignDepartmentCount(campaign) > 0; else noDepartments" class="space-y-1.5">
-              <div *ngFor="let group of getCampaignDepartmentGroups(campaign)" class="leading-tight">
-                <div *ngIf="group.facultyName" class="text-[11px] font-semibold text-slate-500">{{ group.facultyName }}</div>
-                <div class="flex flex-wrap gap-1 mt-1">
+              <div *ngFor="let group of getCampaignDepartmentGroups(campaign)" class="rounded border border-slate-200 bg-slate-50/70 px-2 py-1.5 leading-tight">
+                <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600">
+                  <span class="material-symbols-outlined text-[14px] text-slate-400">account_balance</span>
+                  <span>Khoa: {{ group.facultyName || 'Chưa xác định' }}</span>
+                  <span *ngIf="group.facultyCode" class="font-mono text-slate-400">({{ group.facultyCode }})</span>
+                </div>
+                <div *ngIf="group.isLegacyFacultyScope" class="mt-1 inline-flex items-center rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                  Dữ liệu cũ: chưa gắn Bộ môn
+                </div>
+                <div *ngIf="!group.isLegacyFacultyScope" class="flex flex-wrap gap-1 mt-1.5">
                   <span *ngFor="let dept of group.departments | slice:0:3"
-                        class="inline-flex items-center rounded border border-blue-100 bg-blue-50 px-1.5 py-0.5 text-[11px] font-semibold text-[#00429D]">
-                    {{ dept.code || dept.name }}
+                        class="inline-flex items-center gap-1 rounded border border-blue-100 bg-white px-1.5 py-0.5 text-[11px] font-semibold text-[#00429D]">
+                    <span class="text-slate-400">BM</span>
+                    <span>{{ dept.code || dept.name }}</span>
                   </span>
                   <span *ngIf="group.departments.length > 3" class="text-[11px] text-slate-500 px-1 py-0.5">+{{ group.departments.length - 3 }}</span>
                 </div>

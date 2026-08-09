@@ -14,6 +14,8 @@ interface DepartmentGroup {
 
 interface CampaignDepartmentGroup {
   facultyName: string | null;
+  facultyCode: string | null;
+  isLegacyFacultyScope: boolean;
   departments: CampaignDepartmentSummary[];
 }
 
@@ -202,17 +204,28 @@ export class CampaignManagementComponent implements OnInit {
 
   getCampaignDepartmentGroups(campaign: CampaignResponse): CampaignDepartmentGroup[] {
     const summaries = campaign.department_summaries || this.getFallbackDepartmentSummaries(campaign.department_ids || []);
-    const groups = new Map<string, CampaignDepartmentSummary[]>();
+    const groups = new Map<string, CampaignDepartmentGroup>();
     summaries.forEach(summary => {
-      const facultyName = summary.faculty_name || null;
-      const groupKey = facultyName || `__ungrouped_${summary.id}`;
-      groups.set(groupKey, [...(groups.get(groupKey) || []), summary]);
+      const isLegacyFacultyScope = !summary.faculty_id && !summary.faculty_name;
+      const groupKey = isLegacyFacultyScope
+        ? `faculty_${summary.id}`
+        : `faculty_${summary.faculty_id || summary.faculty_name}`;
+      const existingGroup = groups.get(groupKey);
+
+      if (existingGroup) {
+        existingGroup.departments.push(summary);
+        return;
+      }
+
+      groups.set(groupKey, {
+        facultyName: isLegacyFacultyScope ? summary.name : summary.faculty_name,
+        facultyCode: isLegacyFacultyScope ? summary.code : summary.faculty_code,
+        isLegacyFacultyScope,
+        departments: isLegacyFacultyScope ? [] : [summary]
+      });
     });
 
-    return Array.from(groups.values()).map(departments => ({
-      facultyName: departments[0]?.faculty_name || null,
-      departments
-    }));
+    return Array.from(groups.values());
   }
 
   getCampaignDepartmentCount(campaign: CampaignResponse): number {
