@@ -1,23 +1,8 @@
 import { ToastService } from '../../../core/services/toast.service';
 import { Component, OnInit } from '@angular/core';
 import { CampaignService, CampaignRequest, CampaignTimelinePreviewResponse } from '../../../core/services/campaign.service';
-import { CampaignDepartmentSummary, CampaignResponse, DepartmentResponse, PaginationRequest } from '../../../core/models/base.model';
-import { DepartmentService } from '../../../core/services/department.service';
+import { CampaignResponse, PaginationRequest } from '../../../core/models/base.model';
 import { EvaluationService } from '../../../core/services/evaluation.service';
-import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-
-interface DepartmentGroup {
-  faculty: DepartmentResponse;
-  departments: DepartmentResponse[];
-}
-
-interface CampaignDepartmentGroup {
-  facultyName: string | null;
-  facultyCode: string | null;
-  isLegacyFacultyScope: boolean;
-  departments: CampaignDepartmentSummary[];
-}
 
 @Component({
   selector: 'app-campaign-management',
@@ -78,15 +63,9 @@ export class CampaignManagementComponent implements OnInit {
     { value: 3, label: 'Học kỳ Hè' },
   ];
 
-  departments: DepartmentResponse[] = [];
-  departmentGroups: DepartmentGroup[] = [];
-  selectedDepartmentIds: number[] = [];
-  deptSearchQuery = '';
-
   constructor(
     private toastService: ToastService, 
     private campaignService: CampaignService,
-    private departmentService: DepartmentService,
     private evaluationService: EvaluationService
   ) {
     // Sinh danh sách năm học (5 năm gần đây)
@@ -103,156 +82,6 @@ export class CampaignManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCampaigns();
-    this.loadDepartments();
-  }
-
-  getDepartmentName(id: number): string {
-    const dept = this.departments.find(d => d.id === id);
-    return dept ? `${dept.name} (${dept.code})` : '';
-  }
-
-  getFilteredDepartmentGroups(): DepartmentGroup[] {
-    if (!this.deptSearchQuery.trim()) {
-      return this.departmentGroups;
-    }
-    const q = this.deptSearchQuery.toLowerCase().trim();
-    return this.departmentGroups
-      .map(group => ({
-        faculty: group.faculty,
-        departments: group.departments.filter(d =>
-          d.name.toLowerCase().includes(q) ||
-          d.code.toLowerCase().includes(q) ||
-          group.faculty.name.toLowerCase().includes(q) ||
-          group.faculty.code.toLowerCase().includes(q)
-        )
-      }))
-      .filter(group => group.departments.length > 0);
-  }
-
-  selectAllDepartments(): void {
-    this.selectedDepartmentIds = this.departments.map(d => d.id);
-  }
-
-  deselectAllDepartments(): void {
-    this.selectedDepartmentIds = [];
-  }
-
-  loadDepartments(): void {
-    this.departmentService.getDepartments({ page: 1, limit: 100 }).subscribe({
-      next: (res) => {
-        const faculties = (res.data || []).filter(d => !d.parent_id);
-        if (faculties.length === 0) {
-          this.departmentGroups = [];
-          this.departments = [];
-          return;
-        }
-
-        forkJoin(
-          faculties.map(faculty =>
-            this.departmentService.getChildren(faculty.id).pipe(
-              map(children => ({
-                faculty,
-                departments: (children || []).filter(d => d.parent_id && d.status === 'ACTIVE')
-              })),
-              catchError(() => of({ faculty, departments: [] as DepartmentResponse[] }))
-            )
-          )
-        ).subscribe(groups => {
-          this.departmentGroups = groups.filter(group => group.departments.length > 0);
-          this.departments = this.departmentGroups.flatMap(group => group.departments);
-          this.normalizeSelectedDepartmentIds();
-        });
-      },
-      error: (err) => {
-        this.toastService.error('Không thể tải danh sách khoa');
-      }
-    });
-  }
-
-  isDepartmentSelected(id: number): boolean {
-    return this.selectedDepartmentIds.includes(id);
-  }
-
-  toggleDepartmentSelection(id: number): void {
-    const idx = this.selectedDepartmentIds.indexOf(id);
-    if (idx > -1) {
-      this.selectedDepartmentIds.splice(idx, 1);
-    } else {
-      this.selectedDepartmentIds.push(id);
-    }
-  }
-
-  isFacultyFullySelected(group: DepartmentGroup): boolean {
-    return group.departments.length > 0 && group.departments.every(d => this.isDepartmentSelected(d.id));
-  }
-
-  isFacultyPartiallySelected(group: DepartmentGroup): boolean {
-    const selectedCount = group.departments.filter(d => this.isDepartmentSelected(d.id)).length;
-    return selectedCount > 0 && selectedCount < group.departments.length;
-  }
-
-  toggleFacultySelection(group: DepartmentGroup): void {
-    const ids = group.departments.map(d => d.id);
-    if (this.isFacultyFullySelected(group)) {
-      this.selectedDepartmentIds = this.selectedDepartmentIds.filter(id => !ids.includes(id));
-      return;
-    }
-
-    const merged = new Set([...this.selectedDepartmentIds, ...ids]);
-    this.selectedDepartmentIds = Array.from(merged);
-  }
-
-  getCampaignDepartmentGroups(campaign: CampaignResponse): CampaignDepartmentGroup[] {
-    const summaries = campaign.department_summaries || this.getFallbackDepartmentSummaries(campaign.department_ids || []);
-    const groups = new Map<string, CampaignDepartmentGroup>();
-    summaries.forEach(summary => {
-      const isLegacyFacultyScope = !summary.faculty_id && !summary.faculty_name;
-      const groupKey = isLegacyFacultyScope
-        ? `faculty_${summary.id}`
-        : `faculty_${summary.faculty_id || summary.faculty_name}`;
-      const existingGroup = groups.get(groupKey);
-
-      if (existingGroup) {
-        existingGroup.departments.push(summary);
-        return;
-      }
-
-      groups.set(groupKey, {
-        facultyName: isLegacyFacultyScope ? summary.name : summary.faculty_name,
-        facultyCode: isLegacyFacultyScope ? summary.code : summary.faculty_code,
-        isLegacyFacultyScope,
-        departments: isLegacyFacultyScope ? [] : [summary]
-      });
-    });
-
-    return Array.from(groups.values());
-  }
-
-  getCampaignDepartmentCount(campaign: CampaignResponse): number {
-    return campaign.department_summaries?.length || campaign.department_ids?.length || 0;
-  }
-
-  private getFallbackDepartmentSummaries(ids: number[]): CampaignDepartmentSummary[] {
-    return ids.map(id => {
-      const dept = this.departments.find(d => d.id === id);
-      return {
-        id,
-        code: dept?.code || '',
-        name: dept?.name || `Bộ môn #${id}`,
-        faculty_id: dept?.parent_id || null,
-        faculty_code: null,
-        faculty_name: dept?.parent_name || null
-      };
-    });
-  }
-
-  private normalizeSelectedDepartmentIds(): void {
-    if (this.departments.length === 0 || this.selectedDepartmentIds.length === 0) {
-      return;
-    }
-    const validDepartmentIds = new Set(this.departments.map(d => d.id));
-    this.selectedDepartmentIds = Array.from(new Set(this.selectedDepartmentIds))
-      .filter(id => validDepartmentIds.has(id));
   }
 
   onFilterChange(): void {
@@ -292,8 +121,6 @@ export class CampaignManagementComponent implements OnInit {
     this.isEditMode = false;
     this.editingId = null;
     this.resetForm();
-    this.selectedDepartmentIds = [];
-    this.deptSearchQuery = '';
     this.isModalOpen = true;
   }
 
@@ -322,9 +149,6 @@ export class CampaignManagementComponent implements OnInit {
     this.formTttn06StartDate = campaign.tttn06_start_date ? campaign.tttn06_start_date.substring(0, 10) : '';
     this.formTttn06Deadline = campaign.tttn06_deadline ? campaign.tttn06_deadline.substring(0, 10) : '';
     
-    this.selectedDepartmentIds = campaign.department_ids || [];
-    this.normalizeSelectedDepartmentIds();
-    this.deptSearchQuery = '';
     this.isModalOpen = true;
   }
 

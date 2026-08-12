@@ -73,19 +73,7 @@ export interface CampaignResponse {
   tttn06_deadline?: string;
   status: string;        // "ACTIVE" | "INACTIVE"
   student_count: number;
-  department_count: number;
   created_at: string;
-  department_ids?: number[];
-  department_summaries?: CampaignDepartmentSummary[];
-}
-
-export interface CampaignDepartmentSummary {
-  id: number;
-  code: string;
-  name: string;
-  faculty_id: number | null;
-  faculty_code: string | null;
-  faculty_name: string | null;
 }
 
 /**

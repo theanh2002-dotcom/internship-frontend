@@ -27,7 +27,6 @@ export interface CampaignRequest {
   tttn06_start_date?: string;
   tttn06_deadline?: string;
   grade_deadline?: string;
-  department_ids?: number[];
 }
 
 export interface CampaignTimelinePreviewRequest {
