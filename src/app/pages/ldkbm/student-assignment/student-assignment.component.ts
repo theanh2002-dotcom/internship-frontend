@@ -3,6 +3,7 @@ import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { StudentCampaignService } from '../../../core/services/student-campaign.service';
 import { CampaignService } from '../../../core/services/campaign.service';
 import { UserService } from '../../../core/services/user.service';
+import { DepartmentService } from '../../../core/services/department.service';
 import { 
   ImportStudentRequest, 
   StudentItem, 
@@ -13,7 +14,7 @@ import {
   AutoAssignPreviewResponse,
   AutoAssignRequest
 } from '../../../core/models/request.model';
-import { CampaignResponse, PaginationRequest, UserResponse } from '../../../core/models/base.model';
+import { CampaignResponse, DepartmentResponse, PaginationRequest, UserResponse } from '../../../core/models/base.model';
 import { AuthService } from '../../../core/services/auth.service';
 import * as XLSX from 'xlsx';
 
@@ -27,6 +28,9 @@ export class StudentAssignmentComponent implements OnInit {
       campaigns: CampaignResponse[] = [];
   selectedCampaignId: number | null = null;
   departmentId: number | null = null;
+  managedDepartment: DepartmentResponse | null = null;
+  childDepartments: DepartmentResponse[] = [];
+  selectedStudentDepartmentId: number | null = null;
 
   students: any[] = [];
   totalItems = 0;
@@ -80,15 +84,55 @@ export class StudentAssignmentComponent implements OnInit {
   constructor(private toastService: ToastService, private studentCampaignService: StudentCampaignService,
     private campaignService: CampaignService,
     private userService: UserService,
+    private departmentService: DepartmentService,
     private authService: AuthService) {}
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
     if (user && user.departmentId) {
       this.departmentId = user.departmentId;
+      this.loadManagedDepartment();
     }
     this.loadCampaigns();
     this.loadAllTeachers();
+  }
+
+  loadManagedDepartment(): void {
+    if (!this.departmentId) {
+      return;
+    }
+    this.departmentService.getById(this.departmentId).subscribe({
+      next: (department) => {
+        this.managedDepartment = department;
+        if (!department.parent_id) {
+          this.departmentService.getChildren(department.id).subscribe({
+            next: (children) => {
+              this.childDepartments = (children || []).filter(child => child.status === 'ACTIVE');
+              this.selectedStudentDepartmentId = this.childDepartments[0]?.id || null;
+              this.loadTeachers();
+            }
+          });
+        } else {
+          this.selectedStudentDepartmentId = department.id;
+        }
+      }
+    });
+  }
+
+  isFacultyManager(): boolean {
+    return !!this.managedDepartment && !this.managedDepartment.parent_id;
+  }
+
+  getStudentTargetDepartmentId(): number | null {
+    return this.isFacultyManager() ? this.selectedStudentDepartmentId : this.departmentId;
+  }
+
+  ensureStudentTargetDepartmentSelected(): boolean {
+    if (!this.getStudentTargetDepartmentId()) {
+      this.showError('Vui lòng chọn Bộ môn/ngành để thêm hoặc import sinh viên.');
+      return false;
+    }
+    return true;
   }
 
   loadCampaigns(): void {
@@ -109,11 +153,12 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   loadTeachers(): void {
-    if (!this.selectedCampaignId || !this.departmentId) {
+    const teacherScopeDepartmentId = this.getStudentTargetDepartmentId() || this.departmentId;
+    if (!this.selectedCampaignId || !teacherScopeDepartmentId) {
       this.teachers = [];
       return;
     }
-    this.studentCampaignService.getEligibleTeachers(this.selectedCampaignId, this.departmentId).subscribe({
+    this.studentCampaignService.getEligibleTeachers(this.selectedCampaignId, teacherScopeDepartmentId).subscribe({
       next: (res) => {
         this.teachers = res || [];
       }
@@ -206,6 +251,9 @@ export class StudentAssignmentComponent implements OnInit {
       this.showError('Vui lòng chọn đợt thực tập trước.');
       return;
     }
+    if (!this.ensureStudentTargetDepartmentSelected()) {
+      return;
+    }
     this.formStudentCode = '';
     this.formFullName = '';
     this.formClassName = '';
@@ -218,6 +266,9 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   saveManualStudent(): void {
+    if (!this.ensureStudentTargetDepartmentSelected()) {
+      return;
+    }
     if (!this.formStudentCode || !this.formFullName) {
       this.showError('Mã sinh viên và Họ tên không được để trống.');
       return;
@@ -232,7 +283,7 @@ export class StudentAssignmentComponent implements OnInit {
 
     const req: ImportStudentRequest = {
       campaign_id: this.selectedCampaignId!,
-      department_id: this.departmentId!,
+      department_id: this.getStudentTargetDepartmentId()!,
       students: [item]
     };
 
@@ -293,10 +344,19 @@ export class StudentAssignmentComponent implements OnInit {
       this.showError('Vui lòng chọn đợt thực tập trước.');
       return;
     }
+    if (!this.ensureStudentTargetDepartmentSelected()) {
+      return;
+    }
     this.fileInput.nativeElement.click();
   }
 
   onFileChange(event: any): void {
+    if (!this.ensureStudentTargetDepartmentSelected()) {
+      if (event?.target) {
+        event.target.value = '';
+      }
+      return;
+    }
     const file = event.target.files[0];
     if (!file) return;
 
@@ -410,7 +470,7 @@ export class StudentAssignmentComponent implements OnInit {
 
         const req: ImportStudentRequest = {
           campaign_id: this.selectedCampaignId!,
-          department_id: this.departmentId!,
+          department_id: this.getStudentTargetDepartmentId()!,
           students: students
         };
 
@@ -647,7 +707,7 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   get canPreviewAutoAssignment(): boolean {
-    if (!this.selectedCampaignId || !this.departmentId || this.autoSelectedTeacherIds.size === 0) {
+    if (!this.selectedCampaignId || !this.getStudentTargetDepartmentId() || this.autoSelectedTeacherIds.size === 0) {
       return false;
     }
     if (this.autoAssignScope === 'SELECTED' && this.selectedStudentIds.size === 0) {
@@ -668,6 +728,10 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   calculateAutoAssignment(): void {
+    if (!this.getStudentTargetDepartmentId()) {
+      this.showError('Vui lòng chọn Bộ môn/ngành để phân công tự động.');
+      return;
+    }
     if (this.autoSelectedTeacherIds.size === 0) {
       this.showError('Vui lòng chọn ít nhất 1 giảng viên để phân công tự động.');
       return;
@@ -724,7 +788,7 @@ export class StudentAssignmentComponent implements OnInit {
   private buildAutoAssignRequest(): AutoAssignRequest {
     const request: AutoAssignRequest = {
       campaign_id: this.selectedCampaignId!,
-      department_id: this.departmentId!,
+      department_id: this.getStudentTargetDepartmentId()!,
       teacher_ids: Array.from(this.autoSelectedTeacherIds),
       surplus_teacher_ids: Array.from(this.autoSurplusTeacherIds),
       overwrite_existing: this.autoOverwriteExisting
@@ -802,13 +866,14 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   inviteSelectedTeacher(): void {
-    if (!this.selectedCampaignId || !this.departmentId || !this.selectedInviteTeacherId) {
+    const targetDepartmentId = this.getStudentTargetDepartmentId();
+    if (!this.selectedCampaignId || !targetDepartmentId || !this.selectedInviteTeacherId) {
       this.showError('Vui lòng chọn GVHD cần thêm vào danh sách hướng dẫn.');
       return;
     }
 
     this.isInviteLoading = true;
-    this.studentCampaignService.inviteTeacher(this.selectedCampaignId, this.departmentId, this.selectedInviteTeacherId).subscribe({
+    this.studentCampaignService.inviteTeacher(this.selectedCampaignId, targetDepartmentId, this.selectedInviteTeacherId).subscribe({
       next: () => {
         this.showSuccess('Đã thêm GVHD vào danh sách hướng dẫn của Bộ môn.');
         this.selectedInviteTeacherId = null;
@@ -824,11 +889,12 @@ export class StudentAssignmentComponent implements OnInit {
   }
 
   removeInvitedTeacher(teacher: EligibleTeacherResponse): void {
-    if (!this.selectedCampaignId || !this.departmentId || !teacher.invited) {
+    const targetDepartmentId = this.getStudentTargetDepartmentId();
+    if (!this.selectedCampaignId || !targetDepartmentId || !teacher.invited) {
       return;
     }
 
-    this.studentCampaignService.removeInvitedTeacher(this.selectedCampaignId, this.departmentId, teacher.id).subscribe({
+    this.studentCampaignService.removeInvitedTeacher(this.selectedCampaignId, targetDepartmentId, teacher.id).subscribe({
       next: () => {
         this.showSuccess('Đã bỏ GVHD khỏi danh sách mời.');
         this.selectedTeacherIds.delete(teacher.id);

@@ -176,7 +176,11 @@
       </div>
 
       <div class="flex flex-col gap-1.5">
-        <label class="font-label-md text-[13px] text-slate-600">Bộ môn <span class="text-red-500">*</span></label>
+        <label class="font-label-md text-[13px] text-slate-600">
+          Bộ môn
+          <span *ngIf="requiresSubDepartmentSelection()" class="text-red-500">*</span>
+          <span *ngIf="!requiresSubDepartmentSelection()" class="text-slate-400 font-normal">(nếu quản lý cấp Bộ môn)</span>
+        </label>
         <select [(ngModel)]="formSubDepartmentId" [disabled]="!formFacultyId || subDepartments.length === 0"
                 class="w-full border border-slate-300 rounded px-3 py-2 text-[14px] focus:outline-none focus:border-[#00429D] focus:ring-1 focus:ring-[#00429D] disabled:bg-slate-100 disabled:text-slate-400">
           <option [ngValue]="null">— Chọn Bộ môn —</option>

@@ -468,12 +468,6 @@ export class CampaignManagementComponent implements OnInit {
       this.toastService.error('Thời gian đợt thực tập phải tối thiểu 1 tháng');
       return;
     }
-    this.normalizeSelectedDepartmentIds();
-    if (this.selectedDepartmentIds.length === 0) {
-      this.toastService.error('Vui lòng chọn ít nhất một bộ môn áp dụng');
-      return;
-    }
-
     const request: CampaignRequest = {
       code: this.formCode.trim() || undefined,
       name: this.formName.trim(),
@@ -491,8 +485,7 @@ export class CampaignManagementComponent implements OnInit {
       midterm_start_date: this.formMidtermStartDate ? this.formMidtermStartDate + 'T00:00:00' : undefined,
       midterm_deadline: this.formMidtermDeadline ? this.formMidtermDeadline + 'T23:59:59' : undefined,
       tttn06_start_date: this.formTttn06StartDate ? this.formTttn06StartDate + 'T00:00:00' : undefined,
-      tttn06_deadline: this.formTttn06Deadline ? this.formTttn06Deadline + 'T23:59:59' : undefined,
-      department_ids: this.selectedDepartmentIds
+      tttn06_deadline: this.formTttn06Deadline ? this.formTttn06Deadline + 'T23:59:59' : undefined
     };
 
     this.isLoading = true;
